@@ -22,7 +22,7 @@ from cmbml.core import (
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 from cmbml.sims import MaskCreatorExecutor
-from patch_nn import (
+from d2ps_nn import (
     MakeLutExecutor,
     FindDatasetStatsParallelExecutor,
     PreprocessMapsExecutor,
