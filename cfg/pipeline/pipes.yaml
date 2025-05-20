@@ -1,0 +1,88 @@
+make_lut:
+  assets_out:
+    lut: 
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/lut.npy"
+  assets_in:
+    cmb_map: {stage: make_sims}
+    obs_maps: {stage: make_sims}
+  dir_name: B_LUT
+
+get_dataset_stats:
+  assets_out:
+    dataset_stats: 
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/feature_stats.yaml"
+  assets_in:
+    cmb_map: {stage: make_sims}
+    obs_maps: {stage: make_sims}
+  splits: 
+    - train
+  dir_name: C_PreprocessingPrep
+
+preprocess_maps:
+  assets_out:
+    obs_maps:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}.npy"
+  assets_in:
+    obs_maps: {stage: make_sims}
+    dataset_stats: {stage: get_dataset_stats}
+    lut: {stage: make_lut}
+  dir_name: D_Prep_Observs
+  splits:
+    - train
+    - valid
+    - test
+
+preprocess_spectra:
+  assets_out:
+    cmb_ps:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
+      # handler: NumpyPowerSpectrum
+      # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
+  assets_in:
+    cmb_ps: {stage: make_theory_ps, working: Simulation_Working/}
+  dir_name: E_Prep_Spectra
+  splits:
+    - train
+    - valid
+    - test
+
+train:
+  assets_out:
+    model: 
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+    loss_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+  assets_in:
+    cmb_ps: {stage: preprocess_spectra}
+    obs_maps: {stage: preprocess_maps}
+    model: {stage: train}
+  splits:
+    - train
+    - valid
+  dir_name: F_Model
+  make_stage_log: True
+
+# predict:
+predict: &final_inference
+  assets_out:
+    cmb_ps: 
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.txt"
+      # handler: NumpyPowerSpectrum
+      # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
+  assets_in:
+    obs_maps: {stage: preprocess_maps}
+    model: {stage: train}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs}
+  dir_name: G_Predict
+  make_stage_log: True
+
+final_infer: *final_inference  # Used so that analysis code can find a consistent name

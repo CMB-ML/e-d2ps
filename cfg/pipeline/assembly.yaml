@@ -1,0 +1,5 @@
+defaults:
+  - _self_
+  - assembly_sim
+  - pipes
+  # - pipe_model_analysis

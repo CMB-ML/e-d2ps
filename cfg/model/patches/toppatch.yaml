@@ -1,0 +1,4 @@
+name           : toppatch
+seed_template  : "{split}_patch"
+nside_patch    : ${nside}  # Use same a Nside; grab full top-level pixels
+mask_threshold : 1.0  # 100% of pixels in the patch must be unmasked to be valid
