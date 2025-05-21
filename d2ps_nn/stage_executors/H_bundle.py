@@ -65,10 +65,19 @@ class PSBundleExecutor(BaseStageExecutor):
         out_h : Asset
             The output asset handler. Must provide a numpy array.
         """
+        # Prepared to handle single spectra for a split
+        if split.ps_fidu_fixed:
+            spectrum = in_h.read(use_alt_path=split.ps_fidu_fixed)
+            out_h.write(data=spectrum)
+            return 
+
         data = []
         for sim in split.iter_sims():
             with self.name_tracker.set_context("sim_num", sim):
-                spectrum = in_h.read()
+                try:
+                    spectrum = in_h.read()
+                except AttributeError:
+                    spectrum = in_h.read(use_alt_path=False)
                 data.append(spectrum)
         data = np.array(data)
         # data = data[:, :self.lmax + 1]
