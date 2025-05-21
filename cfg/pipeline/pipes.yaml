@@ -112,7 +112,7 @@ bundle:
     ps_real:
       handler: NumpyPowerSpectrum
       path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_real.npy"
-    ps_theory:
+    ps_thry:
       handler: NumpyPowerSpectrum
       path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_theory.npy"
   assets_in:
