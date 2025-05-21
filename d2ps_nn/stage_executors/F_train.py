@@ -72,6 +72,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         else:
             raise ValueError(f"Unknown final activation: {self.final_activation}")
 
+        logger.info(f"Creating model")
         model = SimpleEncDec(
                              l_max=use_lmax,
                              n_in_channels=len(self.instrument.dets),
@@ -82,6 +83,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                              )
 
         model = model.to(self.device)
+        logger.info(f"Model created!")
 
         # Potentially confusing... the order is determined by the order of
         #   splits for this stage in the pipeline yaml.
