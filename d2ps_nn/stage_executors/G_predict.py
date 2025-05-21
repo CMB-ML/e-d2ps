@@ -20,11 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class PredictExecutor(BasePyTorchModelExecutor):
-    """
-    Goal: Reassemble a map from patches.
-
-    Use a dataset to iterate through patches (instead of simulations).
-    """
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="predict")
 
