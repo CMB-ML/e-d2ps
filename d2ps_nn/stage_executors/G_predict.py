@@ -3,6 +3,7 @@ import logging
 from tqdm import tqdm
 
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
 
@@ -97,6 +98,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
                         self.process_split(split, model_epoch)
 
     def process_split(self, split, epoch) -> None:
+        pad_mono_dipole = self.skip_mono_dipole
+
         dataset = self.set_up_dataset(split)
         dataloader = DataLoader(
             dataset, 
@@ -112,6 +115,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
                 for pred, sim_idx in zip(predictions, sim_idcs):
                     sim_idx = int(sim_idx)
                     with self.name_tracker.set_context("sim_num", sim_idx):
+                        if pad_mono_dipole:
+                            pred = np.concatenate(([0,0], pred))
                         self.out_cmb_asset.write(data=pred)
 
     def set_up_dataset(self, template_split: Split) -> TestDataset:

@@ -56,12 +56,12 @@ def run(cfg):
 
     # # # Cleaning: Training and Prediction
     # pipeline_context.add_pipe(TrainingExecutor)
-    # pipeline_context.add_pipe(PredictExecutor)
+    pipeline_context.add_pipe(PredictExecutor)
 
     ### Analysis is all untested!
     # # Analysis: generating the power spectra and power spectra statistics
-    pipeline_context.add_pipe(MaskCreatorExecutor)
-    pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    # pipeline_context.add_pipe(MaskCreatorExecutor)
+    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
     pipeline_context.prerun_pipeline()
 

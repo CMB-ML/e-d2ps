@@ -8,12 +8,12 @@ lmax      : ${lmax}  # lmax for prediction of power spectra
 #            null (no scaling)
 # For non-Wishart loss function
 # scale_ps  : null
-final_activation: null
-scale_ps  : null
+# final_activation: null
+# scale_ps  : null
 
 # For Wishart loss function
-# scale_ps  : Cl
-# final_activation: softplus
+scale_ps  : Cl
+final_activation: softplus
 
 # Other model parameters
 n_init_features: 16
@@ -43,8 +43,8 @@ train:
   # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 
   # loss: l1
-  loss: l2
-  # loss: wishart  # When using wishart, scale_ps must be set to "Cl" (above)
+  # loss: l2
+  loss: wishart  # When using wishart, scale_ps must be set to "Cl" (above)
 
 test:
   batch_size: 20
