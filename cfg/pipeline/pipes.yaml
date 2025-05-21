@@ -103,3 +103,21 @@ make_ps:  # Used for all power spectrum stages
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_J_Real_Power_Spectra
+
+bundle:
+  assets_out:
+    ps_pred: 
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_e{epoch}.npy"
+    ps_real:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_real.npy"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_real: {stage: make_ps, orig_name: auto_real}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_K_Bundle
+  # make_stage_log: True
+  make_stage_log: False 
