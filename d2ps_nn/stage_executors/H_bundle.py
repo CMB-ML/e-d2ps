@@ -4,7 +4,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset, BaseStageExecutor
-from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum
+from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum
 
 
 logger = logging.getLogger(__name__)
@@ -21,13 +21,17 @@ class PSBundleExecutor(BaseStageExecutor):
 
         self.out_ps_pred: Asset = self.assets_out["ps_pred"]
         self.out_ps_real: Asset = self.assets_out["ps_real"]
+        self.out_ps_thry: Asset = self.assets_out["ps_thry"]
         out_ps_pred_handler: NumpyPowerSpectrum
         out_ps_real_handler: NumpyPowerSpectrum
+        out_ps_thry_handler: NumpyPowerSpectrum
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
         self.in_ps_real: Asset = self.assets_in["ps_real"]
+        self.in_ps_thry: Asset = self.assets_in["ps_thry"]
         in_ps_pred_handler: TextPowerSpectrum
         in_ps_real_handler: NumpyPowerSpectrum
+        in_ps_thry_handler: CambPowerSpectrum
 
         # Not going to clip the power spectra for now...
         # self.lmax          = cfg.model.lmax
@@ -39,6 +43,7 @@ class PSBundleExecutor(BaseStageExecutor):
             with self.name_tracker.set_context("split", split.name):
                 # Handle the single lump of realization power spectra
                 self.process(split, self.in_ps_real, self.out_ps_real)
+                self.process(split, self.in_ps_thry, self.out_ps_thry)
 
                 # Handler predictions of power spectra for each epoch
                 for model_epoch in self.model_epochs:

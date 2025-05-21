@@ -112,9 +112,13 @@ bundle:
     ps_real:
       handler: NumpyPowerSpectrum
       path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_real.npy"
+    ps_theory:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_theory.npy"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     ps_real: {stage: make_ps, orig_name: auto_real}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
