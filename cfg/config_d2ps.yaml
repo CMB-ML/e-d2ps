@@ -15,7 +15,7 @@ defaults:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
-working_dir        : "d2ps/"
+working_dir        : "d2ps-l2/"
 fig_model_name     : "d2ps"
 hydra:
   run:
@@ -49,5 +49,5 @@ n_show_cap           : 1
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
-n_infer_cap           : 20
-run_inference_on      : train  # Either "test" or "valid" ("train" should work, but is not recommended)
+n_infer_cap           : null
+run_inference_on      : valid  # Either "test" or "valid" ("train" should work, but is not recommended)
