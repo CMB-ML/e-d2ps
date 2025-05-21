@@ -86,3 +86,20 @@ predict: &final_inference
   make_stage_log: True
 
 final_infer: *final_inference  # Used so that analysis code can find a consistent name
+
+make_ps:  # Used for all power spectrum stages
+  assets_out:
+    # Autocorrelation for realization (target)
+    auto_real:
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/ps_real.npy"
+      handler: NumpyPowerSpectrum
+  assets_in:
+    cmb_map_real: {stage: make_sims, orig_name: cmb_map}
+    mask:    {stage: make_mask}  # Remove or set to null for no masking;
+                                 #   set stage: to make_mask for the common mask
+                                 #   set stage: to mask_in for the original mask (will be downgraded)
+    mask_sm: {stage: make_mask}  # Remove or set to null for no masking;
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_J_Real_Power_Spectra
