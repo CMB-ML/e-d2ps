@@ -118,7 +118,7 @@ bundle:
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     ps_real: {stage: make_ps, orig_name: auto_real}
-    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
