@@ -210,7 +210,6 @@ class SingleDWishartLoss(torch.nn.Module):
         self.ratio = (2 * ells + 1) / (2* ells - 1)
 
     def forward(self, output, target):
-        target[:, 0:2] = 1
         t1 = output / target
         t2 = torch.log(target)
         t3 = torch.log(output)
