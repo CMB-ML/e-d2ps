@@ -50,21 +50,21 @@ def run(cfg):
     pipeline_context.add_pipe(HydraConfigCheckerExecutor)
 
     # # Cleaning: Preprocessing
-    # pipeline_context.add_pipe(MakeLutExecutor)
-    # pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
-    # pipeline_context.add_pipe(PreprocessMapsExecutor)
-    # pipeline_context.add_pipe(PreprocessSpectraExecutor)
+    pipeline_context.add_pipe(MakeLutExecutor)
+    pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
+    pipeline_context.add_pipe(PreprocessMapsExecutor)
+    pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
-    # # # Cleaning: Training and Prediction
-    # pipeline_context.add_pipe(TrainingExecutor)
-    # pipeline_context.add_pipe(PredictExecutor)
+    # # Cleaning: Training and Prediction
+    pipeline_context.add_pipe(TrainingExecutor)
+    pipeline_context.add_pipe(PredictExecutor)
 
     ### Analysis is all untested!
     # # Analysis: generating the power spectra and power spectra statistics
     # pipeline_context.add_pipe(MaskCreatorExecutor)
     # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
-    pipeline_context.add_pipe(PSBundleExecutor)
+    # pipeline_context.add_pipe(PSBundleExecutor)
 
     pipeline_context.prerun_pipeline()
 

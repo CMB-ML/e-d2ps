@@ -100,11 +100,13 @@ class SimpleEncDec(nn.Module):
         for _ in range(n_levels):
             downs.append(Down(curr_features))
             curr_features *= 2
+            # nside /= 2
         self.dns = nn.ModuleList(downs)
 
         self.out = FCNDecoder(
             in_channels=curr_features,
-            mid_channels=curr_features // 2,
+            mid_channels=l_max*2,
+            # mid_channels=curr_features // 2,
             out_channels=l_max + 1,
             final_activation=final_activation
         )
