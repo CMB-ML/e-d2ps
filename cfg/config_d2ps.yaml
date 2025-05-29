@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly
   - scenario       : scenario
-  - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
   - model          : basic_d2ps_nn
   - model/patches  : toppatch
   - model/analysis : basic_analysis
@@ -27,17 +27,17 @@ hydra:
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
 nside              : 512
-lmax               : 512
+lmax               : 2048 # 512
 # detectors          : [30, 44, 70, 100, 143, 217, 353, 545, 857]
-detectors          : [100, 143, 217, 353]
+detectors          : [100] # [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 3
+num_epochs         : 5 # 3
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3]  #, 2, 3, 4, 5, 10, 25, 50, 75, 100]
+use_epochs           : [5] # [1,2,3]  #, 2, 3, 4, 5, 10, 25, 50, 75, 100]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:

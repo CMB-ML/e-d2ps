@@ -12,6 +12,7 @@ from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TrainDataset
 from d2ps_nn.encdec import SimpleEncDec
+from d2ps_nn.utils.parse_ell_list import parse_ells
 
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.extra_check   = cfg.model.train.extra_check
 
         self.norm          = None
-        self.lmax          = cfg.model.lmax
+        # self.lmax          = cfg.model.lmax
+        self.ells          = parse_ells(cfg.model.use_ells)
         self.loss_key      = cfg.model.train.loss
 
         # When using Wishart loss, we need to skip the monopole and dipole
@@ -63,7 +65,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.out_loss_record.write(data=loss_record_headers)
 
         # When using Wishart loss, we need to skip the monopole and dipole
-        use_lmax = self.lmax - 2 if self.skip_mono_dipole else self.lmax
+        # use_lmax = self.lmax - 2 if self.skip_mono_dipole else self.lmax
 
         if self.final_activation == "softplus":
             final_activation = torch.nn.Softplus()
@@ -74,7 +76,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         logger.info(f"Creating model")
         model = SimpleEncDec(
-                             l_max=use_lmax,
+                            #  l_max=use_lmax,
+                             n_ells=len(self.ells),
                              n_in_channels=len(self.instrument.dets),
                              final_activation=final_activation,
                              n_init_features=self.model_n_init_features,
@@ -106,14 +109,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             num_workers=self.num_workers
             )
 
-        if self.loss_key == "l1":
-            loss_function = torch.nn.L1Loss(reduction='mean')
-        elif self.loss_key == "l2":
-            loss_function = torch.nn.MSELoss(reduction='mean')
-        elif self.loss_key == "wishart":
-            loss_function = SingleDWishartLoss(lmax=self.lmax, device=self.device)
-        else:
-            raise ValueError(f"Unknown loss function: {self.loss_key}")
+        loss_function = get_loss(self.loss_key, self.ells)
+        loss_function = loss_function.to(self.device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
 
@@ -150,7 +147,14 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
 
                     optimizer.zero_grad()
+                    
                     output = model(train_features)
+                    # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
+                    # loss = loss_function(output, train_label)
+                    # loss.backward()
+                    # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
+                    # exit()
+
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
                     optimizer.step()
@@ -187,27 +191,35 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             self.out_model.write(model=model, epoch="final")
 
     def set_up_dataset(self, split: Split) -> None:
-        cmb_path_template = self.make_fn_template(split, self.in_cmb_asset)
-        obs_path_template = self.make_fn_template(split, self.in_obs_assets)
+        # TODO: Unsure if this change is needed
+        label_path_template = self.make_fn_template(split, self.in_ps_asset)
+        feature_path_template = self.make_fn_template(split, self.in_map_asset)
+        # cmb_path_template = self.make_fn_template(split, self.in_cmb_asset)
+        # obs_path_template = self.make_fn_template(split, self.in_obs_assets)
 
         dataset = TrainDataset(
             n_sims = split.n_sims,
             freqs = self.instrument.dets.keys(),
             map_fields=self.map_fields,
-            label_path_template=cmb_path_template,
+            # label_path_template=cmb_path_template,
+            label_path_template=label_path_template,
             label_handler=self.in_cmb_asset.handler,
-            feature_path_template=obs_path_template,
+            # feature_path_template=obs_path_template,
+            feature_path_template=feature_path_template,
             feature_handler=self.in_obs_assets.handler
             )
         return dataset
 
 
 class SingleDWishartLoss(torch.nn.Module):
-    def __init__(self, lmax, device):
+    def __init__(self, ells):
         super().__init__()
-        ells = torch.arange(0, lmax + 1, dtype=torch.float32).to(device=device)
-        ells = ells[2:]
-        self.ratio = (2 * ells + 1) / (2* ells - 1)
+
+        ells = torch.tensor(ells, dtype=torch.float32)
+        # ells = torch.arange(0, lmax + 1, dtype=torch.float32)
+        # ells = ells[2:]
+        ratio = (2 * ells + 1) / (2 * ells - 1)
+        self.register_buffer("ratio", ratio)
 
     def forward(self, output, target):
         t1 = output / target
@@ -217,3 +229,14 @@ class SingleDWishartLoss(torch.nn.Module):
         per_ell = t1 + t2 - self.ratio * t3
 
         return torch.sum(per_ell)
+
+def get_loss(loss_key, ells):
+    if loss_key == "l1":
+        loss_function = torch.nn.L1Loss(reduction='mean')
+    elif loss_key == "l2":
+        loss_function = torch.nn.MSELoss(reduction='mean')
+    elif loss_key == "wishart":
+        loss_function = SingleDWishartLoss(ells=ells)
+    else:
+        raise ValueError(f"Unknown loss function: {loss_key}")
+    return loss_function

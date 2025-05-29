@@ -5,3 +5,7 @@ from .stage_executors.E_preprocess_ps_serial import PreprocessSpectraExecutor
 from .stage_executors.F_train import TrainingExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.H_bundle import PSBundleExecutor
+
+from .stage_executors._check_model_size import CheckGPULoadExecutor
+from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
+from .stage_executors._show_predictions import ShowPredictionsExecutor

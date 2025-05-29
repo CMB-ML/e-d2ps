@@ -28,7 +28,10 @@ from d2ps_nn import (
     PreprocessSpectraExecutor,
     TrainingExecutor,
     PredictExecutor,
-    PSBundleExecutor
+    PSBundleExecutor,
+    CheckGPULoadExecutor,
+    ShowChosenEllsExecutor,
+    ShowPredictionsExecutor
     )
 from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
@@ -55,16 +58,20 @@ def run(cfg):
     pipeline_context.add_pipe(PreprocessMapsExecutor)
     pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
+    pipeline_context.add_pipe(ShowChosenEllsExecutor)
+    pipeline_context.add_pipe(CheckGPULoadExecutor)
+
     # # Cleaning: Training and Prediction
     pipeline_context.add_pipe(TrainingExecutor)
     pipeline_context.add_pipe(PredictExecutor)
 
     ### Analysis is all untested!
-    # # Analysis: generating the power spectra and power spectra statistics
-    # pipeline_context.add_pipe(MaskCreatorExecutor)
-    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    # Analysis: generating the power spectra and power spectra statistics
+    pipeline_context.add_pipe(MaskCreatorExecutor)
+    pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
-    # pipeline_context.add_pipe(PSBundleExecutor)
+    pipeline_context.add_pipe(ShowPredictionsExecutor)
+    pipeline_context.add_pipe(PSBundleExecutor)
 
     pipeline_context.prerun_pipeline()
 

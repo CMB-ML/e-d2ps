@@ -82,7 +82,8 @@ class FCNDecoder(nn.Module):
 class SimpleEncDec(nn.Module):
     def __init__(
                  self,
-                 l_max,
+                #  l_max,
+                 n_ells,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
                  n_init_features=16,
@@ -105,9 +106,10 @@ class SimpleEncDec(nn.Module):
 
         self.out = FCNDecoder(
             in_channels=curr_features,
-            mid_channels=l_max*2,
-            # mid_channels=curr_features // 2,
-            out_channels=l_max + 1,
+            # mid_channels=l_max*2,
+            mid_channels=curr_features // 2,
+            # out_channels=l_max + 1,
+            out_channels=n_ells,
             final_activation=final_activation
         )
 

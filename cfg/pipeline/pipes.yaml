@@ -125,3 +125,31 @@ bundle:
   dir_name: Analysis_K_Bundle
   # make_stage_log: True
   make_stage_log: False 
+
+show_chosen_ells:
+  assets_out:
+    fig: 
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/chosen_ells.png"
+  assets_in:
+    ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_L_Show_Chosen_Ells
+  make_stage_log: False
+
+show_predictions:
+  assets_out:
+    fig: 
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/predictions.png"
+  assets_in:
+    ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_M_Show_Predictions
+  make_stage_log: False

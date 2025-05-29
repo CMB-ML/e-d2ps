@@ -13,7 +13,9 @@ from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TestDataset
 from d2ps_nn.encdec import SimpleEncDec
-from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
+# from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
+from d2ps_nn.utils.ps_scale import get_ps_scale
+from d2ps_nn.utils.parse_ell_list import parse_ells
 
 
 logger = logging.getLogger(__name__)
@@ -37,32 +39,35 @@ class PredictExecutor(BasePyTorchModelExecutor):
 
         self.model = None  # Placeholder for model
 
-        self.lmax          = cfg.model.lmax
+        # self.lmax             = cfg.model.lmax
+        self.ells             = parse_ells(cfg.model.use_ells)
         self.skip_mono_dipole = cfg.model.train.loss == "wishart"
-        self.scale_ps_choice = cfg.model.scale_ps
+        self.scale_ps_choice  = cfg.model.scale_ps
 
-        self.final_activation = cfg.model.final_activation
+        self.final_activation      = cfg.model.final_activation
         self.model_n_init_features = cfg.model.n_init_features
-        self.model_n_levels = cfg.model.n_levels
-        self.model_note = cfg.model.note
+        self.model_n_levels        = cfg.model.n_levels
+        self.model_note            = cfg.model.note
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         # Set up scaling for post processing
-        if self.scale_ps_choice == "Cl":
-            self.scale_ps = make_cl_lognorm_scale(self.lmax)
-        elif self.scale_ps_choice is None:
-            self.scale_ps = 1
-        else:
-            self.scale_ps = self.scale_ps_choice
+        self.scale_ps = get_ps_scale(self.scale_ps_choice, self.ells)
 
-        # When using Wishart loss, we need to skip the monopole and dipole
-        if self.skip_mono_dipole:
-            use_lmax = self.lmax - 2
-            self.scale_ps = self.scale_ps[2:]
-        else:
-            use_lmax = self.lmax
+        # if self.scale_ps_choice == "Cl":
+        #     self.scale_ps = make_cl_lognorm_scale(self.lmax)
+        # elif self.scale_ps_choice is None:
+        #     self.scale_ps = 1
+        # else:
+        #     self.scale_ps = self.scale_ps_choice
+
+        # # When using Wishart loss, we need to skip the monopole and dipole
+        # if self.skip_mono_dipole:
+        #     use_lmax = self.lmax - 2
+        #     self.scale_ps = self.scale_ps[2:]
+        # else:
+        #     use_lmax = self.lmax
 
         if self.final_activation == "softplus":
             final_activation = torch.nn.Softplus()
@@ -74,7 +79,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
         # It would likely be safer to have this within the loop, right before read()
         #    But this should work and be faster (especially with larger models)
         self.model = SimpleEncDec(
-                                  l_max=use_lmax,
+                                #   l_max=use_lmax,
+                                  n_ells=len(self.ells),
                                   n_in_channels=len(self.instrument.dets),
                                   final_activation=final_activation,
                                   n_init_features=self.model_n_init_features,
