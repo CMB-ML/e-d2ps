@@ -192,20 +192,20 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
     def set_up_dataset(self, split: Split) -> None:
         # TODO: Unsure if this change is needed
-        label_path_template = self.make_fn_template(split, self.in_ps_asset)
-        feature_path_template = self.make_fn_template(split, self.in_map_asset)
-        # cmb_path_template = self.make_fn_template(split, self.in_cmb_asset)
-        # obs_path_template = self.make_fn_template(split, self.in_obs_assets)
+        # label_path_template = self.make_fn_template(split, self.in_ps_asset)
+        # feature_path_template = self.make_fn_template(split, self.in_map_asset)
+        cmb_path_template = self.make_fn_template(split, self.in_cmb_asset)
+        obs_path_template = self.make_fn_template(split, self.in_obs_assets)
 
         dataset = TrainDataset(
             n_sims = split.n_sims,
             freqs = self.instrument.dets.keys(),
             map_fields=self.map_fields,
-            # label_path_template=cmb_path_template,
-            label_path_template=label_path_template,
+            label_path_template=cmb_path_template,
+            # label_path_template=label_path_template,
             label_handler=self.in_cmb_asset.handler,
-            # feature_path_template=obs_path_template,
-            feature_path_template=feature_path_template,
+            feature_path_template=obs_path_template,
+            # feature_path_template=feature_path_template,
             feature_handler=self.in_obs_assets.handler
             )
         return dataset

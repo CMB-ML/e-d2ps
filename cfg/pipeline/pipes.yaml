@@ -153,3 +153,21 @@ show_predictions:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_M_Show_Predictions
   make_stage_log: False
+
+check_model_size:
+  assets_out:
+    model: 
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+    loss_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+  assets_in:
+    cmb_ps: {stage: preprocess_spectra}
+    obs_maps: {stage: preprocess_maps}
+    model: {stage: train}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_N_Check_Model_Size
+  make_stage_log: False
