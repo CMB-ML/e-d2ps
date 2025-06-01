@@ -84,7 +84,7 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
 
         batch_size = self.batch_size
         nside = self.nside
-        channels = 1  # Change for observations (d2ps)
+        channels = len(self.instrument.dets)
 
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
