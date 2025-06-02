@@ -39,12 +39,11 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 10 # 3
+num_epochs         : 100 # 3
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3,5,10]  # ,25,50,75,100] # [1,2,3]  #, 2, 3, 4, 5, 10, 25, 50, 75, 100]
-# use_epochs           : [5,10,25,50,75,100] # [1,2,3]  #, 2, 3, 4, 5, 10, 25, 50, 75, 100]
+use_epochs           : [1,2,3,5,10,25,50,75,100]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:

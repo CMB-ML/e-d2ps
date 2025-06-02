@@ -40,26 +40,6 @@ class Down(nn.Module):
         return x
 
 
-class Up(nn.Module):
-    def __init__(self, in_channels):
-        super().__init__()
-        out_channels = in_channels // 2
-        self.up = nn.ConvTranspose2d(in_channels,
-                                     out_channels,
-                                     kernel_size=2,
-                                     stride=2)
-        # between up and conv, we will concatenate feature maps,
-        #   doubling the size. So we use in_channels here:
-        self.conv = DoubleConv(in_channels,
-                               out_channels)
-
-    def forward(self, x1, x2):
-        x1 = self.up(x1)
-        x = torch.cat([x2, x1], dim=1)
-        x = self.conv(x)
-        return x
-
-
 class FCNDecoder(nn.Module):
     def __init__(self, in_channels, mid_channels, out_channels, final_activation=None):
         super().__init__()
