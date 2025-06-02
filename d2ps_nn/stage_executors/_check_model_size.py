@@ -30,7 +30,7 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
 
         self.in_ps_asset: Asset = self.assets_in["cmb_ps"]
         self.in_maps_asset: Asset = self.assets_in["obs_maps"]
-        self.in_model: Asset = self.assets_in["model"]
+        # self.in_model: Asset = self.assets_in["model"]
         in_cmb_map_handler: NumpyMap
         in_obs_map_handler: NumpyMap
         in_model_handler: PyTorchModel
