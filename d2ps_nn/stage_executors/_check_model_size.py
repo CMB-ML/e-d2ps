@@ -59,6 +59,10 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
+        batch_size = self.batch_size
+        nside = self.nside
+        n_channels = len(self.instrument.dets)
+
         loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
         self.out_loss_record.write(data=loss_record_headers)
 
@@ -72,7 +76,7 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         logger.info(f"Creating model")
         model = SimpleEncDec(
                              n_ells=len(self.ells),
-                             n_in_channels=1,  # CMB Only, not observations
+                             n_in_channels=n_channels,  # CMB Only, not observations
                              final_activation=final_activation,
                              n_init_features=self.model_n_init_features,
                              n_levels=self.model_n_levels,
@@ -82,14 +86,10 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         model = model.to(self.device)
         logger.info(f"Model created!")
 
-        batch_size = self.batch_size
-        nside = self.nside
-        channels = len(self.instrument.dets)
-
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
-        input_shape = (batch_size, channels, nside*4, nside*3)
+        input_shape = (batch_size, n_channels, nside*4, nside*3)
         output_shape = (batch_size, len(self.ells))
 
         # Make random tensor to check model size
