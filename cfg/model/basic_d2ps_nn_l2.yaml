@@ -5,7 +5,8 @@ lmax      : ${lmax}  # lmax for prediction of power spectra
 # Use ells follows numpy format [ell_min:ell_max:step] with multiple 
 #   ranges separated by commas; e.g. "[2:11],[20:201:10]"
 #   Remember that the max is not included in the range!
-use_ells  : "[2:31],[40:${lmax}:10]"
+use_ells  : "[2:${lmax}:64]"
+# use_ells  : "[2:31],[40:${lmax}:10]"
 # Scaling the power spectra
 #   Accepts: a float (a multiplier for the Dl)
 #            "Cl" (convert Dl back to Cl, not recommended unless using matching loss)
@@ -20,8 +21,8 @@ final_activation: null
 
 # Other model parameters
 n_init_features: 16
-# n_levels: 7  # For 128
-n_levels: 9
+n_levels: 7  # For 128
+# n_levels: 9
 note: null
 
 preprocess:
