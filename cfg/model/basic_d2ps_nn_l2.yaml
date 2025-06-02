@@ -20,8 +20,8 @@ final_activation: null
 
 # Other model parameters
 n_init_features: 16
-n_levels: 7  # For 128
-# n_levels: 9
+# n_levels: 7  # For 128
+n_levels: 9
 note: null
 
 preprocess:
