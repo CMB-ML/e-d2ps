@@ -38,9 +38,9 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
         split = self.splits[0]
 
-        all_theory_ps = []
-        all_prep_ps = []
         for epoch in self.model_epochs:
+            all_theory_ps = []
+            all_prep_ps = []
             # with self.name_tracker.set_context('epoch', epoch):
                 # logger.info(f"Processing epoch {epoch} for split {split.name}")
                 # self.process_epoch(split, epoch, show_max_l, scale_prep_ps, all_theory_ps, all_prep_ps)
@@ -76,7 +76,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 for ps_thry in all_theory_ps:
                     ax1.plot(full_ells, ps_thry, alpha=0.3)
                 for ps_prep in all_prep_ps:
-                    ax2.scatter(part_ells, ps_prep, alpha=0.3)
+                    ax2.scatter(part_ells, ps_prep, alpha=0.7, zorder=10)
 
                 ax1.set_xlim([0, show_max_l])
                 # ax1.set_ylim([0, 1.5])
@@ -93,4 +93,4 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 self.out_fig.write()  # Make directory only
                 # fn = self.out_fig.path.name  # This may be more convenient
                 plt.savefig(fn)
-                plt.close()
+                plt.close(fig)
