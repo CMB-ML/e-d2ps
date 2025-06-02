@@ -144,9 +144,10 @@ show_predictions:
   assets_out:
     fig: 
       handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/predictions.png"
+      path_template: "{root}/{dataset}/{working}{stage}/predictions_{epoch}.png"
   assets_in:
-    ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
   splits:
     - ${splits.run_inference_on}
