@@ -28,13 +28,12 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         in_ps_thry_handler: CambPowerSpectrum
 
         self.ells = parse_ells(cfg.model.use_ells)
-        # self.scale_ps_choice = cfg.model.scale_ps
+        self.display_lmax = cfg.lmax
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        # scale_prep_ps = get_ps_scale(self.scale_ps_choice, self.ells)
-        show_max_l = 1000
+        show_max_l = self.display_lmax
 
         split = self.splits[0]
 
