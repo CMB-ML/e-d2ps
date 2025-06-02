@@ -4,7 +4,8 @@ import numpy as np
 def parse_slice(slice_str):
     """Parses a slice string like '2:11' or '20:201:10' into a numpy array."""
     parts = [int(p) for p in slice_str.split(':')]
-    return np.arange(*parts) if len(parts) > 1 else np.array([parts[0]])
+    ells = np.arange(*parts) if len(parts) > 1 else np.array([parts[0]])
+    return ells
 
 
 def parse_ells(ell_list_str):
