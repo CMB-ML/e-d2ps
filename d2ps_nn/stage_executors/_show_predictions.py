@@ -29,6 +29,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
         self.ells = parse_ells(cfg.model.use_ells)
         self.display_lmax = cfg.lmax
+        self.display_n_sims = cfg.n_show_cap
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -54,6 +55,8 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                         ps_thry = self.in_ps_thry.read(use_alt_path=False)
                     all_theory_ps.append(ps_thry[:show_max_l])
                     all_prep_ps.append(ps_prep)
+                    if sim >= self.display_n_sims:
+                        break
 
                 full_ells = np.arange(show_max_l)
                 part_ells = self.ells
