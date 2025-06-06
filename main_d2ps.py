@@ -53,13 +53,13 @@ def run(cfg):
     pipeline_context.add_pipe(HydraConfigCheckerExecutor)
 
     # # Cleaning: Preprocessing
-    pipeline_context.add_pipe(MakeLutExecutor)
-    pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
-    pipeline_context.add_pipe(PreprocessMapsExecutor)
-    pipeline_context.add_pipe(PreprocessSpectraExecutor)
+    # pipeline_context.add_pipe(MakeLutExecutor)
+    # pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
+    # pipeline_context.add_pipe(PreprocessMapsExecutor)
+    # pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
-    pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    pipeline_context.add_pipe(CheckGPULoadExecutor)
+    # pipeline_context.add_pipe(ShowChosenEllsExecutor)
+    # pipeline_context.add_pipe(CheckGPULoadExecutor)
 
     # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
     # pipeline_context.add_pipe(MaskCreatorExecutor)

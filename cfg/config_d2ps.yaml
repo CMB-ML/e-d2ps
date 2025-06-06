@@ -4,8 +4,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly
   - scenario       : scenario
-  - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
-  # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  # - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
   - model          : basic_d2ps_nn_l2
   # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
@@ -17,13 +17,23 @@ defaults:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
-working_dir        : "d2ps-l2-4det/"
+working_dir        : "d2ps-${model.train.learning_rate}/"
 # working_dir        : "d2ps-wishart-1det/"
 fig_model_name     : "d2ps"
 hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      learning_rate: 2e-4, 2e-3, 2e-2, 2e-1
   run:
-    dir            : Logs/${now:%Y-%m-%d-%H-%M-%S}
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
   verbose          : false
+
+learning_rate: 2e-4
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
