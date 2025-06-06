@@ -31,6 +31,8 @@ from d2ps_nn import (
     PSBundleExecutor,
     CheckGPULoadExecutor,
     ShowChosenEllsExecutor,
+    PowerSpectrumAnalysisExecutor,
+    PowerSpectrumAggExecutor,
     ShowPredictionsExecutor
     )
 from cmbml.analysis import (
@@ -53,21 +55,24 @@ def run(cfg):
     pipeline_context.add_pipe(HydraConfigCheckerExecutor)
 
     # # Cleaning: Preprocessing
-    pipeline_context.add_pipe(MakeLutExecutor)
-    pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
-    pipeline_context.add_pipe(PreprocessMapsExecutor)
-    pipeline_context.add_pipe(PreprocessSpectraExecutor)
+    # pipeline_context.add_pipe(MakeLutExecutor)
+    # pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
+    # pipeline_context.add_pipe(PreprocessMapsExecutor)
+    # pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
-    pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    pipeline_context.add_pipe(CheckGPULoadExecutor)
+    # pipeline_context.add_pipe(ShowChosenEllsExecutor)
+    # pipeline_context.add_pipe(CheckGPULoadExecutor)
 
-    # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
-    # pipeline_context.add_pipe(MaskCreatorExecutor)
-    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    # # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
+    # # pipeline_context.add_pipe(MaskCreatorExecutor)
+    # # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
-    # # Cleaning: Training and Prediction
-    pipeline_context.add_pipe(TrainingExecutor)
-    pipeline_context.add_pipe(PredictExecutor)
+    # # # Cleaning: Training and Prediction
+    # pipeline_context.add_pipe(TrainingExecutor)
+    # pipeline_context.add_pipe(PredictExecutor)
+
+    # pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
+    # pipeline_context.add_pipe(PowerSpectrumAggExecutor)
 
     # ### Analysis is all untested!
     pipeline_context.add_pipe(ShowPredictionsExecutor)

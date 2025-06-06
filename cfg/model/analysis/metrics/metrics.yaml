@@ -1,0 +1,34 @@
+ps_functions: &stat_funcs
+  mse:
+    plot_name: "Mean Squared Error (MSE)"
+    axis_name: "MSE"
+    label: MSE
+    func: "skimage.metrics.mean_squared_error"
+  psnr:
+    plot_name: "Peak Signal-to-Noise Ratio (PNSR)"
+    axis_name: "PNSR"
+    label: PSNR
+    func: "psnr"
+  rmse:
+    plot_name: "Root Mean Squared Error (RMSE)"
+    axis_name: "RMSE"
+    label: RMSE
+    func: "rmse"
+  mae:
+    plot_name: "Mean Absolute Error (MAE)"
+    axis_name: "MAE"
+    label: MAE
+    func: "sklearn.metrics.mean_absolute_error"
+  r2:
+    plot_name: "Coefficient of Determination (R^2)"
+    axis_name: "R2"
+    label: R2
+    func: "sklearn.metrics.r2_score"
+  nrmse:
+    plot_name: "Normalized Root MSE (NRMSE)"
+    axis_name: "NRMSE"
+    label: NRMSE
+    func: "skimage.metrics.normalized_root_mse"
+    kwargs: {normalization: "euclidean"}
+ps_operations:
+  num_processes: 10

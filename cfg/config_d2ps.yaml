@@ -10,6 +10,7 @@ defaults:
   # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
   - model/analysis : simple_apo
+  - model/analysis/metrics    : metrics
   - override hydra/job_logging: custom_log
   - _self_
 
@@ -51,7 +52,7 @@ use_epochs_map_stats : ${use_epochs}
 # For summary statistics:
 use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations for which to generate figures
-n_show_cap           : 20
+n_show_cap           : null
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all

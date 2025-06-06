@@ -87,9 +87,8 @@ predict: &final_inference
 
 final_infer: *final_inference  # Used so that analysis code can find a consistent name
 
-make_ps:  # Used for all power spectrum stages
+make_ps:
   assets_out:
-    # Autocorrelation for realization (target)
     auto_real:
       path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/ps_real.npy"
       handler: NumpyPowerSpectrum
@@ -104,27 +103,36 @@ make_ps:  # Used for all power spectrum stages
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_J_Real_Power_Spectra
 
-bundle:
+ps_analysis:
   assets_out:
-    ps_pred: 
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_e{epoch}.npy"
-    ps_real:
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_real.npy"
-    ps_thry:
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_theory.npy"
+    report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/ps_report.csv"
+      handler: PandasCsvHandler
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
-    ps_real: {stage: make_ps, orig_name: auto_real}
-    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    theory_ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    # auto_real: {stage: make_pred_ps}
+    auto_pred: {stage: predict, orig_name: cmb_ps}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
-  dir_name: Analysis_K_Bundle
-  # make_stage_log: True
-  make_stage_log: False 
+  override_n_sims: ${n_test_cap}
+  # wmap_n_ps: 50
+  dir_name: Analysis_H_PS_Report
+
+ps_agg:
+  assets_out:
+    agg_report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/ps_agg_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    report: {stage: ps_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  override_n_sims: ${n_test_cap}
+  dir_name: Analysis_H_PS_Report
 
 show_chosen_ells:
   assets_out:
@@ -149,6 +157,7 @@ show_predictions:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    report: {stage: ps_agg, orig_name: agg_report}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
@@ -172,3 +181,26 @@ check_model_size:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_N_Check_Model_Size
   make_stage_log: False
+
+bundle:
+  assets_out:
+    ps_pred: 
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_e{epoch}.npy"
+    ps_real:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_real.npy"
+    ps_thry:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_theory.npy"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_real: {stage: make_ps, orig_name: auto_real}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_K_Bundle
+  # make_stage_log: True
+  make_stage_log: False 
+
