@@ -64,8 +64,8 @@ def run(cfg):
     pipeline_context.add_pipe(CheckGPULoadExecutor)
 
     # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
-    # pipeline_context.add_pipe(MaskCreatorExecutor)
-    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    pipeline_context.add_pipe(MaskCreatorExecutor)
+    pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
     # # # # Cleaning: Training and Prediction
     pipeline_context.add_pipe(TrainingExecutor)
@@ -76,7 +76,7 @@ def run(cfg):
 
     # # ### Analysis is all untested!
     pipeline_context.add_pipe(ShowPredictionsExecutor)
-    # pipeline_context.add_pipe(PSBundleExecutor)
+    pipeline_context.add_pipe(PSBundleExecutor)
 
     pipeline_context.prerun_pipeline()
 

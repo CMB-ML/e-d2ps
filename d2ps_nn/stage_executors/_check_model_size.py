@@ -31,10 +31,8 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         self.in_features = FeatureAsset.select(self.assets_in, 
                                                cfg.features_type, 
                                                self.instrument)
-        # self.in_model: Asset = self.assets_in["model"]
         in_cmb_map_handler: NumpyMap
         in_obs_map_handler: NumpyMap
-        in_model_handler: PyTorchModel
 
         self.dtype         = self.dtype_mapping[cfg.model.dtype]  # TODO: Ensure this is used
 
@@ -63,9 +61,6 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         batch_size = self.batch_size
         nside = self.nside
         n_channels = self.in_features.n_features
-
-        loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
-        self.out_loss_record.write(data=loss_record_headers)
 
         if self.final_activation == "softplus":
             final_activation = torch.nn.Softplus()
