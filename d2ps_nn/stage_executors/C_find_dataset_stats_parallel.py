@@ -41,7 +41,10 @@ class FindDatasetStatsParallelExecutor(BaseStageExecutor):
         super().__init__(cfg, stage_str="get_dataset_stats")
 
         self.instrument: Instrument = make_instrument(cfg=cfg)
-        self.channels = self.instrument.dets.keys()
+        try:
+            self.channels = self.instrument.dets.keys()
+        except ValueError as e:
+            self.channels = None
 
         self.out_dataset_stats: Asset = self.assets_out["dataset_stats"]
         out_norm_handler: Config
@@ -161,15 +164,16 @@ def find_min_max(task_target: TaskTarget, freqs, map_fields):
         res['cmb'][map_field] = {'vmin': cmb_data[i,:].min(), 
                                  'vmax': cmb_data[i,:].max()}
 
-    for freq in freqs:
-        obs_data = obs.handler.read(str(obs.path).format(freq=freq))
-        res[freq] = {}
-        # In case a simulation has 3 map fields, but the current settings are for just 1
-        #    Use zip to stop early if there are fewer map_fields 
-        #    (this may be a bit confusing, consider alternatives)
-        for i, _ in zip(range(obs_data.shape[0]), map_fields):
-            map_field = map_fields[i]
-            res[freq][map_field] = {'vmin': obs_data[i,:].min(), 'vmax': obs_data[i,:].max()}
+    if freqs:
+        for freq in freqs:
+            obs_data = obs.handler.read(str(obs.path).format(freq=freq))
+            res[freq] = {}
+            # In case a simulation has 3 map fields, but the current settings are for just 1
+            #    Use zip to stop early if there are fewer map_fields 
+            #    (this may be a bit confusing, consider alternatives)
+            for i, _ in zip(range(obs_data.shape[0]), map_fields):
+                map_field = map_fields[i]
+                res[freq][map_field] = {'vmin': obs_data[i,:].min(), 'vmax': obs_data[i,:].max()}
     return res
 
 
