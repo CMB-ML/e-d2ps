@@ -17,6 +17,7 @@ from cmbml.core.asset_handlers import CambPowerSpectrum
 from cmbml.core.asset_handlers import HealpyMap
 from cmbml.utils.map_fields_helper import map_field_str2int
 from d2ps_nn.utils.minmax_scale import minmax_scale
+from d2ps_nn.utils.select_features import FeatureAsset
 
 
 logger = logging.getLogger(__name__)
@@ -29,10 +30,21 @@ class PreprocessMapsExecutor(BaseStageExecutor):
 
         self.instrument: Instrument = make_instrument(cfg=cfg)
 
-        self.out_obs_patch: Asset = self.assets_out["obs_maps"]
+        out_obs_patch: Asset = self.assets_out["obs_maps"]
+        out_cmb_patch: Asset = self.assets_out["cmb_map"]
         out_patches_handler: NumpyMap
 
-        self.in_obs_maps: Asset = self.assets_in["obs_maps"]
+        if cfg.features_type == "cmb":
+            self.out_feat  = out_cmb_patch
+        elif cfg.features_type == "obs":
+            self.out_feat = out_obs_patch
+        else:
+            msg = f"Unsupported features type: {cfg.features_type}. Supported types are 'cmb' and 'obs'."
+            raise ValueError(msg)
+
+        self.in_features = FeatureAsset.select(self.assets_in, 
+                                               cfg.features_type, 
+                                               self.instrument)
         self.in_dataset_stats: Asset = self.assets_in["dataset_stats"]
         self.in_lut: Asset = self.assets_in["lut"]
         in_obs_map_handler: HealpyMap
@@ -75,13 +87,11 @@ class PreprocessMapsExecutor(BaseStageExecutor):
 
     def process_sim(self, split) -> None:
         # Process observations
-        for freq in self.instrument.dets.keys():
-            with self.name_tracker.set_context("freq", freq):
-                obs_map = self.in_obs_maps.read()
-                map_stats = self.get_dataset_stats(freq)
-                out = self.process_map(obs_map, map_stats)
-                self.out_obs_patch.write(data=out)
-        
+        for channel, asset in self.in_features.feature_iter():
+            obs_map = asset.read()
+            map_stats = self.get_dataset_stats(channel)
+            out = self.process_map(obs_map, map_stats)
+            self.out_feat.write(data=out)
 
     def process_map(self,
                     map_data: np.ndarray,  # Or Astropy Quantity

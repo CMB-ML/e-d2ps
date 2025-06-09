@@ -16,6 +16,7 @@ from d2ps_nn.encdec import SimpleEncDec
 # from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
+from d2ps_nn.utils.select_features import FeatureAsset
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,9 @@ class PredictExecutor(BasePyTorchModelExecutor):
         self.out_cmb_asset: Asset = self.assets_out["cmb_ps"]
         out_cmb_handler: HealpyMap
 
-        self.in_obs_assets: Asset = self.assets_in["obs_maps"]
+        self.in_feat_asset = FeatureAsset.select(self.assets_in, 
+                                                 cfg.features_type, 
+                                                 self.instrument)
         self.in_model_asset: Asset = self.assets_in["model"]
         in_obs_map_handler: HealpyMap
         in_model_handler: PyTorchModel
@@ -121,13 +124,13 @@ class PredictExecutor(BasePyTorchModelExecutor):
                         self.out_cmb_asset.write(data=pred)
 
     def set_up_dataset(self, template_split: Split) -> TestDataset:
-        obs_path_template = self.make_fn_template(template_split, self.in_obs_assets)
+        obs_path_template = self.make_fn_template(template_split, self.in_feat_asset)
 
         dataset = TestDataset(
             n_sims = template_split.n_sims,
             freqs = self.instrument.dets.keys(),
             map_fields=self.map_fields,
             feature_path_template=obs_path_template,
-            feature_handler=self.in_obs_assets.handler
+            feature_handler=self.in_feat_asset.handler
             )
         return dataset

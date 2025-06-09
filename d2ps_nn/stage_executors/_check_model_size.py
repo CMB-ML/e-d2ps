@@ -14,6 +14,7 @@ from d2ps_nn.dataset import TrainDataset
 from d2ps_nn.encdec import SimpleEncDec
 from d2ps_nn.stage_executors.F_train import get_loss
 from d2ps_nn.utils.parse_ell_list import parse_ells
+from d2ps_nn.utils.select_features import FeatureAsset
 
 
 logger = logging.getLogger(__name__)
@@ -24,12 +25,12 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         super().__init__(cfg, stage_str="train")
 
         self.out_model: Asset = self.assets_out["model"]
-        self.out_loss_record: Asset = self.assets_out["loss_record"]
         out_model_handler: PyTorchModel
-        out_loss_record: AppendingCsvHandler
 
         self.in_ps_asset: Asset = self.assets_in["cmb_ps"]
-        self.in_maps_asset: Asset = self.assets_in["obs_maps"]
+        self.in_features = FeatureAsset.select(self.assets_in, 
+                                               cfg.features_type, 
+                                               self.instrument)
         # self.in_model: Asset = self.assets_in["model"]
         in_cmb_map_handler: NumpyMap
         in_obs_map_handler: NumpyMap
@@ -61,7 +62,7 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
 
         batch_size = self.batch_size
         nside = self.nside
-        n_channels = len(self.instrument.dets)
+        n_channels = self.in_features.n_features
 
         loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
         self.out_loss_record.write(data=loss_record_headers)
