@@ -55,7 +55,7 @@ use_epochs_map_stats : ${use_epochs}
 # For summary statistics:
 use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations for which to generate figures
-n_show_cap           : null
+n_show_cap           : 10
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
