@@ -84,6 +84,7 @@ predict: &final_inference
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
   assets_in:
     cmb_map: {stage: preprocess_maps}
+    obs_maps: {stage: preprocess_maps}
     model:
       stage: train
       working: ${trained_wd}
@@ -179,7 +180,7 @@ show_predictions:
   assets_out:
     fig: 
       handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/predictions_{epoch}.png"
+      path_template: "{root}/{dataset}/{working}{stage}/planck_predictions_{epoch}.png"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
