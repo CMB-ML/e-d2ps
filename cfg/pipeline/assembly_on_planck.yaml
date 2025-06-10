@@ -1,0 +1,4 @@
+defaults:
+  - _self_
+  - assembly_planck_as_sim
+  - pipes_on_planck
