@@ -164,6 +164,18 @@ show_predictions:
   dir_name: Analysis_M_Show_Predictions
   make_stage_log: False
 
+loss_plot:
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
+  assets_out:
+    fig:
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/loss_plot.png"
+  dir_name: Analysis_N_Loss_Plot
+  make_stage_log: False
+
+
+
 check_model_size:
   assets_out:
     model: 

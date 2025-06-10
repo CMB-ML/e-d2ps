@@ -11,3 +11,4 @@ from .stage_executors.Z_bundle import PSBundleExecutor
 from .stage_executors._check_model_size import CheckGPULoadExecutor
 from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
 from .stage_executors._show_predictions import ShowPredictionsExecutor
+from .stage_executors._loss_plot import LossPlotExecutor
