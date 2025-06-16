@@ -59,7 +59,7 @@ def run(cfg):
     # pipeline_context.add_pipe(MakeLutExecutor)
     # pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
     # pipeline_context.add_pipe(PreprocessMapsExecutor)
-    # pipeline_context.add_pipe(PreprocessSpectraExecutor)
+    pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
     # pipeline_context.add_pipe(ShowChosenEllsExecutor)
     pipeline_context.add_pipe(CheckGPULoadExecutor)
