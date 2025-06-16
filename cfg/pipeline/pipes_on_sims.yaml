@@ -63,9 +63,9 @@ train:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
   assets_in:
-    cmb_ps: {stage: preprocess_spectra}
+    cmb_ps: {stage: preprocess_spectra, working: d2ps-prep/}
     cmb_map: {stage: preprocess_maps}
-    obs_maps: {stage: preprocess_maps}
+    obs_maps: {stage: preprocess_maps, working: d2ps-prep/}
     model: {stage: train}
   splits:
     - train
@@ -83,7 +83,7 @@ predict: &final_inference
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
   assets_in:
     cmb_map: {stage: preprocess_maps}
-    obs_maps: {stage: preprocess_maps}
+    obs_maps: {stage: preprocess_maps, working: d2ps-prep/}
     model: {stage: train}
   splits:
     - ${splits.run_inference_on}
