@@ -34,7 +34,7 @@ train:
 
   # Data loading
   batch_size        : 5
-  num_loader_workers: 4
+  num_loader_workers: 0
   # Training parameters
   learning_rate     : 0.0002
 
