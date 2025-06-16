@@ -35,6 +35,7 @@ hydra:
   verbose          : false
 
 learning_rate: 2e-4
+iter_num: 0
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
