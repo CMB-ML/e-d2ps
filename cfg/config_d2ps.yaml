@@ -46,8 +46,8 @@ lmax               : 320
 # lmax               : 2048 # 512
 
 # Features type should be either "cmb" or "obs"
-# features_type      : cmb
-features_type      : obs
+features_type      : cmb
+# features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 

@@ -46,17 +46,17 @@ lmax               : 320
 # lmax               : 2048 # 512
 
 # Features type should be either "cmb" or "obs"
-# features_type      : cmb
-features_type      : obs
+features_type      : cmb
+# features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 200 # 3
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3,5,10,25,50,75,100,150,200]
+use_epochs           : [1,2,3,5,10,25,50,75,100,150,200,250,300]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
