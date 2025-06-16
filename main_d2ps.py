@@ -77,9 +77,11 @@ def run(cfg):
     pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
     pipeline_context.add_pipe(PowerSpectrumAggExecutor)
 
-    # # ### Analysis is all untested!
+    # Analysis and Visualization
     pipeline_context.add_pipe(ShowPredictionsExecutor)
     pipeline_context.add_pipe(LossPlotExecutor)
+
+    # Bulk processing
     pipeline_context.add_pipe(PSBundleExecutor)
 
     pipeline_context.prerun_pipeline()
