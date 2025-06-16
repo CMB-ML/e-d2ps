@@ -53,16 +53,16 @@ def run(cfg):
 
     pipeline_context = PipelineContext(cfg, log_maker)
 
-    pipeline_context.add_pipe(HydraConfigCheckerExecutor)
+    # pipeline_context.add_pipe(HydraConfigCheckerExecutor)
 
-    # # Cleaning: Preprocessing
-    pipeline_context.add_pipe(MakeLutExecutor)
-    pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
-    pipeline_context.add_pipe(PreprocessMapsExecutor)
-    pipeline_context.add_pipe(PreprocessSpectraExecutor)
+    # # # Cleaning: Preprocessing
+    # pipeline_context.add_pipe(MakeLutExecutor)
+    # pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
+    # pipeline_context.add_pipe(PreprocessMapsExecutor)
+    # pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
-    pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    pipeline_context.add_pipe(CheckGPULoadExecutor)
+    # pipeline_context.add_pipe(ShowChosenEllsExecutor)
+    # pipeline_context.add_pipe(CheckGPULoadExecutor)
 
     # # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
     # # pipeline_context.add_pipe(MaskCreatorExecutor)
@@ -91,14 +91,6 @@ def run(cfg):
         logger.info("Pipeline completed.")
         log_maker.copy_hydra_run_to_dataset_log()
 
-    import subprocess
-
-    # Run the post-processing export script
-    try:
-        subprocess.run(["/home/aankit/export_results.sh"], check=True)
-        print("Results exported successfully.")
-    except subprocess.CalledProcessError as e:
-        print("Failed to export results:", e)
 
 if __name__ == "__main__":
      run()

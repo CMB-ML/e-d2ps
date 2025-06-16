@@ -8,14 +8,21 @@ class LossPlotExecutor(BaseStageExecutor):
         super().__init__(cfg, stage_str="loss_plot")
         self.out_fig: Figure = self.assets_out["fig"]
         self.in_loss_csv = self.assets_in["loss_record"]
+        self.skip_n_values = 10
+
 
     def execute(self):
         df = pd.read_csv(self.in_loss_csv.path)
+        #skipping the first few rows if they are not needed
+        df = df[df["Epoch"] >= self.skip_n_values]
+        
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(df["Epoch"], df["Training Loss"], label="Training Loss")
         ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss")
+        ax.set_yscale('log') #set this off for normal scale
+
         ax.set_xlabel("Epoch")
-        ax.set_ylabel("Loss")
+        ax.set_ylabel("Loss (Log scale)") #change to "Loss" if not using log scale
         ax.set_title("Training vs Validation Loss")
         ax.legend()
         ax.grid(True)
