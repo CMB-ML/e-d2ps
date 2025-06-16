@@ -82,7 +82,7 @@ def run(cfg):
     pipeline_context.add_pipe(LossPlotExecutor)
 
     # Bulk processing
-    pipeline_context.add_pipe(PSBundleExecutor)
+    # pipeline_context.add_pipe(PSBundleExecutor)
 
     pipeline_context.prerun_pipeline()
 
