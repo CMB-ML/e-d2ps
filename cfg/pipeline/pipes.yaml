@@ -165,12 +165,12 @@ show_predictions:
   make_stage_log: False
 
 loss_plot:
-  assets_in:
-    loss_record: {stage: train, orig_name: loss_record}
   assets_out:
     fig:
       handler: Figure
       path_template: "{root}/{dataset}/{working}{stage}/loss_plot.png"
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
   dir_name: Analysis_N_Loss_Plot
   make_stage_log: False
 
