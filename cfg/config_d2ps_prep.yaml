@@ -1,0 +1,72 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - local_system   : generic_lab
+  - file_system    : common_fs
+  - pipeline       : assembly_on_sims
+  - scenario       : scenario
+  - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  - model          : basic_d2ps_nn_l2
+  # - model          : basic_d2ps_nn_wishart
+  - model/patches  : toppatch
+  - model/analysis : simple_apo
+  - model/analysis/metrics    : metrics
+  - override hydra/job_logging: custom_log
+  - _self_
+
+# When creating multiple datasets, using interpolation like this may be easier:
+dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
+# dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
+# dataset_name       : CMB-ML_512_1450
+# working_dir        : "d2ps-${model.train.learning_rate}/"
+working_dir        : "d2ps-prep/"
+fig_model_name     : "d2ps"
+hydra:
+  # mode: MULTIRUN
+  # sweeper:
+  #   params:
+  #     learning_rate: 2e-4, 2e-3, 2e-2, 2e-1
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose          : false
+
+learning_rate: 2e-4
+
+# Settings below this point are used for interpolation.
+# These are not to be used directly in the python
+# They are picked up from here and MAY be used elsewhere in the yamls.
+# In the scenario yaml
+nside              : 128
+lmax               : 320
+# nside              : 512  # When changing this, change mask apodization as well!
+# lmax               : 2048 # 512
+
+# Features type should be either "cmb" or "obs"
+# features_type      : cmb
+features_type      : obs
+detectors          : [100, 143, 217, 353]
+map_fields         : "I"
+
+# In the model yaml
+num_epochs         : 200 # 3
+
+# In the pipeline yamls
+# For prediction, postprocessing, power spectra generation:
+use_epochs           : [1,2,3,5,10,25,50,75,100,150,200]
+# For single simulation figures (maps & ps figures):
+use_epochs_imgs      : ${use_epochs}
+# For summary statistics:
+use_epochs_map_stats : ${use_epochs}
+# For summary statistics:
+use_epochs_ps_stats  : ${use_epochs}
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 10
+
+# Limit the number of simulations on which to do inference and postprocessing
+# In the splits yaml; null to run on all
+n_infer_cap           : null
+run_inference_on      : valid  # Either "test" or "valid" ("train" should work, but is not recommended)
