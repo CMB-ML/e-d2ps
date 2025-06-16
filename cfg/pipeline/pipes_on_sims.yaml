@@ -170,6 +170,36 @@ show_predictions:
   dir_name: Analysis_M_Show_Predictions
   make_stage_log: False
 
+loss_plot:
+  assets_out:
+    fig:
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/loss_plot.png"
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
+  dir_name: Analysis_N_Loss_Plot
+  make_stage_log: False
+
+
+
+check_model_size:
+  assets_out:
+    model: 
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+    loss_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+  assets_in:
+    cmb_ps: {stage: preprocess_spectra}
+    obs_maps: {stage: preprocess_maps}
+    model: {stage: train}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_N_Check_Model_Size
+  make_stage_log: False
+
 bundle:
   assets_out:
     ps_pred: 

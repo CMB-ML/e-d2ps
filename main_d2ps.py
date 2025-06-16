@@ -33,7 +33,8 @@ from d2ps_nn import (
     ShowChosenEllsExecutor,
     PowerSpectrumAnalysisExecutor,
     PowerSpectrumAggExecutor,
-    ShowPredictionsExecutor
+    ShowPredictionsExecutor,
+    LossPlotExecutor
     )
 from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
@@ -52,7 +53,7 @@ def run(cfg):
 
     pipeline_context = PipelineContext(cfg, log_maker)
 
-    pipeline_context.add_pipe(HydraConfigCheckerExecutor)
+    # pipeline_context.add_pipe(HydraConfigCheckerExecutor)
 
     # # Cleaning: Preprocessing
     pipeline_context.add_pipe(MakeLutExecutor)
@@ -62,12 +63,14 @@ def run(cfg):
 
     pipeline_context.add_pipe(ShowChosenEllsExecutor)
     pipeline_context.add_pipe(CheckGPULoadExecutor)
+    pipeline_context.add_pipe(ShowChosenEllsExecutor)
+    pipeline_context.add_pipe(CheckGPULoadExecutor)
 
-    # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
-    pipeline_context.add_pipe(MaskCreatorExecutor)
-    pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    # Generating realization power spectra (not needed currently; predicting just the Theory PS)
+    # pipeline_context.add_pipe(MaskCreatorExecutor)
+    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
-    # # # # Cleaning: Training and Prediction
+    # Cleaning: Training and Prediction
     pipeline_context.add_pipe(TrainingExecutor)
     pipeline_context.add_pipe(PredictExecutor)
 
@@ -76,6 +79,7 @@ def run(cfg):
 
     # # ### Analysis is all untested!
     pipeline_context.add_pipe(ShowPredictionsExecutor)
+    pipeline_context.add_pipe(LossPlotExecutor)
     pipeline_context.add_pipe(PSBundleExecutor)
 
     pipeline_context.prerun_pipeline()
