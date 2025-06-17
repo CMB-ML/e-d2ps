@@ -4,8 +4,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
-  # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  # - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
   - model          : basic_d2ps_nn_l2
   # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
@@ -18,13 +18,13 @@ defaults:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
-working_dir        : "${features_type}2ps-49ell-${iter_num}/"
-fig_model_name     : "d2ps"
+working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps-49ell-${iter_num}/"
+fig_model_name     : "CMB to PS, 49ell, Repeat ${iter_num}"
 hydra:
-  mode: MULTIRUN
-  sweeper:
-    params:
-      iter_num: 1,2,3,4,5,6,7,8,9,10
+  # mode: MULTIRUN
+  # sweeper:
+  #   params:
+  #     iter_num: 1,2,3,4,5,6,7,8,9,10
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -52,11 +52,11 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 40
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3,5,10,25,50,75,100,150,200,250,300]
+use_epochs           : [1,2,5,10,20,40,"best"] #,40,80,160,300,"best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:

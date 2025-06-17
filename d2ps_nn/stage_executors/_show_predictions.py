@@ -10,6 +10,7 @@ from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
+from d2ps_nn.utils.get_epochs import get_epochs_with_best
 
 
 logger = logging.getLogger(__name__)
@@ -32,8 +33,18 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         self.ells = parse_ells(cfg.model.use_ells)
         self.display_lmax = cfg.lmax
         self.display_n_sims = cfg.n_show_cap
+        self._model_epochs = cfg.use_epochs
+
+    @property
+    def model_epochs(self):
+        """
+        Returns the epochs to use for prediction.
+        If the model asset has a 'best' epoch, it will be included in the list.
+        """
+        return self._model_epochs
 
     def execute(self) -> None:
+        self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_ps_pred, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         show_max_l = self.display_lmax
@@ -101,6 +112,9 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 logger.info(f"Saving figure to {fn}")
                 self.out_fig.write()  # Make directory only
                 # fn = self.out_fig.path.name  # This may be more convenient
+
+                if isinstance(epoch, str) and epoch.startswith("best_"):
+                    epoch = int(epoch.split('_')[1]) 
 
                 if report_data is not None:
                     key = ('mse', 'mean')

@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset, BaseStageExecutor
 from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum
+from d2ps_nn.utils.get_epochs import get_epochs_with_best
 
 
 logger = logging.getLogger(__name__)
@@ -35,8 +36,18 @@ class PSBundleExecutor(BaseStageExecutor):
 
         # Not going to clip the power spectra for now...
         # self.lmax          = cfg.model.lmax
+        self._model_epochs = cfg.use_epochs
+
+    @property
+    def model_epochs(self):
+        """
+        Returns the epochs to use for prediction.
+        If the model asset has a 'best' epoch, it will be included in the list.
+        """
+        return self._model_epochs
 
     def execute(self) -> None:
+        self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_ps_pred, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         for split in self.splits:
