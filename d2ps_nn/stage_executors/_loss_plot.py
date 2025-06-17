@@ -14,6 +14,8 @@ class LossPlotExecutor(BaseStageExecutor):
         self.in_loss_csv = self.assets_in["loss_record"]
         # self.skip_n_values = 10
 
+        self.fig_label = cfg.fig_model_name
+
     def execute(self):
         df = pd.read_csv(self.in_loss_csv.path)
         #skipping the first few rows if they are not needed
@@ -53,7 +55,7 @@ class LossPlotExecutor(BaseStageExecutor):
 
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Log Loss")
-        ax.set_title("Training vs Validation Loss")
+        ax.set_title(f"Training vs Validation Loss, {self.fig_label}")
 
         custom_legend = [
             Line2D([0], [0], color="tab:blue", linestyle="-", linewidth=2, label="Training Loss"),

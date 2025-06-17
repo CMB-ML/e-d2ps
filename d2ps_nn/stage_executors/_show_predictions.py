@@ -33,6 +33,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         self.ells = parse_ells(cfg.model.use_ells)
         self.display_lmax = cfg.lmax
         self.display_n_sims = cfg.n_show_cap
+        self.fig_label = cfg.fig_model_name
         self._model_epochs = cfg.use_epochs
 
     @property
@@ -80,7 +81,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 full_ells = np.arange(show_max_l)
                 part_ells = self.ells
 
-                logger.info(f"There are {len(part_ells)} ells chosen.")
+                # logger.info(f"There are {len(part_ells)} ells chosen.")
 
                 fig, ax1 = plt.subplots(1, 1, figsize=(12, 6))
                 ax2 = ax1
@@ -106,7 +107,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 ax2.set_xlim([0, show_max_l])
                 # ax2.set_ylim([0, 1.5])
 
-                ax1.set_title(f"Predictions and theory, Epoch {epoch}")
+                ax1.set_title(f"Predictions and theory, Epoch {epoch}, {self.fig_label}")
 
                 fn = self.out_fig.path
                 logger.info(f"Saving figure to {fn}")
