@@ -19,12 +19,13 @@ dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
 working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps-49ell-${iter_num}/"
-fig_model_name     : "CMB to PS, 13ell, Repeat ${iter_num}"
+fig_model_name     : "${features_type} to PS, 290ell, Repeat ${iter_num}"
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      iter_num: 1,2,3,4,5,6,7,8,9,10
+      iter_num: 1,2,3,4,5
+      features_type: cmb,obs
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
