@@ -65,7 +65,7 @@ train:
   assets_in:
     cmb_ps: {stage: preprocess_spectra}
     # cmb_ps: {stage: preprocess_spectra, working: d2ps-prep/}
-    cmb_map: {stage: preprocess_maps}
+    cmb_map: {stage: preprocess_maps, working: d2ps-prep/}
     obs_maps: {stage: preprocess_maps, working: d2ps-prep/}
     model: {stage: train}
   splits:
@@ -83,7 +83,7 @@ predict: &final_inference
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
   assets_in:
-    cmb_map: {stage: preprocess_maps}
+    cmb_map: {stage: preprocess_maps, working: d2ps-prep/}
     obs_maps: {stage: preprocess_maps, working: d2ps-prep/}
     model: {stage: train}
   splits:
