@@ -19,7 +19,7 @@ dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
 working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps-49ell-${iter_num}/"
-fig_model_name     : "CMB to PS, 49ell, Repeat ${iter_num}"
+fig_model_name     : "Obs(4) to PS, 49ell, Repeat ${iter_num}"
 hydra:
   mode: MULTIRUN
   sweeper:
@@ -46,8 +46,8 @@ lmax               : 320
 # lmax               : 2048 # 512
 
 # Features type should be either "cmb" or "obs"
-features_type      : cmb
-# features_type      : obs
+# features_type      : cmb
+features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
