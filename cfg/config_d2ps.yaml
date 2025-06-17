@@ -18,7 +18,7 @@ defaults:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
-working_dir        : "${features_type}2ps-13ell-${iter_num}/"
+working_dir        : "${features_type}2ps-49ell-${iter_num}/"
 fig_model_name     : "d2ps"
 hydra:
   mode: MULTIRUN
