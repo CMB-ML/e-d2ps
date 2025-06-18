@@ -1,9 +1,9 @@
 mask_threshold:  0.9  # Per Planck's 2015 results:IX. Diffuse component separation: CMB maps
 
 # For 512 resolution:
-# mask_sm_apo_size:  20.6  # Matching smallest beam
+mask_sm_apo_size:  20.6  # Matching smallest beam
 # For 128 resolution:
-mask_sm_apo_size:  60  # Matching smallest beam
+# mask_sm_apo_size:  60  # Matching smallest beam
 
 mask_sm_apo_type:  'C1'  # NaMaster mask type
 

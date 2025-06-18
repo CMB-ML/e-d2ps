@@ -18,8 +18,8 @@ defaults:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 # dataset_name       : CMB-ML_512_1450
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps-49ell-${iter_num}/"
-fig_model_name     : "${features_type} to PS, 290ell, Repeat ${iter_num}"
+working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps-1250ell-${iter_num}/"
+fig_model_name     : "${features_type} to PS, 1250ell, Repeat ${iter_num}"
 hydra:
   mode: MULTIRUN
   sweeper:
@@ -41,10 +41,10 @@ iter_num: 0
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 128
-lmax               : 320
-# nside              : 512  # When changing this, change mask apodization as well!
-# lmax               : 2048 # 512
+# nside              : 128
+# lmax               : 320
+nside              : 512  # When changing this, change mask apodization as well!
+lmax               : 1280 # 512
 
 # Features type should be either "cmb" or "obs"
 features_type      : cmb
