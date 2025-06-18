@@ -60,6 +60,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.model_n_init_features = cfg.model.n_init_features
         self.model_n_levels = cfg.model.n_levels
         self.model_note = cfg.model.note
+        self.earliest_best = cfg.model.train.earliest_best
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -185,7 +186,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
             # already_saved = False
             is_best_condition_a = valid_loss == min(all_valid_loss)
-            is_best_condition_b = epoch > 10
+            is_best_condition_b = epoch > self.earliest_best
             if is_best_condition_a and is_best_condition_b:
                 with self.name_tracker.set_context("epoch", "best"):
                     self.out_model.write(model=model,
