@@ -109,19 +109,15 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
                 ax1.set_title(f"Predictions and theory, Epoch {epoch}, {self.fig_label}")
 
-                fn = self.out_fig.path
-                logger.info(f"Saving figure to {fn}")
-                self.out_fig.write()  # Make directory only
-                # fn = self.out_fig.path.name  # This may be more convenient
-
-                if isinstance(epoch, str) and epoch.startswith("best_"):
-                    epoch = int(epoch.split('_')[1]) 
+                # Unneeded currently; could be useful when re-adding sequential best epochs
+                # if isinstance(epoch, str) and epoch.startswith("best_"):
+                #     epoch = int(epoch.split('_')[1]) 
 
                 if report_data is not None:
                     key = ('mse', 'mean')
                     mask = (
                         (report_data[('split', '')] == split.name) &
-                        (report_data[('epoch', '')] == epoch)
+                        (report_data[('epoch', '')] == str(epoch))
                     )
                     subset = report_data.loc[mask]
                     if subset.empty:
@@ -129,5 +125,10 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                     else:
                         mse = subset[key].values[0]
                     ax1.text(0.95, 0.95, f"MSE: {mse:.1e}")
+
+                fn = self.out_fig.path
+                # fn = self.out_fig.path.name  # This may be more convenient
+                logger.info(f"Saving figure to {fn}")
+                self.out_fig.write()  # Make directory only
                 plt.savefig(fn)
                 plt.close(fig)
