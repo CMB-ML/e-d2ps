@@ -40,10 +40,10 @@ learning_rate: 2e-4
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 128
-lmax               : 320
-# nside              : 512  # When changing this, change mask apodization as well!
-# lmax               : 2048 # 512
+# nside              : 128
+# lmax               : 320
+nside              : 512  # When changing this, change mask apodization as well!
+lmax               : 1280 # 512
 
 # Features type should be either "cmb" or "obs"
 features_type      : cmb
@@ -56,7 +56,7 @@ num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3,5,10,30,50,100,150,200,250,300]
+use_epochs           : ["best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
