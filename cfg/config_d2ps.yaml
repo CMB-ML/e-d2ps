@@ -57,7 +57,8 @@ num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,5,10,20,40,80,160,300,"best"]
+use_epochs           : ["best"]
+# use_epochs           : [1,2,5,10,20,40,80,160,300,"best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
