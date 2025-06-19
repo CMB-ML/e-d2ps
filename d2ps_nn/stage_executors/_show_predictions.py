@@ -87,20 +87,23 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 for i, ps_thry in enumerate(all_theory_ps):
                     # ax1.plot(full_ells, ps_thry, alpha=0.3)
                     ax1.plot(full_ells, ps_thry, 
-                             alpha=1, 
+                             alpha=1, linewidth=0.5,
                              label=f'Theory {i}', 
                              color=mpl_colors[i % len(mpl_colors)])
                 for i, ps_pred in enumerate(all_pred_ps):
-                    # ax2.scatter(part_ells, ps_pred, alpha=0.7, zorder=10)
-                    ax1.plot(part_ells, ps_pred, 
-                             alpha=1, ls="--", linewidth=2, 
-                             label=f'Prediction {i}', 
-                             color=mpl_colors[i % len(mpl_colors)])
-
-
+                    if len(part_ells) < 20:
+                        ax2.scatter(part_ells, ps_pred, 
+                                    alpha=0.7, zorder=10,
+                                    label=f'Prediction {i}',
+                                    color=mpl_colors[i % len(mpl_colors)])
+                    else:
+                        ax1.plot(part_ells, ps_pred, 
+                                alpha=0.5, ls=(i, (5,5)), linewidth=2, 
+                                label=f'Prediction {i}', 
+                                color=mpl_colors[i % len(mpl_colors)])
 
                 ax1.set_xlim([0, show_max_l])
-                # ax1.set_ylim([0, 1.5])
+                ax1.set_ylim([0, 6000])
                 ax1.set_xlabel(r"$\ell$")
                 ax1.set_ylabel(r"$D_\ell$")
 
