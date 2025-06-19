@@ -170,6 +170,21 @@ show_predictions:
   dir_name: Analysis_M_Show_Predictions
   make_stage_log: False
 
+show_predictions_indiv:
+  assets_out:
+    fig: 
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/predictions_{epoch}_{sim}.png"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    report: {stage: ps_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_M_Show_Predictions_Indiv
+  make_stage_log: False
+
 loss_plot:
   assets_out:
     fig:
