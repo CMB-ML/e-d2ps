@@ -37,7 +37,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
 
         self.ells = parse_ells(cfg.model.use_ells)
         self.display_lmax = cfg.lmax
-        self.display_n_sims = cfg.n_show_cap
+        self.first_n = cfg.model.analysis.first_n
         self.top_n = cfg.model.analysis.top_n
         self.bottom_n = cfg.model.analysis.bottom_n
 
@@ -51,7 +51,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
         report_data['epoch'] = report_data['epoch'].astype(str)  # Ensure epoch is string for comparison
 
         for epoch in self.model_epochs:
-            show_sims = set(range(self.display_n_sims))
+            show_sims = set(range(self.first_n))
             if self.top_n > 0 or self.bottom_n > 0:
                 # Get the top_n sims based on MSE
                 key = 'mse'
@@ -64,11 +64,11 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                     raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
 
                 if self.top_n > 0:
-                    top_subset = subset.nsmallest(self.top_n, key)
-                    show_sims.update(top_subset["sim"].tolist())
-                elif self.bottom_n > 0:
-                    bottom_subset = subset.nlargest(self.bottom_n, key)
-                    show_sims.update(bottom_subset["sim"].tolist())
+                    top_subset = subset.nsmallest(self.top_n, key)["sim"].tolist()
+                    show_sims.update(top_subset)
+                if self.bottom_n > 0:
+                    bottom_subset = subset.nlargest(self.bottom_n, key)["sim"].tolist()
+                    show_sims.update(bottom_subset)
 
             show_sims = list(sorted(show_sims))
 
@@ -116,7 +116,13 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                     ax2.set_xlim([0, show_max_l])
                     # ax2.set_ylim([0, 1.5])
 
-                    ax1.set_title(f"Predictions and theory, Epoch {epoch}, Sim {this_sim}")
+                    bw_label = ""
+                    if this_sim in top_subset:
+                        bw_label = "(among best)"
+                    elif this_sim in bottom_subset:
+                        bw_label = "(among worst)"
+
+                    ax1.set_title(f"{split.name} Sim {this_sim}, Epoch {epoch}, {bw_label}")
 
                     if report_data is not None:
                         key = 'mse'
