@@ -57,6 +57,7 @@ test:
 analysis:  # TODO: implement local settings for analysis procedures in models
   top_n:  3
   bottom_n: 3
+  first_n: 0
 #   fig_model_name : PatchNN
 #   fig_model_dir  : PatchNN/
 #   fig_model_color: "#2D1C24"
