@@ -17,7 +17,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
-working_dir        : "${features_type}2ps-l2/"
+working_dir        : "${features_type}2ps-l2-test-best-model-saving/"
 # working_dir        : "${features_type}2ps-l2-4det/"
 fig_model_name     : "d2ps"
 hydra:
@@ -43,11 +43,11 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 200 # 3
+num_epochs         : 100 # 3
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3,5,10,25,50,75,100,150,200]
+use_epochs           : ["best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
