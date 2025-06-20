@@ -34,6 +34,8 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         self.display_n_sims = cfg.n_show_cap
 
     def execute(self) -> None:
+        mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         show_max_l = self.display_lmax
@@ -82,13 +84,26 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 # mse = np.mean(delta**2)
                 # logger.info(f"Epoch {epoch}, MSE: {mse:.4f}")
 
-                for ps_thry in all_theory_ps:
-                    ax1.plot(full_ells, ps_thry, alpha=0.3)
-                for ps_pred in all_pred_ps:
-                    ax2.scatter(part_ells, ps_pred, alpha=0.7, zorder=10)
+                for i, ps_thry in enumerate(all_theory_ps):
+                    # ax1.plot(full_ells, ps_thry, alpha=0.3)
+                    ax1.plot(full_ells, ps_thry, 
+                             alpha=1, linewidth=0.5,
+                             label=f'Theory {i}', 
+                             color=mpl_colors[i % len(mpl_colors)])
+                for i, ps_pred in enumerate(all_pred_ps):
+                    if len(part_ells) < 20:
+                        ax2.scatter(part_ells, ps_pred, 
+                                    alpha=0.7, zorder=10,
+                                    label=f'Prediction {i}',
+                                    color=mpl_colors[i % len(mpl_colors)])
+                    else:
+                        ax1.plot(part_ells, ps_pred, 
+                                alpha=0.5, ls=(i, (5,5)), linewidth=2, 
+                                label=f'Prediction {i}', 
+                                color=mpl_colors[i % len(mpl_colors)])
 
                 ax1.set_xlim([0, show_max_l])
-                # ax1.set_ylim([0, 1.5])
+                ax1.set_ylim([0, 6000])
                 ax1.set_xlabel(r"$\ell$")
                 ax1.set_ylabel(r"$D_\ell$")
 
@@ -97,10 +112,6 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
                 ax1.set_title(f"Predictions and theory, Epoch {epoch}")
 
-                fn = self.out_fig.path
-                logger.info(f"Saving figure to {fn}")
-                self.out_fig.write()  # Make directory only
-                # fn = self.out_fig.path.name  # This may be more convenient
 
                 if report_data is not None:
                     key = ('mse', 'mean')
@@ -114,5 +125,12 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                     else:
                         mse = subset[key].values[0]
                     ax1.text(0.95, 0.95, f"MSE: {mse:.1e}")
+
+                ax1.legend()
+
+                fn = self.out_fig.path
+                logger.info(f"Saving figure to {fn}")
+                self.out_fig.write()  # Make directory only
+                # fn = self.out_fig.path.name  # This may be more convenient
                 plt.savefig(fn)
                 plt.close(fig)
