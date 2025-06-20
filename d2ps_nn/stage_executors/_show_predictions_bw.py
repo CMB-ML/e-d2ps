@@ -134,15 +134,11 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
                                 color=color,
                                 label=label_thry)
 
-                    ax1.set_xlim([0, show_max_l])
-                    ax1.set_ylim([0, 6000])
-                    ax1.set_xlabel(r"$\ell$")
-                    ax1.set_ylabel(r"$D_\ell$")
-
-                    ax2.set_xlim([0, show_max_l])
-                    # ax2.set_ylim([0, 1.5])
-
-                    ax1.set_title(f"{split.name} Sim {this_sim}, Epoch {epoch}")
+                ax1.set_xlim([0, show_max_l])
+                ax1.set_ylim([0, 6000])
+                ax1.set_xlabel(r"$\ell$")
+                ax1.set_ylabel(r"$D_\ell$")
+                ax1.set_title(f"{split.name}, Epoch {epoch}")
 
                 # with self.name_tracker.set_context("sim_num", this_sim):
                 fn = self.out_fig.path
