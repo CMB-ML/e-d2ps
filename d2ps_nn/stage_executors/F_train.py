@@ -179,7 +179,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     valid_loss += loss_function(output, valid_label).item()
                 valid_loss /= len(valid_dataloader)
                 all_valid_loss.append(valid_loss)
-            logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}")
+            note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
+            logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
 
             self.out_loss_record.append([epoch + 1, train_loss, valid_loss])
 
