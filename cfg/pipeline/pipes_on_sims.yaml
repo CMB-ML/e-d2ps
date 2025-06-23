@@ -44,6 +44,7 @@ preprocess_spectra:
     cmb_ps:
       handler: TextPowerSpectrum
       path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
+      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep.txt"
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
   assets_in:

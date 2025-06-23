@@ -35,6 +35,7 @@ class TaskTarget(NamedTuple):
     sim_num: str
     epoch: int
     ells: np.ndarray
+    use_alt_path: bool
 
 
 class PowerSpectrumAnalysisExecutor(BaseStageExecutor):
@@ -124,7 +125,11 @@ class PowerSpectrumAnalysisExecutor(BaseStageExecutor):
                         # real = FrozenAsset(path=real.path, handler=real.handler)
 
                         thry = self.in_ps_theory
-                        thry = FrozenAsset(path=thry.path, handler=thry.handler)
+                        if split.ps_fidu_fixed:
+                            thry_path = thry.path_alt
+                        else:
+                            thry_path = thry.path
+                        thry = FrozenAsset(path=thry_path, handler=thry.handler)
 
                         tasks.append(TaskTarget(pred_asset=pred,
                                                 base_asset=thry,
@@ -132,7 +137,8 @@ class PowerSpectrumAnalysisExecutor(BaseStageExecutor):
                                                 split_name=split.name, 
                                                 sim_num=sim,
                                                 epoch=epoch,
-                                                ells=self.ells))
+                                                ells=self.ells,
+                                                use_alt_path=split.ps_fidu_fixed))
 
                         # tasks.append(TaskTarget(pred_asset=pred,
                         #                         base_asset=real,

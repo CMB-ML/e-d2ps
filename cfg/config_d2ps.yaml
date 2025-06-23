@@ -26,7 +26,8 @@ hydra:
     params:
       ps_source    : wmap9_standard
       # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
-      features_type: cmb, obs
+      features_type: obs
+      # features_type: cmb, obs
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -50,13 +51,13 @@ lmax               : 1280
 # lmax               : 2048 # 512
 
 # Features type should be either "cmb" or "obs"
-features_type      : cmb
-# features_type      : obs
+# features_type      : cmb
+features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 150
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
