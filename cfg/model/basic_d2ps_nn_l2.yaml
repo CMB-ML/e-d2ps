@@ -45,11 +45,9 @@ train:
   earliest_best     : 10  # Earliest epoch to save the best model
                           #   when debugging with small datasets and low total epochs, 
                           #   set to 0 to allow finding a best model at the very start
-  checkpoint_every  : 20  # checkpoint every this number of epochs
+  checkpoint_every  : 100     # checkpoint every this number of epochs
   extra_check       : []  # Extra checkpoints to save
-
-  # extra_check       : [1, 2, 5, 10]  # Extra checkpoints to save
-  # Above (currently commented out) will output checkpoints at epochs 1,2,5,10,20,40,60,80...300
+  # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 
   # loss: l1
   loss: l2

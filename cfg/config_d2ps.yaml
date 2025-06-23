@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  - splits         : three_fixed  # If you aren't getting as many results as expected, check n_infer_cap as well
   # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
   - model          : basic_d2ps_nn_l2
   # - model          : basic_d2ps_nn_wishart
@@ -15,17 +15,18 @@ defaults:
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
-dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
+dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
-# dataset_name       : CMB-ML_512_1450
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps-1250ell-${iter_num}/"
-fig_model_name     : "${features_type} to PS, 1250ell, Repeat ${iter_num}"
+working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps/"
+# working_dir        : "${features_type}2ps-l2-4det/"
+fig_model_name     : "${features_type} to PS, 1250ell, ${ps_source}"
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      iter_num: 1,2,3,4,5,6,7,8,9,10
-      features_type: cmb
+      ps_source    : wmap9_standard
+      # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
+      features_type: cmb, obs
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -34,6 +35,8 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
 
+ps_source          : ???  # placeholder
+
 learning_rate: 2e-4
 iter_num: 0
 
@@ -41,10 +44,10 @@ iter_num: 0
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-# nside              : 128
-# lmax               : 320
-nside              : 512  # When changing this, change mask apodization as well!
-lmax               : 1280 # 512
+nside              : 128
+lmax               : 1280
+# nside              : 512  # When changing this, change mask apodization as well!
+# lmax               : 2048 # 512
 
 # Features type should be either "cmb" or "obs"
 features_type      : cmb
@@ -58,7 +61,6 @@ num_epochs         : 300
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
 use_epochs           : ["best"]
-# use_epochs           : [1,2,5,10,20,40,80,160,300,"best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
@@ -71,4 +73,4 @@ n_show_cap           : 10
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : valid  # Either "test" or "valid" ("train" should work, but is not recommended)
+run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
