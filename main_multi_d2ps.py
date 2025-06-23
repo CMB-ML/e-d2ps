@@ -34,6 +34,8 @@ from d2ps_nn import (
     PowerSpectrumAnalysisExecutor,
     PowerSpectrumAggExecutor,
     ShowPredictionsExecutor,
+    ShowBWPredictionsExecutor,
+    ShowIndivPredictionsExecutor,
     LossPlotExecutor
     )
 from cmbml.analysis import (
@@ -72,11 +74,13 @@ def run(cfg):
     # pipeline_context.add_pipe(TrainingExecutor)
     # pipeline_context.add_pipe(PredictExecutor)
 
-    pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
-    pipeline_context.add_pipe(PowerSpectrumAggExecutor)
+    # pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
+    # pipeline_context.add_pipe(PowerSpectrumAggExecutor)
 
     # Analysis and Visualization
     pipeline_context.add_pipe(ShowPredictionsExecutor)
+    pipeline_context.add_pipe(ShowBWPredictionsExecutor)
+    pipeline_context.add_pipe(ShowIndivPredictionsExecutor)
     pipeline_context.add_pipe(LossPlotExecutor)
 
     # Bulk processing
