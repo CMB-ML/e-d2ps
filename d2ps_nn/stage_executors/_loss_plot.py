@@ -64,9 +64,7 @@ class LossPlotExecutor(BaseStageExecutor):
         ax.legend(handles=custom_legend)
         ax.grid(True)
 
-        self.out_fig.write()
-        plt.savefig(self.out_fig.path)
-        plt.close()
+        self.out_fig.write(fig=fig)
 
 def exp_as_ltx(some_val):
     val_sci = "{:.1e}".format(some_val)

@@ -24,7 +24,7 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      ps_source    : wmap9_standard
+      ps_source    : wmap_best_fit
       # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
       features_type: obs
       # features_type: cmb, obs
@@ -40,6 +40,8 @@ ps_source          : ???  # placeholder
 
 learning_rate: 2e-4
 iter_num: 0
+
+fig_type: png
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
