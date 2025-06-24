@@ -30,13 +30,13 @@ preprocess:
 
 train:
   # Operate on CPU or CUDA; null for auto selection.
-  device            : null
+  device            : "cuda:0"
 
   # Data loading
-  batch_size        : 5
-  num_loader_workers: 4
+  batch_size        : 32
+  num_loader_workers: 0
   # Training parameters
-  learning_rate     : 0.0002
+  learning_rate     : 0.00005
 
   # Epochs
   n_epochs          : ${num_epochs}
