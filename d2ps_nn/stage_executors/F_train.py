@@ -116,6 +116,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
+
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
 
         if self.restart_epoch is not None:
@@ -244,6 +245,16 @@ class SingleDWishartLoss(torch.nn.Module):
 
         return torch.sum(per_ell)
 
+class NormalizedMSELoss(torch.nn.Module):
+    def __init__(self, eps=1e-8):
+        super().__init__()
+        self.eps = eps
+
+    def forward(self, output, target):
+        # Normalizing by the mean of the target
+        norm_error = ((output/(target + self.eps)) - 1.0) ** 2
+        return torch.mean(norm_error)
+
 def get_loss(loss_key, ells):
     if loss_key == "l1":
         loss_function = torch.nn.L1Loss(reduction='mean')
@@ -251,6 +262,8 @@ def get_loss(loss_key, ells):
         loss_function = torch.nn.MSELoss(reduction='mean')
     elif loss_key == "wishart":
         loss_function = SingleDWishartLoss(ells=ells)
+    elif loss_key == "normalized_mse":
+        loss_function = NormalizedMSELoss()
     else:
         raise ValueError(f"Unknown loss function: {loss_key}")
     return loss_function
