@@ -44,6 +44,7 @@ preprocess_spectra:
     cmb_ps:
       handler: TextPowerSpectrum
       path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
+      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep.txt"
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
   assets_in:
@@ -64,8 +65,9 @@ train:
       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
   assets_in:
     cmb_ps: {stage: preprocess_spectra}
-    cmb_map: {stage: preprocess_maps}
-    obs_maps: {stage: preprocess_maps}
+    # cmb_ps: {stage: preprocess_spectra, working: d2ps-prep/}
+    cmb_map: {stage: preprocess_maps, working: d2ps-prep/}
+    obs_maps: {stage: preprocess_maps, working: d2ps-prep/}
     model: {stage: train}
   splits:
     - train
@@ -82,8 +84,8 @@ predict: &final_inference
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
   assets_in:
-    cmb_map: {stage: preprocess_maps}
-    obs_maps: {stage: preprocess_maps}
+    cmb_map: {stage: preprocess_maps, working: d2ps-prep/}
+    obs_maps: {stage: preprocess_maps, working: d2ps-prep/}
     model: {stage: train}
   splits:
     - ${splits.run_inference_on}
@@ -143,8 +145,8 @@ ps_agg:
 show_chosen_ells:
   assets_out:
     fig: 
-      handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/chosen_ells.png"
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/chosen_ells.{fig_type}"
   assets_in:
     ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
@@ -157,8 +159,8 @@ show_chosen_ells:
 show_predictions:
   assets_out:
     fig: 
-      handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/predictions_{epoch}.pdf"
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/predictions_{epoch}.{fig_type}"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
@@ -173,8 +175,8 @@ show_predictions:
 show_predictions_indiv:
   assets_out:
     fig: 
-      handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/predictions_{epoch}_{sim}.pdf"
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/predictions_{epoch}_{sim}.{fig_type}"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
@@ -188,8 +190,8 @@ show_predictions_indiv:
 show_predictions_bw:
   assets_out:
     fig: 
-      handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/predictions_{epoch}.pdf"
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/predictions_{epoch}.{fig_type}"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
@@ -203,8 +205,8 @@ show_predictions_bw:
 loss_plot:
   assets_out:
     fig:
-      handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/loss_plot.png"
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/loss_plot.{fig_type}"
   assets_in:
     loss_record: {stage: train, orig_name: loss_record}
   dir_name: Analysis_N_Loss_Plot

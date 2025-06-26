@@ -6,7 +6,7 @@ from omegaconf import DictConfig
 
 from tqdm import tqdm
 
-from cmbml.core import BaseStageExecutor, Split, Asset
+from cmbml.core import BaseStageExecutor, Split, Asset, AssetWithPathAlts
 from cmbml.utils import make_instrument, Instrument
 from cmbml.core.asset_handlers import NumpyPowerSpectrum  # Import for typing hint
 from cmbml.core.asset_handlers import TextPowerSpectrum
@@ -29,7 +29,7 @@ class PreprocessSpectraExecutor(BaseStageExecutor):
         out_ps_handler: NumpyPowerSpectrum
         out_ps_handler: TextPowerSpectrum
 
-        self.in_cmb_ps: Asset = self.assets_in["cmb_ps"]
+        self.in_cmb_ps: AssetWithPathAlts = self.assets_in["cmb_ps"]
         in_cmb_ps_handler: CambPowerSpectrum
 
         self.ells = parse_ells(cfg.model.use_ells)

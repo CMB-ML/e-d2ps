@@ -43,11 +43,19 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        for split in self.splits:
+            # if "F" not in split.name:
+            #     continue
+            with self.name_tracker.set_context("split", split.name):
+                logger.info(f"Processing split {split.name}")
+                self.process_split(split)
+
+    def process_split(self, split):
         mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
         show_max_l = self.display_lmax
+        use_alt_path = True if split.ps_fidu_fixed else False
 
-        split = self.splits[0]
         report_data = self.in_report.read()
         report_data['epoch'] = report_data['epoch'].astype(str)  # Ensure epoch is string for comparison
 
@@ -86,7 +94,7 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
                 for sim in show_sims:
                     with self.name_tracker.set_context("sim_num", sim):
                         ps_pred = self.in_ps_pred.read()
-                        ps_thry = self.in_ps_thry.read(use_alt_path=False)
+                        ps_thry = self.in_ps_thry.read(use_alt_path=use_alt_path)
                     all_theory_ps[sim] = ps_thry[:show_max_l]
                     all_pred_ps[sim] = ps_pred
 
@@ -134,20 +142,16 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
                                 color=color,
                                 label=label_thry)
 
-                    ax1.set_xlim([0, show_max_l])
-                    ax1.set_ylim([0, 6000])
-                    ax1.set_xlabel(r"$\ell$")
-                    ax1.set_ylabel(r"$D_\ell$")
-
-                    ax2.set_xlim([0, show_max_l])
-                    # ax2.set_ylim([0, 1.5])
-
-                    ax1.set_title(f"{split.name} Sim {this_sim}, Epoch {epoch}")
+                ax1.set_xlim([0, show_max_l])
+                ax1.set_ylim([0, 6000])
+                ax1.set_xlabel(r"$\ell$")
+                ax1.set_ylabel(r"$D_\ell$")
+                ax1.set_title(f"{split.name}, Epoch {epoch}")
 
                 # with self.name_tracker.set_context("sim_num", this_sim):
-                fn = self.out_fig.path
-                logger.info(f"Saving figure to {fn}")
-                self.out_fig.write()  # Make directory only
+                # fn = self.out_fig.path
+                # logger.info(f"Saving figure to {fn}")
+                self.out_fig.write(fig=fig)  # Make directory only
                 # fn = self.out_fig.path.name  # This may be more convenient
-                plt.savefig(fn)
-                plt.close(fig)
+                # plt.savefig(fn)
+                # plt.close(fig)

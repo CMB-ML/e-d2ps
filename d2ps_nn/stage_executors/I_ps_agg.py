@@ -21,21 +21,6 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 logger = logging.getLogger(__name__)
 
 
-class FrozenAsset(NamedTuple):
-    path: Path
-    handler: GenericHandler
-
-
-class TaskTarget(NamedTuple):
-    pred_asset: FrozenAsset
-    base_asset: FrozenAsset
-    baseline_label: str
-    split_name: str
-    sim_num: str
-    epoch: int
-    ells: np.ndarray
-
-
 class PowerSpectrumAggExecutor(BaseStageExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         # The following string must match the pipeline yaml

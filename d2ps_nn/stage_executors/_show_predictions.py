@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 
 from omegaconf import DictConfig
 
-from cmbml.core import Split, Asset
+from cmbml.core import Split, Asset, AssetWithPathAlts
 from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
+from d2ps_nn.utils.get_epochs import get_epochs_with_best
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         out_lut_handler: Figure
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
-        self.in_ps_thry: Asset = self.assets_in["ps_thry"]
+        self.in_ps_thry: AssetWithPathAlts = self.assets_in["ps_thry"]
         self.in_report: Asset = self.assets_in["report"]
         in_ps_prep_handler: TextPowerSpectrum
         in_ps_thry_handler: CambPowerSpectrum
@@ -32,21 +33,39 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         self.ells = parse_ells(cfg.model.use_ells)
         self.display_lmax = cfg.lmax
         self.display_n_sims = cfg.n_show_cap
+        self.fig_label = cfg.fig_model_name
+        self._model_epochs = cfg.use_epochs
+
+    @property
+    def model_epochs(self):
+        """
+        Returns the epochs to use for prediction.
+        If the model asset has a 'best' epoch, it will be included in the list.
+        """
+        return self._model_epochs
 
     def execute(self) -> None:
-        mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
+        self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_ps_pred, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
+        for split in self.splits:
+            # if "F" not in split.name:
+            #     continue
+            with self.name_tracker.set_context("split", split.name):
+                logger.info(f"Processing split {split.name}")
+                self.process_split(split)
+
+
+    def process_split(self, split: Split) -> None:
+        mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         show_max_l = self.display_lmax
-
-        split = self.splits[0]
-
         try:
             report_data = self.in_report.read()
         except FileNotFoundError:
             logger.warning(f"Report file {self.in_report.path} not found. Skipping report data.")
             report_data = None
+
+        use_path_alt = True if split.ps_fidu_fixed else False
 
         for epoch in self.model_epochs:
             all_theory_ps = []
@@ -62,7 +81,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                     )
                     with self.name_tracker.set_contexts(context):
                         ps_pred = self.in_ps_pred.read()
-                        ps_thry = self.in_ps_thry.read(use_alt_path=False)
+                        ps_thry = self.in_ps_thry.read(use_alt_path=use_path_alt)
                     all_theory_ps.append(ps_thry[:show_max_l])
                     all_pred_ps.append(ps_pred)
                     if self.display_n_sims and sim >= self.display_n_sims:
@@ -71,7 +90,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 full_ells = np.arange(show_max_l)
                 part_ells = self.ells
 
-                logger.info(f"There are {len(part_ells)} ells chosen.")
+                # logger.info(f"There are {len(part_ells)} ells chosen.")
 
                 fig, ax1 = plt.subplots(1, 1, figsize=(12, 6))
                 ax2 = ax1
@@ -110,14 +129,17 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 ax2.set_xlim([0, show_max_l])
                 # ax2.set_ylim([0, 1.5])
 
-                ax1.set_title(f"Predictions and theory, Epoch {epoch}")
+                ax1.set_title(f"Predictions and theory, Epoch {epoch}, {self.fig_label}")
 
+                # Unneeded currently; could be useful when re-adding sequential best epochs
+                # if isinstance(epoch, str) and epoch.startswith("best_"):
+                #     epoch = int(epoch.split('_')[1]) 
 
                 if report_data is not None:
                     key = ('mse', 'mean')
                     mask = (
                         (report_data[('split', '')] == split.name) &
-                        (report_data[('epoch', '')] == epoch)
+                        (report_data[('epoch', '')] == str(epoch))
                     )
                     subset = report_data.loc[mask]
                     if subset.empty:
@@ -128,9 +150,4 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
                 ax1.legend()
 
-                fn = self.out_fig.path
-                logger.info(f"Saving figure to {fn}")
-                self.out_fig.write()  # Make directory only
-                # fn = self.out_fig.path.name  # This may be more convenient
-                plt.savefig(fn)
-                plt.close(fig)
+                self.out_fig.write(fig=fig)  # Make directory only

@@ -2,7 +2,7 @@
 dtype     : float
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
-# Use ells follows numpy format [ell_min:ell_max:step] with multiple 
+# Use ells follows numpy format [ell_min:ell_max:step] with multiple
 #   ranges separated by commas; e.g. "[2:11],[20:201:10]"
 #   Remember that the max is not included in the range!
 use_ells  : "[2:${lmax}+1:1]"
@@ -34,7 +34,7 @@ train:
 
   # Data loading
   batch_size        : 5
-  num_loader_workers: 4
+  num_loader_workers: 0
   # Training parameters
   learning_rate     : 0.0002
 

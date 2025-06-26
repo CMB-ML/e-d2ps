@@ -44,9 +44,17 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        show_max_l = self.display_lmax
+        for split in self.splits:
+            # if "F" not in split.name:
+            #     continue
+            with self.name_tracker.set_context("split", split.name):
+                logger.info(f"Processing split {split.name}")
+                self.process_split(split)
 
-        split = self.splits[0]
+    def process_split(self, split: Split) -> None:
+        show_max_l = self.display_lmax
+        use_alt_path = True if split.ps_fidu_fixed else False
+
         report_data = self.in_report.read()
         report_data['epoch'] = report_data['epoch'].astype(str)  # Ensure epoch is string for comparison
 
@@ -85,7 +93,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                 for sim in show_sims:
                     with self.name_tracker.set_context("sim_num", sim):
                         ps_pred = self.in_ps_pred.read()
-                        ps_thry = self.in_ps_thry.read(use_alt_path=False)
+                        ps_thry = self.in_ps_thry.read(use_alt_path=use_alt_path)
                     all_theory_ps[sim] = ps_thry[:show_max_l]
                     all_pred_ps[sim] = ps_pred
 
@@ -139,9 +147,9 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                         ax1.text(0.95, 0.95, f"MSE: {mse:.1e}")
 
                     with self.name_tracker.set_context("sim_num", this_sim):
-                        fn = self.out_fig.path
-                        logger.info(f"Saving figure to {fn}")
-                        self.out_fig.write()  # Make directory only
+                        # fn = self.out_fig.path
+                        # logger.info(f"Saving figure to {fn}")
+                        self.out_fig.write(fig=fig)  # Make directory only
                     # fn = self.out_fig.path.name  # This may be more convenient
-                    plt.savefig(fn)
-                    plt.close(fig)
+                    # plt.savefig(fn)
+                    # plt.close(fig)

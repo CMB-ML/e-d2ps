@@ -17,6 +17,7 @@ from d2ps_nn.encdec import SimpleEncDec
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.get_epochs import get_epochs_with_best
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,18 @@ class PredictExecutor(BasePyTorchModelExecutor):
         self.model_n_levels        = cfg.model.n_levels
         self.model_note            = cfg.model.note
 
+        self._model_epochs = cfg.use_epochs
+
+    @property
+    def model_epochs(self):
+        """
+        Returns the epochs to use for prediction.
+        If the model asset has a 'best' epoch, it will be included in the list.
+        """
+        return self._model_epochs
+
     def execute(self) -> None:
+        self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_model_asset, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         # Set up scaling for post processing

@@ -34,6 +34,8 @@ from d2ps_nn import (
     PowerSpectrumAnalysisExecutor,
     PowerSpectrumAggExecutor,
     ShowPredictionsExecutor,
+    ShowBWPredictionsExecutor,
+    ShowIndivPredictionsExecutor,
     LossPlotExecutor
     )
 from cmbml.analysis import (
@@ -56,29 +58,29 @@ def run(cfg):
     # pipeline_context.add_pipe(HydraConfigCheckerExecutor)
 
     # # Cleaning: Preprocessing
-    pipeline_context.add_pipe(MakeLutExecutor)
-    pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
-    pipeline_context.add_pipe(PreprocessMapsExecutor)
-    pipeline_context.add_pipe(PreprocessSpectraExecutor)
+    # pipeline_context.add_pipe(MakeLutExecutor)
+    # pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
+    # pipeline_context.add_pipe(PreprocessMapsExecutor)
+    # pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
-    pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    pipeline_context.add_pipe(CheckGPULoadExecutor)
-    pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    pipeline_context.add_pipe(CheckGPULoadExecutor)
+    # # pipeline_context.add_pipe(ShowChosenEllsExecutor)
+    # pipeline_context.add_pipe(CheckGPULoadExecutor)
 
-    # Generating realization power spectra (not needed currently; predicting just the Theory PS)
-    # pipeline_context.add_pipe(MaskCreatorExecutor)
-    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
+    # # pipeline_context.add_pipe(MaskCreatorExecutor)
+    # # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
-    # Cleaning: Training and Prediction
-    pipeline_context.add_pipe(TrainingExecutor)
-    pipeline_context.add_pipe(PredictExecutor)
+    # # Cleaning: Training and Prediction
+    # pipeline_context.add_pipe(TrainingExecutor)
+    # pipeline_context.add_pipe(PredictExecutor)
 
-    pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
-    pipeline_context.add_pipe(PowerSpectrumAggExecutor)
+    # pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
+    # pipeline_context.add_pipe(PowerSpectrumAggExecutor)
 
     # Analysis and Visualization
     pipeline_context.add_pipe(ShowPredictionsExecutor)
+    pipeline_context.add_pipe(ShowBWPredictionsExecutor)
+    pipeline_context.add_pipe(ShowIndivPredictionsExecutor)
     pipeline_context.add_pipe(LossPlotExecutor)
 
     # Bulk processing
