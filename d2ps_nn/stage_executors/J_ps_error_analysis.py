@@ -77,8 +77,8 @@ class ErrorAnalysisExecutor(BaseStageExecutor):
         std_dev = np.std(all_pred_ps, axis=0)
         pred_mean = np.mean(all_pred_ps, axis=0)
         chi_square = np.sum(((thry_ps - pred_mean) ** 2) / std_dev**2)
-        # dof = number of simulations - number of cosmological parameters
-        chi_square_per_dof = chi_square / (len(all_pred_ps) - self.num_cosmo_params)
+        # dof = number of Cls - number of cosmological parameters
+        chi_square_per_dof = chi_square / (len(thry_ps) - self.num_cosmo_params)
 
         # Collect results
         report.append({
