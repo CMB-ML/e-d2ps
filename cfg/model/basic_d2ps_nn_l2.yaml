@@ -43,7 +43,7 @@ train:
   restart_epoch     : null  # Set to null to create a new model, or give a checkpoint number
 
   # Checkpointing
-  earliest_best     : 10  # Earliest epoch to save the best model
+  earliest_best     : 0  # Earliest epoch to save the best model
                           #   when debugging with small datasets and low total epochs, 
                           #   set to 0 to allow finding a best model at the very start
   checkpoint_every  : 100     # checkpoint every this number of epochs
