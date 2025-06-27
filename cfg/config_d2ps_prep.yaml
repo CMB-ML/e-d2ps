@@ -16,18 +16,16 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
-# dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
 working_dir        : "d2ps-prep/"
-# working_dir        : "${features_type}2ps-l2-4det/"
-fig_model_name     : "${features_type} to PS, 1250ell, ${ps_source}"
+fig_model_name     : "${features_type} to PS, 1279ell, ${ps_source}"
 hydra:
-  mode: MULTIRUN
-  sweeper:
-    params:
-      ps_source    : wmap_best_fit
-      # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
-      features_type: obs
-      # features_type: cmb, obs
+  # mode: MULTIRUN
+  # sweeper:
+  #   params:
+  #     ps_source    : wmap_best_fit
+  #     # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
+  #     features_type: obs
+  #     # features_type: cmb, obs
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -36,9 +34,7 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
 
-ps_source          : ???  # placeholder
-learning_rate: 2e-4
-iter_num: 0
+ps_source          : wmap_best_fit  # placeholder
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
@@ -73,4 +69,4 @@ n_show_cap           : 10
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : valid  # Either "test" or "valid" ("train" should work, but is not recommended)
+run_inference_on      : test  # Either "test" or "valid" ("train" should work, but is not recommended)
