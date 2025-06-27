@@ -64,18 +64,18 @@ def run(cfg):
     # pipeline_context.add_pipe(PreprocessSpectraExecutor)
 
     # # pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    # pipeline_context.add_pipe(CheckGPULoadExecutor)
+    pipeline_context.add_pipe(CheckGPULoadExecutor)
 
     # # Generating realization power spectra (not needed currently; predicting just the Theory PS)
     # # pipeline_context.add_pipe(MaskCreatorExecutor)
     # # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
 
     # # Cleaning: Training and Prediction
-    # pipeline_context.add_pipe(TrainingExecutor)
-    # pipeline_context.add_pipe(PredictExecutor)
+    pipeline_context.add_pipe(TrainingExecutor)
+    pipeline_context.add_pipe(PredictExecutor)
 
-    # pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
-    # pipeline_context.add_pipe(PowerSpectrumAggExecutor)
+    pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
+    pipeline_context.add_pipe(PowerSpectrumAggExecutor)
 
     # Analysis and Visualization
     pipeline_context.add_pipe(ShowPredictionsExecutor)
