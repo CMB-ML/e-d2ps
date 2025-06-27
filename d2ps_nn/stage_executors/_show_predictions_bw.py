@@ -142,8 +142,22 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
                                 color=color,
                                 label=label_thry)
 
+                if report_data is not None:
+                    key = 'mse'
+                    mask = (
+                        (report_data['sim'] == this_sim) &
+                        (report_data['split'] == split.name) &
+                        (report_data['epoch'] == str(epoch))
+                    )
+                    subset = report_data.loc[mask]
+                    if subset.empty:
+                        raise ValueError(f"No matching rows for sim={this_sim}, split={split.name}, epoch={epoch}")
+                    else:
+                        mse = subset[key].values[0]
+                    ax1.text(20, 100, f"MSE: {mse:.1e}")
+
                 ax1.set_xlim([0, show_max_l])
-                ax1.set_ylim([0, 6000])
+                ax1.set_ylim([0, 6700])
                 ax1.set_xlabel(r"$\ell$")
                 ax1.set_ylabel(r"$D_\ell$")
                 ax1.set_title(f"{split.name}, Epoch {epoch}")

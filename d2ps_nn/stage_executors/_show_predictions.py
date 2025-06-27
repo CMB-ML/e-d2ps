@@ -122,7 +122,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                                 color=mpl_colors[i % len(mpl_colors)])
 
                 ax1.set_xlim([0, show_max_l])
-                ax1.set_ylim([0, 6000])
+                ax1.set_ylim([0, 6700])
                 ax1.set_xlabel(r"$\ell$")
                 ax1.set_ylabel(r"$D_\ell$")
 
@@ -146,8 +146,6 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                         raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
                     else:
                         mse = subset[key].values[0]
-                    ax1.text(0.95, 0.95, f"MSE: {mse:.1e}")
-
-                ax1.legend()
+                    ax1.text(20, 100, f"MSE: {mse:.1e}")
 
                 self.out_fig.write(fig=fig)  # Make directory only

@@ -117,7 +117,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                     # ax2.scatter(part_ells, all_pred_ps[sim], alpha=0.5, zorder=10)
 
                     ax1.set_xlim([0, show_max_l])
-                    ax1.set_ylim([0, 6000])
+                    ax1.set_ylim([0, 6700])
                     ax1.set_xlabel(r"$\ell$")
                     ax1.set_ylabel(r"$D_\ell$")
 
@@ -144,7 +144,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                             raise ValueError(f"No matching rows for sim={this_sim}, split={split.name}, epoch={epoch}")
                         else:
                             mse = subset[key].values[0]
-                        ax1.text(0.95, 0.95, f"MSE: {mse:.1e}")
+                        ax1.text(20, 100, f"MSE: {mse:.1e}")
 
                     with self.name_tracker.set_context("sim_num", this_sim):
                         # fn = self.out_fig.path
