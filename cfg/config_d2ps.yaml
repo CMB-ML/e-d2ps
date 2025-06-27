@@ -16,7 +16,7 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
-working_dir        : "${features_type}2ps_try/"
+working_dir        : "${features_type}2ps_try_bucket_valid_loss/"
 prep_working_dir   : "d2ps-prep"
 fig_model_name     : "${features_type} to PS, 1279ell, ${ps_source}"
 hydra:

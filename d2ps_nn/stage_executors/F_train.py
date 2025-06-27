@@ -65,7 +65,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
+        loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss', 'Valid Bucket 1 Loss', 'Valid Bucket 2 Loss']
         self.out_loss_record.write(data=loss_record_headers)
 
         # When using Wishart loss, we need to skip the monopole and dipole
@@ -143,6 +143,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
+            total_instances = 0
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
                 model.train()
                 train_loss = 0
@@ -159,30 +160,50 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # exit()
 
-                    batch_train_loss = loss_function(output, train_label)
+                    this_batch_size = train_features.shape[0]  # Batch size may be different for the last batch
+                    batch_train_loss = loss_function(output, train_label) * this_batch_size
                     batch_train_loss.backward()
                     optimizer.step()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     train_loss += batch_train_loss.item()
-                train_loss /= len(train_dataloader)
+                    total_instances += this_batch_size
+                train_loss /= total_instances
                 all_train_loss.append(train_loss)
             logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
 
             # Validation
             model.eval()
-            valid_loss = 0
             with torch.no_grad():
+                valid_loss = 0
+                total_instances = 0
+                bucket1_loss = 0
+                bucket2_loss = 0
+                bucket1_size = 0
+                bucket2_size = 0
+                bucket1 = False
                 for valid_features, valid_label in valid_dataloader:
                     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
                     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
                     output = model(valid_features)
-                    valid_loss += loss_function(output, valid_label).item()
-                valid_loss /= len(valid_dataloader)
+                    this_batch_size = valid_features.shape[0]  # Batch size may be different for the last batch
+                    valid_loss += loss_function(output, valid_label).item() * this_batch_size
+                    total_instances += this_batch_size
+                    bucket1 = not bucket1
+                    if bucket1:
+                        bucket1_loss += loss_function(output, valid_label).item() * this_batch_size
+                        bucket1_size += this_batch_size
+                    else:
+                        bucket2_loss += loss_function(output, valid_label).item() * this_batch_size
+                        bucket2_size += this_batch_size
+                valid_loss /= total_instances
+                bucket1_loss /= bucket1_size
+                bucket2_loss /= bucket2_size
                 all_valid_loss.append(valid_loss)
             note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
             logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
+            logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}}, Valid Bucket 1 loss: {bucket1_loss:.02e}, Valid Bucket 2 loss: {bucket2_loss:.02e}")
 
-            self.out_loss_record.append([epoch + 1, train_loss, valid_loss])
+            self.out_loss_record.append([epoch + 1, train_loss, valid_loss, bucket1_loss, bucket2_loss])
 
             is_best_condition_a = valid_loss == min(all_valid_loss)
             is_best_condition_b = epoch >= self.earliest_best
