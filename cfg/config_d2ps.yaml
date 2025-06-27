@@ -16,18 +16,17 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
-# dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps/"
+working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_try/"
 # working_dir        : "${features_type}2ps-l2-4det/"
-fig_model_name     : "${features_type} to PS, 1250ell, ${ps_source}"
+prep_working_dir   : "d2ps-prep"
+fig_model_name     : "${features_type} to PS, 1279ell, ${ps_source}"
 hydra:
-  mode: MULTIRUN
-  sweeper:
-    params:
-      ps_source    : wmap_best_fit
-      # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
-      features_type: obs
-      # features_type: cmb, obs
+  # mode: MULTIRUN
+  # sweeper:
+  #   params:
+  #     activation      : relu, gelu
+  #     model.batchnorm : ED, # E, D  # O: None, E: Encoder, D: Decoder, ED: Both
+  #     iter_num        : 1 #,2,3
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -36,9 +35,8 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
 
-ps_source          : ???  # placeholder
+ps_source          : wmap_best_fit  # placeholder
 
-learning_rate: 2e-4
 iter_num: 0
 
 fig_type: png
@@ -59,7 +57,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 150
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
