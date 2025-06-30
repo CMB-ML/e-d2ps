@@ -19,12 +19,12 @@ class DoubleConv(nn.Module):
         layers.append(nn.Conv2d(in_features, out_channels, 
                       kernel_size=3, padding=1, bias=False))
         if use_batch_norm:
-            layers.append(nn.BatchNorm2d)
+            layers.append(nn.BatchNorm2d())
         layers.append(nn.ReLU(inplace=True))
         layers.append(nn.Conv2d(out_channels, out_channels, 
                       kernel_size=3, padding=1, bias=False))
         if use_batch_norm:
-            layers.append(nn.BatchNorm2d)
+            layers.append(nn.BatchNorm2d())
         layers.append(nn.ReLU(inplace=True))
 
         self.double_conv = nn.Sequential(*layers)
@@ -61,7 +61,7 @@ class FCNDecoder(nn.Module):
         layers.append(nn.Linear(in_channels, mid_channels))
 
         if use_batch_norm:
-            layers.append(nn.BatchNorm2d)
+            layers.append(nn.BatchNorm2d())
 
         layers.append(nn.ReLU(inplace=True))
         layers.append(nn.Linear(mid_channels, out_channels))
