@@ -49,7 +49,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
         self.scale_ps_choice  = cfg.model.scale_ps
 
         self.final_activation      = cfg.model.final_activation
-        self.use_batch_norm        = cfg.model.use_batch_norm
+        self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
+        self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
         self.model_n_init_features = cfg.model.n_init_features
         self.model_n_levels        = cfg.model.n_levels
         self.model_note            = cfg.model.note
