@@ -61,7 +61,7 @@ class FCNDecoder(nn.Module):
         layers.append(nn.Linear(in_channels, mid_channels))
 
         if use_batch_norm:
-            layers.append(nn.BatchNorm2d(mid_channels))
+            layers.append(nn.BatchNorm1d(mid_channels))
 
         layers.append(nn.ReLU(inplace=True))
         layers.append(nn.Linear(mid_channels, out_channels))
@@ -84,7 +84,8 @@ class SimpleEncDec(nn.Module):
                  final_activation=None,
                  n_init_features=16,
                  n_levels=5,
-                 use_batch_norm=True,
+                 use_batch_norm_enc=True,
+                 use_batch_norm_dec=True,
                  note='',
                  ):
         super().__init__()
@@ -92,13 +93,13 @@ class SimpleEncDec(nn.Module):
 
         self.in_c = DoubleConv(in_features=n_in_channels,
                                out_channels=n_init_features,
-                               use_batch_norm=use_batch_norm)
+                               use_batch_norm=use_batch_norm_enc)
 
         downs = []
         curr_features = n_init_features
         for _ in range(n_levels):
             downs.append(Down(curr_features, 
-                              use_batch_norm=use_batch_norm))
+                              use_batch_norm=use_batch_norm_enc))
             curr_features *= 2
             # nside /= 2
         self.dns = nn.ModuleList(downs)
@@ -109,7 +110,7 @@ class SimpleEncDec(nn.Module):
             mid_channels=curr_features // 2,
             # out_channels=l_max + 1,
             out_channels=n_ells,
-            use_batch_norm=use_batch_norm,
+            use_batch_norm=use_batch_norm_dec,
             final_activation=final_activation
         )
 
