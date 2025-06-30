@@ -102,7 +102,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
                                   final_activation=final_activation,
                                   n_init_features=self.model_n_init_features,
                                   n_levels=self.model_n_levels,
-                                  use_batch_norm=self.use_batch_norm,
+                                  use_batch_norm_enc=self.use_batch_norm_enc,
+                                  use_batch_norm_dec=self.use_batch_norm_dec,
                                   note=self.model_note
                                   )
 
