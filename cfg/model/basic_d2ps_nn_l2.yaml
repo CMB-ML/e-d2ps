@@ -14,6 +14,7 @@ use_ells  : "[2:${lmax}+1:1]"
 # For non-Wishart loss function
 scale_ps  : null
 final_activation: null
+use_batch_norm: true
 
 # For Wishart loss function
 # scale_ps  : Cl

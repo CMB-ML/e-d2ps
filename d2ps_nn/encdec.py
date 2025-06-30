@@ -11,28 +11,35 @@ import torch.nn.functional as F
 
 
 class DoubleConv(nn.Module):
-    def __init__(self, in_features, out_channels):
+    def __init__(self, in_features, out_channels, use_batch_norm):
         super().__init__()
-        self.double_conv = nn.Sequential(
-            nn.Conv2d(in_features, out_channels, 
-                      kernel_size=3, padding=1, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, 
-                      kernel_size=3, padding=1, bias=False),
-            nn.ReLU(inplace=True)
-        )
+
+        layers = []
+
+        layers.append(nn.Conv2d(in_features, out_channels, 
+                      kernel_size=3, padding=1, bias=False))
+        if use_batch_norm:
+            layers.append(nn.BatchNorm2d)
+        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.Conv2d(out_channels, out_channels, 
+                      kernel_size=3, padding=1, bias=False))
+        if use_batch_norm:
+            layers.append(nn.BatchNorm2d)
+        layers.append(nn.ReLU(inplace=True))
+
+        self.double_conv = nn.Sequential(*layers)
 
     def forward(self, x):
         return self.double_conv(x)
 
 
 class Down(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, use_batch_norm):
         super().__init__()
         out_channels = in_channels * 2
         self.down_conv = nn.Sequential(
             nn.MaxPool2d(kernel_size=2),
-            DoubleConv(in_channels, out_channels)
+            DoubleConv(in_channels, out_channels, use_batch_norm)
         )
 
     def forward(self, x):
@@ -41,15 +48,24 @@ class Down(nn.Module):
 
 
 class FCNDecoder(nn.Module):
-    def __init__(self, in_channels, mid_channels, out_channels, final_activation=None):
+    def __init__(self, in_channels, 
+                 mid_channels, 
+                 out_channels, 
+                 use_batch_norm,
+                 final_activation=None
+                 ):
         super().__init__()
-        layers = [
-            nn.AdaptiveAvgPool2d((1,1)),  # Squish out spatial information
-            nn.Flatten(),
-            nn.Linear(in_channels, mid_channels),
-            nn.ReLU(inplace=True),
-            nn.Linear(mid_channels, out_channels)
-        ]
+        layers = []
+        layers.append(nn.AdaptiveAvgPool2d((1,1)))  # Squish out spatial information
+        layers.append(nn.Flatten())
+        layers.append(nn.Linear(in_channels, mid_channels))
+
+        if use_batch_norm:
+            layers.append(nn.BatchNorm2d)
+
+        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.Linear(mid_channels, out_channels))
+
         if final_activation is not None:
             layers.append(final_activation)
         self.fc = nn.Sequential(*layers)
@@ -68,18 +84,21 @@ class SimpleEncDec(nn.Module):
                  final_activation=None,
                  n_init_features=16,
                  n_levels=5,
+                 use_batch_norm=True,
                  note='',
                  ):
         super().__init__()
         self.note = note
 
         self.in_c = DoubleConv(in_features=n_in_channels,
-                               out_channels=n_init_features)
+                               out_channels=n_init_features,
+                               use_batch_norm=use_batch_norm)
 
         downs = []
         curr_features = n_init_features
         for _ in range(n_levels):
-            downs.append(Down(curr_features))
+            downs.append(Down(curr_features, 
+                              use_batch_norm=use_batch_norm))
             curr_features *= 2
             # nside /= 2
         self.dns = nn.ModuleList(downs)
@@ -90,6 +109,7 @@ class SimpleEncDec(nn.Module):
             mid_channels=curr_features // 2,
             # out_channels=l_max + 1,
             out_channels=n_ells,
+            use_batch_norm=use_batch_norm,
             final_activation=final_activation
         )
 

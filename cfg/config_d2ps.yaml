@@ -16,16 +16,16 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
-working_dir        : "${features_type}2ps_try/"
+working_dir        : "${features_type}2ps_try_${iter_num}/"
 prep_working_dir   : "d2ps-prep"
-fig_model_name     : "${features_type} to PS, 1279ell, ${ps_source}"
+fig_model_name     : "${features_type} to PS, 1280ell, ${ps_source}"
 hydra:
-  # mode: MULTIRUN
-  # sweeper:
-  #   params:
-  #     activation      : relu, gelu
-  #     model.batchnorm : ED, # E, D  # O: None, E: Encoder, D: Decoder, ED: Both
-  #     iter_num        : 1 #,2,3
+  mode: MULTIRUN
+  sweeper:
+    params:
+      ps_source    : wmap_best_fit
+      features_type: obs
+      iter_num    :  1  #, 2, 3, 4, 5, 6, 7, 8, 9, 10
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:

@@ -5,14 +5,16 @@ make_lut:
   assets_out:
     lut: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/${trained_wd}{stage}/lut.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/lut.npy"
+      # path_template: "{root}/{dataset}/${trained_wd}{stage}/lut.npy"
   dir_name: B_LUT
 
 get_dataset_stats:
   assets_out:
     dataset_stats: 
       handler: Config
-      path_template: "{root}/{dataset}/${trained_wd}{stage}/feature_stats.yaml"
+      path_template: "{root}/{dataset}/{working}{stage}/feature_stats.yaml"
+      # path_template: "{root}/{dataset}/${trained_wd}{stage}/feature_stats.yaml"
   assets_in:
     cmb_map: {stage: make_sims}
     obs_maps: {stage: make_sims}
@@ -35,8 +37,8 @@ preprocess_maps:
     obs_maps: 
       stage: make_sims 
       dataset: ${planck_ds}
-    dataset_stats: {stage: get_dataset_stats}
-    lut: {stage: make_lut}
+    dataset_stats: {stage: get_dataset_stats, working: d2ps-prep/}
+    lut: {stage: make_lut, working: d2ps-prep/}
   dir_name: D_Prep_Observs
   splits:
     - test
@@ -65,7 +67,7 @@ train:
     loss_record:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/${trained_wd}{stage}/loss_record.csv"
-  assets_in:
+  assets_in:  # No training occurs, this is a placeholder
     cmb_ps: {stage: preprocess_spectra}
     cmb_map: {stage: preprocess_maps}
     model: {stage: train}
@@ -179,7 +181,7 @@ bundle:
 show_predictions:
   assets_out:
     fig: 
-      handler: Figure
+      handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/planck_predictions_{epoch}.png"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}

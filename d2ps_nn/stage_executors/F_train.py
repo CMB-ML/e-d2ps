@@ -56,6 +56,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         # When using Wishart loss, we need to skip the monopole and dipole
         # self.skip_mono_dipole = cfg.model.train.loss == "wishart"
         self.final_activation = cfg.model.final_activation
+        self.use_batch_norm = cfg.model.use_batch_norm
 
         self.model_n_init_features = cfg.model.n_init_features
         self.model_n_levels = cfg.model.n_levels
@@ -86,6 +87,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                              final_activation=final_activation,
                              n_init_features=self.model_n_init_features,
                              n_levels=self.model_n_levels,
+                             use_batch_norm=self.use_batch_norm,
                              note=self.model_note
                              )
 

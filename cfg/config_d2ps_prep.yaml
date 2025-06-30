@@ -17,7 +17,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
 working_dir        : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, 1279ell, ${ps_source}"
+fig_model_name     : "${features_type} to PS, 1280ell, ${ps_source}"
 hydra:
   # mode: MULTIRUN
   # sweeper:
@@ -52,7 +52,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 150
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

@@ -15,11 +15,19 @@ defaults:
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
-dataset_name       : ${scenario.map_fields}_${scenario.nside}_1450
+dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
-working_dir        : "${features_type}2ps-l2-on-planck/"
-fig_model_name     : "d2ps"
+working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}_on_Planck/"
+fig_model_name     : "${features_type} to PS, Model using BN, On Planck, Iteration ${iter_num}"
 hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      ps_source    : wmap_best_fit
+      # ps_source    : wmap9_standard, wmap_best_fit, planck_best_fit
+      features_type: obs
+      # features_type: cmb, obs
+      iter_num    :  1  #, 2, 3, 4, 5, 6, 7, 8, 9, 10
   run:
     dir            : Logs/${now:%Y-%m-%d-%H-%M-%S}
   verbose          : false
@@ -29,12 +37,17 @@ hydra:
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
 nside              : 128
-lmax               : 320
+lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
 # lmax               : 2048 # 512
 
+# TODO: Organize and label these better
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "${features_type}2ps-l2/"
+trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_try_${iter_num}/"
+# trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_2ps_try/"
+ps_source          : ???  # placeholder
+iter_num: 0
+fig_type: png
 
 # Features type should be either "cmb" or "obs"
 # features_type      : cmb
@@ -45,11 +58,11 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 200 # 3
+num_epochs         : 300 # 3
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : [1,2,3,5,10,25,50,75,100,150,200]
+use_epochs           : ["best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
