@@ -32,3 +32,5 @@ ps_functions: &stat_funcs
     kwargs: {normalization: "euclidean"}
 ps_operations:
   num_processes: 10
+# Number of cosmological parameters could vary based on the model, so we want to normalize chi-square test
+num_cosmo_params: 6
