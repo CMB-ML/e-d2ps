@@ -36,6 +36,8 @@ from d2ps_nn import (
     ShowPredictionsExecutor,
     ShowBWPredictionsExecutor,
     ShowIndivPredictionsExecutor,
+    ErrorAnalysisExecutor,
+    ShowPredictionsWithChiSquareExecutor,
     LossPlotExecutor
     )
 from cmbml.analysis import (
@@ -79,9 +81,13 @@ def run(cfg):
 
     # Analysis and Visualization
     pipeline_context.add_pipe(ShowPredictionsExecutor)
+    pipeline_context.add_pipe(ShowPredictionsWithChiSquareExecutor)
     pipeline_context.add_pipe(ShowBWPredictionsExecutor)
     pipeline_context.add_pipe(ShowIndivPredictionsExecutor)
     pipeline_context.add_pipe(LossPlotExecutor)
+
+    pipeline_context.add_pipe(ErrorAnalysisExecutor)
+    pipeline_context.add_pipe(ShowPredictionsWithChiSquareExecutor)
 
     # Bulk processing
     # pipeline_context.add_pipe(PSBundleExecutor)

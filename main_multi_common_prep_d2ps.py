@@ -33,7 +33,7 @@ from d2ps_nn import (
     ShowChosenEllsExecutor,
     PowerSpectrumAnalysisExecutor,
     PowerSpectrumAggExecutor,
-    ShowPredictionsExecutor,
+    ShowPredictionsWithChiSquareExecutor,
     LossPlotExecutor
     )
 from cmbml.analysis import (

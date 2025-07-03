@@ -16,12 +16,13 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 logger = logging.getLogger(__name__)
 
 
-class ShowPredictionsExecutor(BaseStageExecutor):
+class ShowPredictionsWithChiSquareExecutor(BaseStageExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="show_predictions_error_analysis")
 
         self.out_fig: Asset = self.assets_out["fig"]
-        out_lut_handler: Figure
+        self.out_fig: Asset = self.assets_out["fig_many"]
+        out_fig_handler: Figure
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
         self.in_ps_thry: Asset = self.assets_in["ps_thry"]

@@ -259,7 +259,10 @@ show_predictions_error_analysis:
   assets_out:
     fig: 
       handler: Figure
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_mean_{epoch}.png"
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_mean_{epoch}.{fig_type}"
+    fig_many: 
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_mean_{epoch}_many.{fig_type}"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
@@ -269,26 +272,4 @@ show_predictions_error_analysis:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_M_Show_Predictions_Error_Analysis
   make_stage_log: False
-
-bundle:
-  assets_out:
-    ps_pred: 
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_e{epoch}.npy"
-    ps_real:
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_real.npy"
-    ps_thry:
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_theory.npy"
-  assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
-    ps_real: {stage: make_ps, orig_name: auto_real}
-    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
-  splits:
-    - ${splits.run_inference_on}
-  epochs: ${use_epochs_ps_stats}
-  dir_name: Analysis_K_Bundle
-  # make_stage_log: True
-  make_stage_log: False 
 
