@@ -182,7 +182,7 @@ show_predictions:
   assets_out:
     fig: 
       handler: MPLFigure
-      path_template: "{root}/{dataset}/{working}{stage}/planck_predictions_{epoch}.png"
+      path_template: "{root}/{dataset}/{working}{stage}/planck_predictions_{epoch}.{fig_type}"
   assets_in:
     ps_pred: {stage: predict, orig_name: cmb_ps}
     # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}

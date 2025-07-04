@@ -33,7 +33,7 @@ from d2ps_nn import (
     ShowChosenEllsExecutor,
     PowerSpectrumAnalysisExecutor,
     PowerSpectrumAggExecutor,
-    ShowPredictionsWithChiSquareExecutor
+    ShowPredictionsExecutor
     )
 from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
@@ -57,7 +57,7 @@ def run(cfg):
     pipeline_context.add_pipe(PreprocessMapsExecutor)
     pipeline_context.add_pipe(PreprocessSpectraExecutor)
     pipeline_context.add_pipe(PredictExecutor)
-    pipeline_context.add_pipe(ShowPredictionsWithChiSquareExecutor)
+    pipeline_context.add_pipe(ShowPredictionsExecutor)
 
     pipeline_context.prerun_pipeline()
 

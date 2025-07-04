@@ -15,9 +15,9 @@ defaults:
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
-dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
+dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_wmap_best_fit_3_fixed
 # dataset_name       : ${scenario.map_fields}_${scenario.nside}_${splits.name}
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}_on_Planck/"
+working_dir        : "${features_type}2ps_temp_figs_on_Planck/"
 fig_model_name     : "${features_type} to PS, Model using BN, On Planck, Iteration ${iter_num}"
 hydra:
   mode: MULTIRUN
@@ -43,7 +43,7 @@ lmax               : 1280
 
 # TODO: Organize and label these better
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_try_${iter_num}/"
+trained_wd: "${features_type}2ps_temp_figs/"
 # trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_2ps_try/"
 ps_source          : ???  # placeholder
 iter_num: 0
