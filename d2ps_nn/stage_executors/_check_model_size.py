@@ -37,6 +37,13 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         self.dtype         = self.dtype_mapping[cfg.model.dtype]  # TODO: Ensure this is used
 
         self.choose_device(cfg.model.train.device)  # See parent class
+        if isinstance(self.device, torch.device):
+            if self.device.type == 'cuda' and self.device.index is not None:
+                torch.cuda.set_device(self.device.index)
+        elif isinstance(self.device, str) and self.device.startswith("cuda:"):
+            torch.cuda.set_device(int(self.device.split(":")[1]))
+        elif isinstance(self.device, int):
+            torch.cuda.set_device(self.device)
         self.batch_size    = cfg.model.train.batch_size
         self.num_workers   = cfg.model.train.num_loader_workers
         self.learning_rate = cfg.model.train.learning_rate

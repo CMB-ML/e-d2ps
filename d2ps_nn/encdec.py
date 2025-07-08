@@ -85,7 +85,7 @@ class SimpleEncDec(nn.Module):
                  n_init_features=16,
                  n_levels=5,
                  use_batch_norm_enc=True,
-                 use_batch_norm_dec=True,
+                 use_batch_norm_dec=False,
                  note='',
                  ):
         super().__init__()
