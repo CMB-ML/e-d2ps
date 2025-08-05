@@ -56,7 +56,7 @@ class FCNDecoder(nn.Module):
                  ):
         super().__init__()
         layers = []
-        layers.append(nn.AdaptiveAvgPool2d((1,1)))  # Squish out spatial information
+        layers.append(nn.AdaptiveMaxPool2d((1,1)))  # Squish out spatial information
         layers.append(nn.Flatten())
         layers.append(nn.Linear(in_channels, mid_channels))
 
