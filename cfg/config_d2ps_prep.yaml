@@ -15,7 +15,7 @@ defaults:
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
-dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_${ps_source}_3_fixed
+dataset_name       : I_128_1600
 working_dir        : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, 1280ell, ${ps_source}"
 hydra:
@@ -34,14 +34,13 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
 
-ps_source          : wmap_best_fit  # placeholder
+# ps_source          : wmap_best_fit  # placeholder
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
 nside              : 128
-# lmax               : 320
 # nside              : 512  # When changing this, change mask apodization as well!
 lmax               : 1280 # 512
 
