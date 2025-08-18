@@ -15,17 +15,15 @@ defaults:
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
-dataset_name       : ${scenario.map_fields}_${scenario.nside}_1600_wmap_best_fit_3_fixed
-working_dir        : "${features_type}2ps_temp_figs/"
+dataset_name       : I_128_1600
+working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
 prep_working_dir   : "d2ps-prep"
-fig_model_name     : "${features_type} to PS, 1280ell, ${ps_source}"
+fig_model_name     : "${features_type} to PS, 1280ell"
 hydra:
   # mode: MULTIRUN
   # sweeper:
   #   params:
-  #     ps_source    : wmap_best_fit
-  #     features_type: obs
-  #     iter_num    :  1  #, 2, 3, 4, 5, 6, 7, 8, 9, 10
+  #     iter_num    :  2, 3, 4, 5, 6, 7, 8, 9, 10
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -34,9 +32,7 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
 
-ps_source          : wmap_best_fit  # placeholder
-
-iter_num: 0
+iter_num: 1
 
 fig_type: pdf
 
@@ -47,7 +43,6 @@ fig_type: pdf
 nside              : 128
 lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
-# lmax               : 2048 # 512
 
 # Features type should be either "cmb" or "obs"
 # features_type      : cmb
