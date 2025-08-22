@@ -1,0 +1,10 @@
+defaults:
+  - config_d2ps
+  - override pipeline: assembly_on_planck_multi
+  - override splits: "1-1"
+  - _self_
+
+working_dir        : "d2ps-prep/"
+prep_working_dir   : ${working_dir}
+
+planck_ds: PlanckAsDataset_${scenario.nside}

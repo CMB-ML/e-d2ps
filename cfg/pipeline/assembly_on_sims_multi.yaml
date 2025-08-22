@@ -1,0 +1,7 @@
+defaults:
+  - assembly_sim
+  # Mostly, use pipeline for simulations:
+  - pipes_on_sims
+  # Adjustments needed:
+  - adapt_multi
+  - _self_

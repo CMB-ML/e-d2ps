@@ -1,0 +1,15 @@
+defaults:
+  - assembly_planck_as_sim
+  # Mostly, use pipeline for simulations:
+  - pipes_on_sims
+  # Adjustments needed:
+  - adapt_on_planck
+  - adapt_multi
+  - _self_
+
+preprocess_maps:
+  assets_in:
+    lut:
+      working: ${working_dir}
+    dataset_stats:
+      working: ${working_dir}

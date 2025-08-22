@@ -1,0 +1,12 @@
+train:
+  assets_in:
+    cmb_ps: {working: "${prep_working_dir}"}
+    cmb_map: {working: "${prep_working_dir}"}
+    obs_maps: {working: "${prep_working_dir}"}
+
+predict: &final_inference
+  assets_in:
+    cmb_map: {working: "${prep_working_dir}"}
+    obs_maps: {working: "${prep_working_dir}"}
+
+final_infer: *final_inference  # Used so that analysis code can find a consistent name
