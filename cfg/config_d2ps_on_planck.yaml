@@ -1,11 +1,12 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
   - config_d2ps
+  - override pipeline: assembly_on_planck
+  - override splits: "1-1"
   - _self_
 
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}_on_Planck/"
-fig_model_name     : "${features_type} to PS, Model using BN, On Planck, Iteration ${iter_num}"
+working_dir        : "${features_type}2ps_on_Planck/"
+fig_model_name     : "${features_type} to PS, Model using BN, On Planck"
 
-# TODO: Organize and label these better
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+trained_wd: "${features_type}2ps/"

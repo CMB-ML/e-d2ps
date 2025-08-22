@@ -4,8 +4,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : three_fixed  # If you aren't getting as many results as expected, check n_infer_cap as well
-  # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  # - splits         : three_fixed
+  - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
   - model          : basic_d2ps_nn_l2
   # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
@@ -15,15 +15,10 @@ defaults:
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
-dataset_name       : I_128_1600
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
-prep_working_dir   : "d2ps-prep"
+dataset_name       : I_128_1600_base
+working_dir        : "${features_type}2ps/"
 fig_model_name     : "${features_type} to PS, 1280ell"
 hydra:
-  # mode: MULTIRUN
-  # sweeper:
-  #   params:
-  #     iter_num    :  2, 3, 4, 5, 6, 7, 8, 9, 10
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -31,8 +26,6 @@ hydra:
     subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
-
-iter_num: 1
 
 fig_type: pdf
 
@@ -51,7 +44,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 1
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

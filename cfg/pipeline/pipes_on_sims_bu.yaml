@@ -1,0 +1,275 @@
+make_lut:
+  assets_out:
+    lut: 
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/lut.npy"
+  assets_in:
+    cmb_map: {stage: make_sims}
+    obs_maps: {stage: make_sims}
+  dir_name: B_LUT
+
+get_dataset_stats:
+  assets_out:
+    dataset_stats: 
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/feature_stats.yaml"
+  assets_in:
+    cmb_map: {stage: make_sims}
+    obs_maps: {stage: make_sims}
+  splits: 
+    - train
+  dir_name: C_PreprocessingPrep
+
+preprocess_maps:
+  assets_out:
+    obs_maps:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}.npy"
+    cmb_map:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_prep.npy"
+  assets_in:
+    cmb_map: {stage: make_sims}
+    obs_maps: {stage: make_sims}
+    dataset_stats: {stage: get_dataset_stats}
+    lut: {stage: make_lut}
+  dir_name: D_Prep_Observs
+  splits:
+    - train
+    - valid
+    - test
+
+preprocess_spectra:
+  assets_out:
+    cmb_ps:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
+      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep.txt"
+      # handler: NumpyPowerSpectrum
+      # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
+  assets_in:
+    cmb_ps: {stage: make_theory_ps, working: Simulation_Working/}
+  dir_name: E_Prep_Spectra
+  splits:
+    - train
+    - valid
+    - test
+
+train:
+  assets_out:
+    model: 
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+    loss_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+  assets_in:
+    # cmb_ps: {stage: preprocess_spectra}
+    cmb_ps: {stage: preprocess_spectra, working: "${prep_working_dir}/"}
+    cmb_map: {stage: preprocess_maps, working: "${prep_working_dir}/"}
+    obs_maps: {stage: preprocess_maps, working: "${prep_working_dir}/"}
+    model: {stage: train}
+  splits:
+    - train
+    - valid
+  dir_name: F_Model
+  make_stage_log: True
+
+# predict:
+predict: &final_inference
+  assets_out:
+    cmb_ps: 
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.txt"
+      # handler: NumpyPowerSpectrum
+      # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
+  assets_in:
+    cmb_map: {stage: preprocess_maps, working: "${prep_working_dir}/"}
+    obs_maps: {stage: preprocess_maps, working: "${prep_working_dir}/"}
+    model: {stage: train}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs}
+  dir_name: G_Predict
+  make_stage_log: True
+
+final_infer: *final_inference  # Used so that analysis code can find a consistent name
+
+make_ps:
+  assets_out:
+    auto_real:
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/ps_real.npy"
+      handler: NumpyPowerSpectrum
+  assets_in:
+    cmb_map_real: {stage: make_sims, orig_name: cmb_map}
+    mask:    {stage: make_mask}  # Remove or set to null for no masking;
+                                 #   set stage: to make_mask for the common mask
+                                 #   set stage: to mask_in for the original mask (will be downgraded)
+    mask_sm: {stage: make_mask}  # Remove or set to null for no masking;
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_J_Real_Power_Spectra
+
+ps_analysis:
+  assets_out:
+    report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/ps_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    theory_ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    # auto_real: {stage: make_pred_ps}
+    auto_pred: {stage: predict, orig_name: cmb_ps}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  override_n_sims: ${n_test_cap}
+  # wmap_n_ps: 50
+  dir_name: Analysis_H_PS_Report
+
+ps_agg:
+  assets_out:
+    agg_report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/ps_agg_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    report: {stage: ps_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  override_n_sims: ${n_test_cap}
+  dir_name: Analysis_H_PS_Report
+
+show_chosen_ells:
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/chosen_ells.{fig_type}"
+  assets_in:
+    ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_L_Show_Chosen_Ells
+  make_stage_log: False
+
+show_predictions:
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/predictions_{epoch}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    report: {stage: ps_agg, orig_name: agg_report}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_M_Show_Predictions
+  make_stage_log: False
+
+show_predictions_indiv:
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/predictions_{epoch}_{sim}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    report: {stage: ps_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_M_Show_Predictions_Indiv
+  make_stage_log: False
+
+show_predictions_bw:
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/predictions_{epoch}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    report: {stage: ps_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_M_Show_Predictions_BestWorst
+  make_stage_log: False
+
+loss_plot:
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/loss_plot.{fig_type}"
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
+  dir_name: Analysis_N_Loss_Plot
+  make_stage_log: False
+
+loss_summary:
+  assets_out:
+    summary:
+      handler: TextHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_summary.txt"
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
+  dir_name: Analysis_N_Loss_Plot
+  make_stage_log: False
+
+check_model_size:
+  assets_out:
+    model: 
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+    loss_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+  assets_in:
+    cmb_ps: {stage: preprocess_spectra}
+    obs_maps: {stage: preprocess_maps}
+    model: {stage: train}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_N_Check_Model_Size
+  make_stage_log: False
+
+error_analysis:
+  assets_out:
+    report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/error_analysis_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_J_Error_Analysis
+  make_stage_log: False
+
+show_predictions_error_analysis:
+  assets_out:
+    fig: 
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_mean_{epoch}.{fig_type}"
+    fig_many: 
+      handler: Figure
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_mean_{epoch}_many.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    report: {stage: error_analysis, orig_name: report}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_M_Show_Predictions_Error_Analysis
+  make_stage_log: False
+

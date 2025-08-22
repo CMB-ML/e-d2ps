@@ -20,24 +20,12 @@ from cmbml.core import (
                       LogMaker
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
-from cmbml.sims import MaskCreatorExecutor
 from d2ps_nn import (
-    MakeLutExecutor,
-    FindDatasetStatsParallelExecutor,
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
-    TrainingExecutor,
     PredictExecutor,
-    PSBundleExecutor,
-    CheckGPULoadExecutor,
-    ShowChosenEllsExecutor,
-    PowerSpectrumAnalysisExecutor,
-    PowerSpectrumAggExecutor,
     ShowPredictionsExecutor
     )
-from cmbml.analysis import (
-    MakeRealPowerSpectrumExecutor
-)
 
 
 logger = logging.getLogger(__name__)
@@ -45,20 +33,17 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_planck")
 def run(cfg):
-    logger.debug(f"Running {__name__} in {__file__}")
-
     log_maker = LogMaker(cfg)
     log_maker.log_procedure_to_hydra(source_script=__file__)
 
     pipeline_context = PipelineContext(cfg, log_maker)
-
-    pipeline_context.add_pipe(HydraConfigCheckerExecutor)
-
-    pipeline_context.add_pipe(PreprocessMapsExecutor)
-    pipeline_context.add_pipe(PreprocessSpectraExecutor)
-    pipeline_context.add_pipe(PredictExecutor)
-    pipeline_context.add_pipe(ShowPredictionsExecutor)
-
+    pipes = [HydraConfigCheckerExecutor,
+             PreprocessMapsExecutor,
+             PreprocessSpectraExecutor,
+             PredictExecutor,
+             ShowPredictionsExecutor]
+    for pipe in pipes:
+        pipeline_context.add_pipe(pipe)
     pipeline_context.prerun_pipeline()
 
     try:
@@ -72,4 +57,4 @@ def run(cfg):
 
 
 if __name__ == "__main__":
-     run()
+    run()
