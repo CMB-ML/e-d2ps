@@ -20,7 +20,6 @@ from cmbml.core import (
                       LogMaker
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
-from cmbml.sims import MaskCreatorExecutor
 from d2ps_nn import (
     MakeLutExecutor,
     FindDatasetStatsParallelExecutor,
@@ -28,9 +27,7 @@ from d2ps_nn import (
     PreprocessSpectraExecutor,
     TrainingExecutor,
     PredictExecutor,
-    # PSBundleExecutor,
     CheckGPULoadExecutor,
-    ShowChosenEllsExecutor,
     PowerSpectrumAnalysisExecutor,
     PowerSpectrumAggExecutor,
     ShowPredictionsExecutor,
@@ -40,52 +37,57 @@ from d2ps_nn import (
     ShowPredictionsWithChiSquareExecutor,
     LossPlotExecutor
     )
-from cmbml.analysis import (
-    MakeRealPowerSpectrumExecutor
-)
 
 
 logger = logging.getLogger(__name__)
 
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps")
-def run(cfg):
-    logger.debug(f"Running {__name__} in {__file__}")
+def run_train(cfg):
+    logger.debug(f"Running train in {__file__}")
+    pipes = [
+             HydraConfigCheckerExecutor,
+             MakeLutExecutor,
+             FindDatasetStatsParallelExecutor,
+             PreprocessMapsExecutor,
+             PreprocessSpectraExecutor,
+             CheckGPULoadExecutor,
+             TrainingExecutor,
+             PredictExecutor,
+             PowerSpectrumAnalysisExecutor,
+             PowerSpectrumAggExecutor,
+             ShowPredictionsExecutor,
+             ShowBWPredictionsExecutor,
+             ShowIndivPredictionsExecutor,
+             LossPlotExecutor,
+             ErrorAnalysisExecutor,
+             ShowPredictionsWithChiSquareExecutor
+             ]
+    run(cfg, pipes)
 
+
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_planck")
+def run_planck(cfg):
+    logger.debug(f"Running train in {__file__}")
+    pipes = [
+             HydraConfigCheckerExecutor,
+             PreprocessMapsExecutor,
+             PreprocessSpectraExecutor,
+             PredictExecutor,
+             ShowPredictionsExecutor
+             ]
+    run(cfg, pipes)
+
+
+def run(cfg, pipes):
     log_maker = LogMaker(cfg)
     log_maker.log_procedure_to_hydra(source_script=__file__)
 
     pipeline_context = PipelineContext(cfg, log_maker)
-
-    pipeline_context.add_pipe(HydraConfigCheckerExecutor)
-
-    # # Preprocessing
-    pipeline_context.add_pipe(MakeLutExecutor)
-    pipeline_context.add_pipe(FindDatasetStatsParallelExecutor)
-    pipeline_context.add_pipe(PreprocessMapsExecutor)
-    pipeline_context.add_pipe(PreprocessSpectraExecutor)
-
-    # # pipeline_context.add_pipe(ShowChosenEllsExecutor)
-    pipeline_context.add_pipe(CheckGPULoadExecutor)
-
-    # # Training and Prediction
-    pipeline_context.add_pipe(TrainingExecutor)
-    pipeline_context.add_pipe(PredictExecutor)
-
-    pipeline_context.add_pipe(PowerSpectrumAnalysisExecutor)
-    pipeline_context.add_pipe(PowerSpectrumAggExecutor)
-
-    # Analysis and Visualization
-    pipeline_context.add_pipe(ShowPredictionsExecutor)
-    pipeline_context.add_pipe(ShowBWPredictionsExecutor)
-    pipeline_context.add_pipe(ShowIndivPredictionsExecutor)
-    pipeline_context.add_pipe(LossPlotExecutor)
-
-    pipeline_context.add_pipe(ErrorAnalysisExecutor)
-    pipeline_context.add_pipe(ShowPredictionsWithChiSquareExecutor)
+    for pipe in pipes:
+        pipeline_context.add_pipe(pipe)
 
     pipeline_context.prerun_pipeline()
-
     try:
         pipeline_context.run_pipeline()
     except Exception as e:
@@ -97,4 +99,5 @@ def run(cfg):
 
 
 if __name__ == "__main__":
-     run()
+     run_train()
+     run_planck()
