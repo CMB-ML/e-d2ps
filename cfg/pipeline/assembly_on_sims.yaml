@@ -2,4 +2,3 @@ defaults:
   - _self_
   - assembly_sim
   - pipes_on_sims
-  # - pipe_model_analysis
