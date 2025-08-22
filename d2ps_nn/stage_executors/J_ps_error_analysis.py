@@ -45,9 +45,12 @@ class ErrorAnalysisExecutor(BaseStageExecutor):
             with self.name_tracker.set_context("split", split.name):
                 logger.info(f"Processing split: {split.name}")
                 self.process_split(split, report)
-        report = pd.DataFrame(report)
-        self.out_report.write(data=report)
-            
+        if not report:
+            logger.warning(f'No report to be written. Are you using "TestF" splits?')
+        else:
+            report = pd.DataFrame(report)
+            self.out_report.write(data=report)
+
     def process_split(self, split, report):
         for model_epoch in self.model_epochs:
             with self.name_tracker.set_context("epoch", model_epoch):
