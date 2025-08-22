@@ -35,7 +35,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         out_patches_handler: NumpyMap
 
         if cfg.features_type == "cmb":
-            self.out_feat  = out_cmb_patch
+            self.out_feat = out_cmb_patch
         elif cfg.features_type == "obs":
             self.out_feat = out_obs_patch
         else:
@@ -117,6 +117,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         try:
             dataset_stats = self.dataset_stats[freq]
         except TypeError:
-            # self.dataset_stats is None
-            pass
+            pass  # Allow TypeError to go through? Unknown why this is here.
+        except Exception:
+            raise TypeError(f"No stats for {freq} in file {self.in_dataset_stats.path}")
         return dataset_stats

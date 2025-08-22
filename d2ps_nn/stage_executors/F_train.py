@@ -30,8 +30,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         self.in_trgt_asset: Asset = self.assets_in["cmb_ps"]
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
-                                               cfg.features_type, 
-                                               self.instrument)
+                                                 cfg.features_type, 
+                                                 self.instrument)
         self.in_model: Asset = self.assets_in["model"]
         in_cmb_map_handler: NumpyMap
         in_obs_map_handler: NumpyMap
