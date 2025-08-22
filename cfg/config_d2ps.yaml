@@ -4,8 +4,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  # - splits         : three_fixed
-  - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  - splits         : three_fixed
+  # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
   - model          : basic_d2ps_nn_l2
   # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
@@ -44,7 +44,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 1
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

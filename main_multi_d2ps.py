@@ -115,7 +115,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    #  prep_run()
-    #  multi_train_runs()
+    prep_run()
+    multi_train_runs()
     prep_run_planck()
     run_planck()
