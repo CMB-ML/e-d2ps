@@ -2,12 +2,15 @@ import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from omegaconf import DictConfig
+import pysm3.units as u
 
 from cmbml.core import Split, Asset, AssetWithPathAlts
 from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
+from cmbml.utils.number_report import float_to_latex
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
@@ -30,6 +33,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         in_ps_thry_handler: CambPowerSpectrum
         in_report_handler: PandasCsvHandler
 
+        self.units = u.Unit(cfg.scenario.units)
         self.ells = parse_ells(cfg.model.use_ells)
         self.display_lmax = cfg.lmax
         self.display_n_sims = cfg.n_show_cap
@@ -92,48 +96,53 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
                 # logger.info(f"There are {len(part_ells)} ells chosen.")
 
-                fig, ax1 = plt.subplots(1, 1, figsize=(12, 6))
-                ax2 = ax1
+                fig, ax = plt.subplots(1, 1, figsize=(12, 6))
 
-                # Confirming results in the other executor
-                # ps_thry = np.array(all_theory_ps)
-                # ps_thry = ps_thry[:, part_ells]
-                # ps_pred = np.array(all_pred_ps)
-                # delta = ps_thry - ps_pred
-                # mse = np.mean(delta**2)
-                # logger.info(f"Epoch {epoch}, MSE: {mse:.4f}")
+                max_scatter_multipoles = 20
 
                 for i, ps_thry in enumerate(all_theory_ps):
                     # ax1.plot(full_ells, ps_thry, alpha=0.3)
-                    ax1.plot(full_ells, ps_thry, 
+                    ax.plot(full_ells[2:], ps_thry[2:], 
                              alpha=1, linewidth=0.5,
                              label=f'Theory {i}', 
                              color=mpl_colors[i % len(mpl_colors)])
                 for i, ps_pred in enumerate(all_pred_ps):
-                    if len(part_ells) < 20:
-                        ax2.scatter(part_ells, ps_pred, 
+                    if len(part_ells) < max_scatter_multipoles:
+                        ax.scatter(part_ells, ps_pred, 
                                     alpha=0.7, zorder=10,
                                     label=f'Prediction {i}',
                                     color=mpl_colors[i % len(mpl_colors)])
                     else:
-                        ax1.plot(part_ells, ps_pred, 
-                                alpha=0.5, ls=(i, (5,5)), linewidth=2, 
+                        ax.plot(part_ells, ps_pred, 
+                                alpha=0.7, ls=(i, (5,5)), linewidth=2, 
                                 label=f'Prediction {i}', 
                                 color=mpl_colors[i % len(mpl_colors)])
 
-                ax1.set_xlim([0, show_max_l])
-                ax1.set_ylim([0, 6700])
-                ax1.set_xlabel(r"$\ell$")
-                ax1.set_ylabel(r"$D_\ell$")
+                # Proxies for the legend
+                theory_proxy = Line2D([0], [0], color="black", linewidth=0.5, alpha=1)
+                # Pred proxy depends on how many multipoles are included
+                if len(part_ells) < max_scatter_multipoles:
+                    pred_proxy = Line2D([0], [0], color="black", marker="o",
+                                        linestyle="none", alpha=0.7)
+                else:
+                    pred_proxy = Line2D([0], [0], color="black", linewidth=2,
+                                        ls=(0, (3, 3)), alpha=0.7)
 
-                ax2.set_xlim([0, show_max_l])
+                # Put the legend wherever you like; fig.legend works across axes
+                handles = [theory_proxy, pred_proxy]
+                labels  = ["Target", "Prediction"]
+                ax.legend(handles=handles, labels=labels, loc="upper right")
+
+                ax.set_xlim([0, show_max_l])
+                ax.set_ylim([0, 6700])
+                ax.set_xlabel(r"$\ell$")
+                unit_str = (self.units**2).to_string('latex_inline')
+                ax.set_ylabel(r"$D_\ell$ [" + unit_str + "]")
+
+                ax.set_xlim([0, show_max_l])
                 # ax2.set_ylim([0, 1.5])
 
-                ax1.set_title(f"Predictions and theory, Epoch {epoch}, {self.fig_label}")
-
-                # Unneeded currently; could be useful when re-adding sequential best epochs
-                # if isinstance(epoch, str) and epoch.startswith("best_"):
-                #     epoch = int(epoch.split('_')[1]) 
+                ax.set_title(f"Predictions and Targets, Epoch {epoch}, {self.fig_label}")
 
                 if report_data is not None:
                     key = ('mse', 'mean')
@@ -145,7 +154,8 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                     if subset.empty:
                         raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
                     else:
-                        mse = subset[key].values[0]
-                    ax1.text(20, 100, f"MSE: {mse:.1e}")
+                        mse = subset[key].mean()
+                        mse_str = float_to_latex(mse)
+                    ax.text(20, 100, f"{split.name} MSE: ${mse_str}$")
 
                 self.out_fig.write(fig=fig)  # Make directory only
