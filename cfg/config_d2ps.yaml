@@ -4,8 +4,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : three_fixed
-  # - splits         : "3-140" # all  # If you aren't getting as many results as expected, check n_infer_cap as well
+  # - splits         : three_fixed
+  - splits         : three_fixed_dummy
   - model          : basic_d2ps_nn_l2
   # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
