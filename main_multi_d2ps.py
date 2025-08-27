@@ -90,6 +90,7 @@ def run_planck(cfg):
     pipes = [
              HydraConfigCheckerExecutor,
              PredictExecutor,
+             PowerSpectrumAnalysisExecutor,
              ShowPredictionsExecutor
              ]
     run(cfg, pipes)

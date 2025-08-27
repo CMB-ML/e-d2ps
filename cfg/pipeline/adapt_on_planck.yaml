@@ -46,3 +46,6 @@ show_predictions:
   assets_in:
     ps_thry:
       dataset: ${planck_ds}
+
+ps_analysis:
+  dir_name: Analysis_H_PS_Report_Planck
