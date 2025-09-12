@@ -1,3 +1,4 @@
+import sys
 import logging
 
 import numpy as np
@@ -5,13 +6,15 @@ import pandas as pd
 from omegaconf import DictConfig
 from tqdm import tqdm
 from itertools import product
+import yaml
+import csv
 
 from cmbml.core import Split, Asset, BaseStageExecutor
 from cmbml.core.asset_handlers import (
     TextPowerSpectrum, 
     CambPowerSpectrum, 
     PandasCsvHandler, 
-    NumpyPowerSpectrum
+    # NumpyPowerSpectrum
 )
 from cmbml.utils.cosmic_variance import get_var_per_ell
 from d2ps_nn.utils.parse_ell_list import parse_ells
@@ -25,11 +28,11 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
     Goal: Calculate various error metrics for power spectra predictions.
     """
     def __init__(self, cfg: DictConfig) -> None:
-        super().__init__(cfg, stage_str="per_split_per_ell_analysis")
+        super().__init__(cfg, stage_str="per_split_analysis")
 
-        self.out_per_ell_vector: Asset = self.assets_out["report"]
-        out_report_handler: NumpyPowerSpectrum
-        self.over_all_ell_scalars: Asset = self.assets_out["report"]
+        self.out_vectors: Asset = self.assets_out["per_vector_report"]
+        out_report_handler: TextPowerSpectrum
+        self.out_scalars: Asset = self.assets_out["per_scalar_report"]
         out_report_handler: PandasCsvHandler
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
@@ -47,10 +50,9 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        self.cosmic_var = self.get_cosmic_var()
         for split in self.splits:
             print(f"Processing split: {split.name}")
-            if not split.ps_fidu_fixed:
-                continue  # Skip if no fixed fiducial power spectrum
             with self.name_tracker.set_context("split", split.name):
                 logger.info(f"Processing split: {split.name}")
                 self.process_split(split)
@@ -59,6 +61,7 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
         # Cosmic variance is a relative measure of variance, reporting 
         #   Delta Cl / Cl (or Delta Dl / Dl)
         self.cosmic_var = get_var_per_ell(self.ells)
+        return self.cosmic_var
 
     def process_split(self, split):
         if split.ps_fidu_fixed:
@@ -66,12 +69,12 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
             thry_ps = np.array(thry_ps)
         else:
             thry_ps = []
-            for sim in split.iter_sim():
+            for sim in split.iter_sims():
                 with self.name_tracker.set_context("sim_num", sim):
-                    one_thry_ps = self.in_ps_thry.read()
+                    one_thry_ps = self.in_ps_thry.read(use_alt_path=False)
                 thry_ps.append(one_thry_ps)
             thry_ps = np.array(thry_ps)
-        thry_ps = thry_ps[self.ells]
+        thry_ps = thry_ps[:, self.ells]
 
         for model_epoch in self.model_epochs:
             with self.name_tracker.set_context("epoch", model_epoch):
@@ -142,41 +145,44 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
             "ensemble_chi_square":   chi2_ens
         }
 
+        nw = "uniform"
+        yw = "alm"
+        l1 = "mean"
+        l2 = "rms"
+
         res_v = res_vector = {}
         res_s = res_scalar = {}
         for m_label, m in metrics.items():
             # Project over all simulations; this indicates performance per-ell
             m_sims = np.mean(m, axis=0)
-            res_s[(m_label, "per_ell")] = accumulate_over(m_sims)
-            res_v[(m_label, "per_ell")] = m_sims
+            res_v[m_label] = m_sims
+            res_s[(m_label, "per_ell", l1, nw)] = accumulate_over(m_sims)
+            res_s[(m_label, "per_ell", l1, yw)] = {"mean": np.average(m_sims, weights=weights)}
 
-            # Project over all simulations, account for weighting at each ell
-            # m_sims_w = np.average()  #????
-
-            # Project over all ells first
+            # Ells first, no weighting
             m_ells = np.mean(m, axis=1)
-            res_s[(m_label, "per_sim", "L1", "nw")] = accumulate_over(m_ells)
+            res_s[(m_label, "per_sim", l1, nw)] = accumulate_over(m_ells)
             
             # Ells first, weight by modes
             m_ells = np.average(m, axis=1, weights=weights)
-            res_s[(m_label, "per_sim", "L1", "wt")] = accumulate_over(m_ells)
+            res_s[(m_label, "per_sim", l1, yw)] = accumulate_over(m_ells)
 
             # Ells first, highlight trouble using L2
-            m_ells = np.mean(m ** 2, axis=1)
-            res_s[(m_label, "per_sim", "L2", "nw")]["mean"] = np.mean(np.sqrt(m_ells))
+            m_ells = np.sqrt(np.mean(m ** 2, axis=1))
+            res_s[(m_label, "per_sim", l2, nw)] = accumulate_over(m_ells)
 
             # Ells first, highlight trouble using L2, weight by modes
-            m_ells = np.average(m ** 2, axis=1, weights=weights)
-            res_s[(m_label, "per_sim", "L2", "nw")]["mean"] = np.mean(np.sqrt(m_ells))
+            m_ells = np.sqrt(np.average(m ** 2, axis=1, weights=weights))
+            res_s[(m_label, "per_sim", l2, yw)] = accumulate_over(m_ells)
 
-        df = pd.DataFrame(res_s)
-        self.over_all_ell_scalars.write(df)
+        for metric in metrics:
+            with self.name_tracker.set_context("metric", metric):
+                self.out_vectors.write(data=res_v[metric])
 
-        self.out_per_ell_vector.write(res_v)
-        # self.out_per_ell_vector: Asset = self.assets_out["report"]
-        # out_report_handler: NumpyPowerSpectrum
-        # self.over_all_ell_scalars: Asset = self.assets_out["report"]
-        # out_report_handler: PandasCsvHandler
+        df = pd.DataFrame(res_s).T
+        df = df.reset_index()
+        df.columns = ['metric','proj','norm','weighting'] + df.columns[4:].tolist()
+        self.out_scalars.write(data=df)
 
 
 def accumulate_over(arr):

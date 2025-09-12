@@ -30,6 +30,11 @@ ps_functions: &stat_funcs
     label: NRMSE
     func: "skimage.metrics.normalized_root_mse"
     kwargs: {normalization: "euclidean"}
+  mape:
+    plot_name: "Mean Absolute Percentage Error (MAPE)"
+    axis_name: "MAPE"
+    label: MAPE
+    func: "sklearn.metrics.mean_absolute_percentage_error"
 ps_operations:
   num_processes: 10
 # Number of cosmological parameters could vary based on the model, so we want to normalize chi-square test

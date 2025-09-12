@@ -263,3 +263,19 @@ show_predictions_error_analysis:
   dir_name: Analysis_M_Show_Predictions_Error_Analysis
   make_stage_log: False
 
+per_split_analysis:
+  assets_out:
+    per_vector_report:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{metric}_ep_{epoch}.txt"
+    per_scalar_report:
+      handler: PandasCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/metrics_ep_{epoch}.csv"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_K_per_split_analysis
+  make_stage_log: False

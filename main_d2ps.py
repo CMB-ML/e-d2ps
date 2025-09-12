@@ -74,7 +74,8 @@ def run_planck(cfg):
              PreprocessMapsExecutor,
              PreprocessSpectraExecutor,
              PredictExecutor,
-             ShowPredictionsExecutor
+             ShowPredictionsExecutor,
+             PowerSpectrumAnalysisExecutor
              ]
     run(cfg, pipes)
 
@@ -99,5 +100,5 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-     run_train()
-     run_planck()
+    run_train()
+    run_planck()

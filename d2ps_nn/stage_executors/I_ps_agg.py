@@ -11,10 +11,10 @@ from tqdm import tqdm
 from omegaconf import DictConfig
 
 from cmbml.core import BaseStageExecutor, Asset, AssetWithPathAlts, GenericHandler
-from cmbml.analysis.px_statistics import get_func
+from cmbml.analysis.statistics import get_func
 from cmbml.core.asset_handlers.pd_csv_handler import PandasCsvHandler # Import for typing hint
 from cmbml.core.asset_handlers.healpy_map_handler import HealpyMap # Import for typing hint
-from cmbml.core.asset_handlers.psmaker_handler import NumpyPowerSpectrum
+from cmbml.core.asset_handlers.ps_handler import NumpyPowerSpectrum
 from d2ps_nn.utils.parse_ell_list import parse_ells
 
 

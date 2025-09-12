@@ -34,7 +34,8 @@ from d2ps_nn import (
     ShowIndivPredictionsExecutor,
     ErrorAnalysisExecutor,
     ShowPredictionsWithChiSquareExecutor,
-    LossPlotExecutor
+    LossPlotExecutor,
+    PerSplitPerEllAnalysis,
     )
 
 
@@ -58,17 +59,18 @@ def prep_run(cfg):
 def multi_train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        TrainingExecutor,
-        PredictExecutor,
-        PowerSpectrumAnalysisExecutor,
-        PowerSpectrumAggExecutor,
-        ShowPredictionsExecutor,
-        ShowPredictionsWithChiSquareExecutor,
-        ShowBWPredictionsExecutor,
-        ShowIndivPredictionsExecutor,
-        LossPlotExecutor,
-        ErrorAnalysisExecutor,
-        ShowPredictionsWithChiSquareExecutor
+        # TrainingExecutor,
+        # PredictExecutor,
+        # PowerSpectrumAnalysisExecutor,
+        # PowerSpectrumAggExecutor,
+        # ShowPredictionsExecutor,
+        # ShowPredictionsWithChiSquareExecutor,
+        # ShowBWPredictionsExecutor,
+        # ShowIndivPredictionsExecutor,
+        # LossPlotExecutor,
+        # ErrorAnalysisExecutor,
+        # ShowPredictionsWithChiSquareExecutor,
+        PerSplitPerEllAnalysis
     ]
     run(cfg, pipes)
 
@@ -88,10 +90,11 @@ def prep_run_planck(cfg):
 def run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-             HydraConfigCheckerExecutor,
-             PredictExecutor,
+            #  HydraConfigCheckerExecutor,
+            #  PredictExecutor,
              PowerSpectrumAnalysisExecutor,
-             ShowPredictionsExecutor
+             ShowPredictionsExecutor,
+             PerSplitPerEllAnalysis
              ]
     run(cfg, pipes)
 
@@ -116,7 +119,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    prep_run()
+    # prep_run()
     multi_train_runs()
-    prep_run_planck()
-    run_planck()
+    # prep_run_planck()
+    # run_planck()
