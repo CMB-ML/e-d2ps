@@ -67,9 +67,6 @@ class TrainingExecutor(BasePyTorchModelExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
-        self.out_loss_record.write(data=loss_record_headers)
-
         # When using Wishart loss, we need to skip the monopole and dipole
         # use_lmax = self.lmax - 2 if self.skip_mono_dipole else self.lmax
 
@@ -134,11 +131,15 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                                                  )
             if start_epoch == "init":
                 start_epoch = 0
+            self.out_loss_record.start()  # New lines will be added, naively 
+                                          #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
             logger.info(f"Starting new model.")
             with self.name_tracker.set_context("epoch", "init"):
                 self.out_model.write(model=model, epoch="init")
             start_epoch = 0
+            loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
+            self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
