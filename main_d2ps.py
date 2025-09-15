@@ -54,14 +54,14 @@ def run_train(cfg):
              CheckGPULoadExecutor,
              TrainingExecutor,
              PredictExecutor,
-             PowerSpectrumAnalysisExecutor,
-             PowerSpectrumAggExecutor,
-             ShowPredictionsExecutor,
-             ShowBWPredictionsExecutor,
-             ShowIndivPredictionsExecutor,
-             LossPlotExecutor,
-             ErrorAnalysisExecutor,
-             ShowPredictionsWithChiSquareExecutor
+            #  PowerSpectrumAnalysisExecutor,
+            #  PowerSpectrumAggExecutor,
+            #  ShowPredictionsExecutor,
+            #  ShowBWPredictionsExecutor,
+            #  ShowIndivPredictionsExecutor,
+            #  LossPlotExecutor,
+            #  ErrorAnalysisExecutor,
+            #  ShowPredictionsWithChiSquareExecutor
              ]
     run(cfg, pipes)
 
@@ -101,4 +101,4 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_train()
-    run_planck()
+    # run_planck()
