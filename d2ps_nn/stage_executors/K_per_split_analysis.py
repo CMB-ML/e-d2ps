@@ -94,10 +94,26 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
                 pred_ps.append(one_pred_ps)
         pred_ps = np.array(pred_ps)
 
+        metrics = get_split_analysis(ells=self.ells, 
+                                     thry_ps=thry_ps, 
+                                     pred_ps=pred_ps, 
+                                     cosmic_var=self.cosmic_var)
+
+        for metric in metrics['vectors'].keys():
+            with self.name_tracker.set_context("metric", metric):
+                self.out_vectors.write(data=metrics['vectors'][metric])
+
+        df = pd.DataFrame(metrics['scalars']).T
+        df = df.reset_index()
+        df.columns = ['metric','proj','norm','weighting'] + df.columns[4:].tolist()
+        self.out_scalars.write(data=df)
+
+
+def get_split_analysis(ells, thry_ps, pred_ps, cosmic_var):
         # Calculate statistics (all vectors--per ell)
         pred_mean       = np.mean(pred_ps, axis=0)
         pred_sd         = np.std(pred_ps, axis=0)
-        cosmic_var      = self.cosmic_var              # Ratio: (Delta D) / D
+        cosmic_var      = cosmic_var              # Ratio: (Delta D) / D
 
         # Ensemble chi-square 
         # Reference vs. mean prediction, normalized by prediction scatter
@@ -133,7 +149,7 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
 
         ############################
         # Single scalar scores
-        ells            = self.ells
+        ells            = ells
         weights         = 2 * ells + 1
 
         metrics = {
@@ -174,15 +190,7 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
             # Ells first, highlight trouble using L2, weight by modes
             m_ells = np.sqrt(np.average(m ** 2, axis=1, weights=weights))
             res_s[(m_label, "per_sim", l2, yw)] = accumulate_over(m_ells)
-
-        for metric in metrics:
-            with self.name_tracker.set_context("metric", metric):
-                self.out_vectors.write(data=res_v[metric])
-
-        df = pd.DataFrame(res_s).T
-        df = df.reset_index()
-        df.columns = ['metric','proj','norm','weighting'] + df.columns[4:].tolist()
-        self.out_scalars.write(data=df)
+        return {'vectors': res_v, 'scalars': res_s}
 
 
 def accumulate_over(arr):
