@@ -59,7 +59,7 @@ def prep_run(cfg):
 def multi_train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # TrainingExecutor,
+        TrainingExecutor,
         # PredictExecutor,
         # PowerSpectrumAnalysisExecutor,
         # PowerSpectrumAggExecutor,
@@ -70,7 +70,7 @@ def multi_train_runs(cfg):
         # LossPlotExecutor,
         # ErrorAnalysisExecutor,
         # ShowPredictionsWithChiSquareExecutor,
-        PerSplitPerEllAnalysis
+        # PerSplitPerEllAnalysis
     ]
     run(cfg, pipes)
 
@@ -90,8 +90,8 @@ def prep_run_planck(cfg):
 def run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-            #  HydraConfigCheckerExecutor,
-            #  PredictExecutor,
+             HydraConfigCheckerExecutor,
+             PredictExecutor,
              PowerSpectrumAnalysisExecutor,
              ShowPredictionsExecutor,
              PerSplitPerEllAnalysis
@@ -120,6 +120,7 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     # prep_run()
-    multi_train_runs()
+    # multi_train_runs()
     # prep_run_planck()
     # run_planck()
+    pass
