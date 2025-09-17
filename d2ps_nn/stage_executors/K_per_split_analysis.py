@@ -95,6 +95,9 @@ class PerSplitAnalysis(BaseStageExecutor):
                 pred_ps.append(one_pred_ps)
         pred_ps = np.array(pred_ps)
 
+        # TODO: Fix this. Patch exists to handle Realization Power Spectra,
+        #       which are produced using a different way of defining ells
+        #       (thye use lmax; this later method uses use_ells)
         if pred_ps.shape[1] == 1281:
             pred_ps = pred_ps[:, 2:]
 
