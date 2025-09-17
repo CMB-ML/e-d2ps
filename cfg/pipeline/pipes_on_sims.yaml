@@ -279,3 +279,60 @@ per_split_analysis:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_K_per_split_analysis
   make_stage_log: False
+
+per_split_surrogate_analysis:
+  assets_out:
+    per_vector_report:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{metric}_ep_{epoch}.txt"
+    per_scalar_report:
+      handler: PandasCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/metrics_ep_{epoch}.csv"
+  assets_in:
+    ps_pred: {stage: make_real_ps, orig_name: auto_real}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_K_per_split_analysis
+  make_stage_log: False
+
+fig_rel_error:
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_A_rel_error_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    per_vector_report: {stage: per_split_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+fig_cosmic_var:
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_A_cosmic_var_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    per_vector_report: {stage: per_split_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+fig_chi_square:
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_A_chi_square_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    per_vector_report: {stage: per_split_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+

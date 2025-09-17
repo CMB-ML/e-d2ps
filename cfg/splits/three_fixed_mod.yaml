@@ -1,0 +1,27 @@
+name: "1750"
+Train:
+  n_sims: 1000
+Valid:
+  n_sims: 250
+  n_sims_cap: ${n_infer_cap}
+Test:
+  n_sims: 200
+  n_sims_cap: ${n_infer_cap}
+TestF1:
+  n_sims: 100
+  n_sims_cap: ${n_infer_cap}
+  ps_fidu_fixed: true
+TestF2:
+  n_sims: 100
+  n_sims_cap: ${n_infer_cap}
+  ps_fidu_fixed: true
+TestF3:
+  n_sims: 100
+  n_sims_cap: ${n_infer_cap}
+  ps_fidu_fixed: true
+TestFP:
+  n_sims: 100
+  n_sims_cap: ${n_infer_cap}
+  ps_fidu_fixed: true
+  ps_fidu_planck: true
+run_inference_on: ${run_inference_on}

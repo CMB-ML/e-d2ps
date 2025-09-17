@@ -8,6 +8,4 @@ mask_sm_apo_size:  20.6  # Matching smallest beam
 mask_sm_apo_type:  'C1'  # NaMaster mask type
 
 # Ratio of nside to lmax. (E.g., with nside=128 and ratio=2.0, lmax=256)
-# TODO: Remove this; we're setting lmax directly
-lmax_ratio: 2.0
 ps_use_smooth_mask: true  # Whether to use the smoothed mask for power spectrum calculations

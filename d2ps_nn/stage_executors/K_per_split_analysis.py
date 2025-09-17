@@ -23,12 +23,12 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 logger = logging.getLogger(__name__)
 
 
-class PerSplitPerEllAnalysis(BaseStageExecutor):
+class PerSplitAnalysis(BaseStageExecutor):
     """
     Goal: Calculate various error metrics for power spectra predictions.
     """
-    def __init__(self, cfg: DictConfig) -> None:
-        super().__init__(cfg, stage_str="per_split_analysis")
+    def __init__(self, cfg: DictConfig, stage_str="per_split_analysis") -> None:
+        super().__init__(cfg, stage_str=stage_str)
 
         self.out_vectors: Asset = self.assets_out["per_vector_report"]
         out_report_handler: TextPowerSpectrum
@@ -67,6 +67,7 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
         if split.ps_fidu_fixed:
             thry_ps = self.in_ps_thry.read(use_alt_path=True)
             thry_ps = np.array(thry_ps)
+            thry_ps = thry_ps[self.ells]
         else:
             thry_ps = []
             for sim in split.iter_sims():
@@ -74,7 +75,7 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
                     one_thry_ps = self.in_ps_thry.read(use_alt_path=False)
                 thry_ps.append(one_thry_ps)
             thry_ps = np.array(thry_ps)
-        thry_ps = thry_ps[:, self.ells]
+            thry_ps = thry_ps[:, self.ells]
 
         for model_epoch in self.model_epochs:
             with self.name_tracker.set_context("epoch", model_epoch):
@@ -94,6 +95,9 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
                 pred_ps.append(one_pred_ps)
         pred_ps = np.array(pred_ps)
 
+        if pred_ps.shape[1] == 1281:
+            pred_ps = pred_ps[:, 2:]
+
         metrics = get_split_analysis(ells=self.ells, 
                                      thry_ps=thry_ps, 
                                      pred_ps=pred_ps, 
@@ -110,6 +114,11 @@ class PerSplitPerEllAnalysis(BaseStageExecutor):
 
 
 def get_split_analysis(ells, thry_ps, pred_ps, cosmic_var):
+        res_v = res_vector = {}
+        res_s = res_scalar = {}
+
+        fixed_fidu = len(thry_ps.shape) == 1
+        
         # Calculate statistics (all vectors--per ell)
         pred_mean       = np.mean(pred_ps, axis=0)
         pred_sd         = np.std(pred_ps, axis=0)
@@ -153,21 +162,23 @@ def get_split_analysis(ells, thry_ps, pred_ps, cosmic_var):
         weights         = 2 * ells + 1
 
         metrics = {
-            "absolute_error":        abs_err,
-            "relative_error":        rel_err,
+            "absolute_error"       : abs_err,
+            "relative_error"       : rel_err,
             "cosmic_relative_error": cv_err,
-            "z_abs_relative_error":  z_abs_err,
+            "z_abs_relative_error" : z_abs_err,
             "z_sign_relative_error": z_sign_err,
-            "ensemble_chi_square":   chi2_ens
+            "residual"             : residual
         }
+        if not fixed_fidu:
+            metrics["ensemble_chi_square"] = chi2_ens
+            res_v["thry_mean"] = np.mean(thry_ps, axis=0)
+            res_v["thry_std"] = np.std(thry_ps, axis=0)
 
         nw = "uniform"
         yw = "alm"
         l1 = "mean"
         l2 = "rms"
 
-        res_v = res_vector = {}
-        res_s = res_scalar = {}
         for m_label, m in metrics.items():
             # Project over all simulations; this indicates performance per-ell
             m_sims = np.mean(m, axis=0)
@@ -190,6 +201,16 @@ def get_split_analysis(ells, thry_ps, pred_ps, cosmic_var):
             # Ells first, highlight trouble using L2, weight by modes
             m_ells = np.sqrt(np.average(m ** 2, axis=1, weights=weights))
             res_s[(m_label, "per_sim", l2, yw)] = accumulate_over(m_ells)
+
+        if fixed_fidu:
+            chi2_lbl = 'ensemble_chi_square'
+            res_v[chi2_lbl] = chi2_ens
+            res_s[(chi2_lbl, "per_ell", l1, nw)] = accumulate_over(chi2_ens)
+            res_s[(chi2_lbl, "per_ell", l1, nw)] = {'mean': np.average(chi2_ens, weights=weights)}
+            res_v["thry_mean"] = thry_ps
+
+        res_v['pred_mean'] = pred_mean
+        res_v['pred_sd']   = pred_sd
         return {'vectors': res_v, 'scalars': res_s}
 
 
@@ -204,3 +225,8 @@ def accumulate_over(arr):
         "max":    float(np.max(arr)),
         "min":    float(np.min(arr)),
     }
+
+
+class PerSplitSurrogateAnalysis(PerSplitAnalysis):
+    def __init__(self, cfg):
+        super().__init__(cfg, stage_str="per_split_surrogate_analysis")

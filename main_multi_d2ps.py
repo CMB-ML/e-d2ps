@@ -35,7 +35,7 @@ from d2ps_nn import (
     ErrorAnalysisExecutor,
     ShowPredictionsWithChiSquareExecutor,
     LossPlotExecutor,
-    PerSplitPerEllAnalysis,
+    PerSplitAnalysis,
     )
 
 
@@ -94,7 +94,7 @@ def run_planck(cfg):
              PredictExecutor,
              PowerSpectrumAnalysisExecutor,
              ShowPredictionsExecutor,
-             PerSplitPerEllAnalysis
+             PerSplitAnalysis
              ]
     run(cfg, pipes)
 
