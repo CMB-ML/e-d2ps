@@ -314,7 +314,7 @@ fig_cosmic_var:
   assets_out:
     fig:
       handler: MPLFigure
-      path_template: "{root}/{dataset}/{working}{stage}/fig_A_cosmic_var_{split}_ep_{epoch}.{fig_type}"
+      path_template: "{root}/{dataset}/{working}{stage}/fig_B_cosmic_var_{split}_ep_{epoch}.{fig_type}"
   assets_in:
     per_vector_report: {stage: per_split_analysis}
   splits:
@@ -327,7 +327,7 @@ fig_chi_square:
   assets_out:
     fig:
       handler: MPLFigure
-      path_template: "{root}/{dataset}/{working}{stage}/fig_A_chi_square_{split}_ep_{epoch}.{fig_type}"
+      path_template: "{root}/{dataset}/{working}{stage}/fig_C_chi_square_{split}_ep_{epoch}.{fig_type}"
   assets_in:
     per_vector_report: {stage: per_split_analysis}
   splits:

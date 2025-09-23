@@ -1,0 +1,66 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - local_system   : generic_lab
+  - file_system    : common_fs
+  - pipeline       : assembly_for_petroff_fig
+  - scenario       : scenario
+  # - splits         : planck_test
+  - splits         : three_fixed_mod
+  # - splits         : three_fixed_dummy
+  - model          : basic_d2ps_nn_l2
+  # - model          : basic_d2ps_nn_wishart
+  - model/patches  : toppatch
+  - model/analysis : simple_apo
+  - model/analysis/metrics    : metrics
+  - override hydra/job_logging: custom_log
+  - _self_
+
+# When creating multiple datasets, using interpolation like this may be easier:
+# dataset_name       : I_128_1750_d1_0rg
+dataset_name       : "${map_fields}_${scenario.nside}_${splits.name}_d1_0rg"
+working_dir        : "${features_type}2ps/"
+fig_model_name     : "${features_type} to PS, 1280ell"
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose          : false
+
+fig_type: png
+
+# Settings below this point are used for interpolation.
+# These are not to be used directly in the python
+# They are picked up from here and MAY be used elsewhere in the yamls.
+# In the scenario yaml
+nside              : 512
+lmax               : 1280
+# nside              : 512  # When changing this, change mask apodization as well!
+
+# Features type should be either "cmb" or "obs"
+# features_type      : cmb
+features_type      : obs
+detectors          : [100, 143, 217, 353]
+map_fields         : "I"
+
+# In the model yaml
+num_epochs         : 300
+
+# In the pipeline yamls
+# For prediction, postprocessing, power spectra generation:
+use_epochs           : ["best"]
+# For single simulation figures (maps & ps figures):
+use_epochs_imgs      : ${use_epochs}
+# For summary statistics:
+use_epochs_map_stats : ${use_epochs}
+# For summary statistics:
+use_epochs_ps_stats  : ${use_epochs}
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 10
+
+# Limit the number of simulations on which to do inference and postprocessing
+# In the splits yaml; null to run on all
+n_infer_cap           : null
+run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)

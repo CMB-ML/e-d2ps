@@ -17,6 +17,7 @@ from cmbml.core.asset_handlers import (
     # NumpyPowerSpectrum
 )
 from cmbml.utils.cosmic_variance import get_var_per_ell
+from cmbml.utils.dl_norm import get_cl2dl_norm_per_ell
 from d2ps_nn.utils.parse_ell_list import parse_ells
 
 
@@ -46,22 +47,14 @@ class PerSplitAnalysis(BaseStageExecutor):
             num_samples = split.n_sims
             if num_samples - self.num_cosmo_params <= 0:
                 raise ValueError(f"Number of simulations ({num_samples}) must be greater than number of cosmological parameters ({self.num_cosmo_params}) for valid chi-squared calculation.")
-        self.cosmic_var = None
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
-        self.cosmic_var = self.get_cosmic_var()
         for split in self.splits:
             print(f"Processing split: {split.name}")
             with self.name_tracker.set_context("split", split.name):
                 logger.info(f"Processing split: {split.name}")
                 self.process_split(split)
-
-    def get_cosmic_var(self) -> None:
-        # Cosmic variance is a relative measure of variance, reporting 
-        #   Delta Cl / Cl (or Delta Dl / Dl)
-        self.cosmic_var = get_var_per_ell(self.ells)
-        return self.cosmic_var
 
     def process_split(self, split):
         if split.ps_fidu_fixed:
@@ -103,8 +96,7 @@ class PerSplitAnalysis(BaseStageExecutor):
 
         metrics = get_split_analysis(ells=self.ells, 
                                      thry_ps=thry_ps, 
-                                     pred_ps=pred_ps, 
-                                     cosmic_var=self.cosmic_var)
+                                     pred_ps=pred_ps)
 
         for metric in metrics['vectors'].keys():
             with self.name_tracker.set_context("metric", metric):
@@ -116,12 +108,17 @@ class PerSplitAnalysis(BaseStageExecutor):
         self.out_scalars.write(data=df)
 
 
-def get_split_analysis(ells, thry_ps, pred_ps, cosmic_var):
+def get_split_analysis(ells, thry_ps, pred_ps):
         res_v = res_vector = {}
         res_s = res_scalar = {}
-
         fixed_fidu = len(thry_ps.shape) == 1
-        
+
+        cosmic_var = get_var_per_ell(ells)
+
+        # norm = get_cl2dl_norm_per_ell(ells)
+        # thry_ps = thry_ps / norm
+        # pred_ps = pred_ps / norm
+
         # Calculate statistics (all vectors--per ell)
         pred_mean       = np.mean(pred_ps, axis=0)
         pred_sd         = np.std(pred_ps, axis=0)

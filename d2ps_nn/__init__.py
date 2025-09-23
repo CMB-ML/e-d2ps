@@ -23,3 +23,6 @@ from .stage_executors._show_predictions_error_analysis import ShowPredictionsWit
 from .stage_executors.__show_rel_err import ShowRelativeError
 from .stage_executors.__show_cosmic_fractions import ShowCosmicFractions
 from .stage_executors.__show_chi_sq import ShowChiSquare
+
+from .stage_executors.__show_petroff_like import ShowPetroffSingle
+from .stage_executors.__show_petroff_like import ShowPetroffSet
