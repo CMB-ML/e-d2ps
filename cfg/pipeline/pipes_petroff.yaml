@@ -29,3 +29,20 @@ fig_petroff_set:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_Figures
   make_stage_log: False
+
+fig_petroff_set_bin:
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_I_petroff_set_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    pred_vecs: {stage: per_split_analysis, orig_name: per_vector_report}
+    real_vecs: {stage: per_split_analysis, orig_name: per_vector_report, working: Real_PS/}
+    # ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    # ps_pred: {stage: predict, orig_name: cmb_ps}
+    # ps_real: {stage: make_real_ps, orig_name: auto_real, working: Real_PS/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False

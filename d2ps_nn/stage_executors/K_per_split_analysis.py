@@ -43,6 +43,9 @@ class PerSplitAnalysis(BaseStageExecutor):
 
         self.ells = parse_ells(cfg.model.use_ells)
         self.num_cosmo_params = cfg.model.analysis.metrics.num_cosmo_params
+
+        self.bin_width = 30
+
         for split in self.splits:
             num_samples = split.n_sims
             if num_samples - self.num_cosmo_params <= 0:
@@ -94,9 +97,13 @@ class PerSplitAnalysis(BaseStageExecutor):
         if pred_ps.shape[1] == 1281:
             pred_ps = pred_ps[:, 2:]
 
+        bin_edges = np.arange(self.ells[0], self.ells[-1]+1, self.bin_width)
+        bin_edges[-1] = self.ells[-1]  # Wider bin width at the end if needed
+
         metrics = get_split_analysis(ells=self.ells, 
                                      thry_ps=thry_ps, 
-                                     pred_ps=pred_ps)
+                                     pred_ps=pred_ps,
+                                     bin_edges=bin_edges)
 
         for metric in metrics['vectors'].keys():
             with self.name_tracker.set_context("metric", metric):
@@ -108,7 +115,7 @@ class PerSplitAnalysis(BaseStageExecutor):
         self.out_scalars.write(data=df)
 
 
-def get_split_analysis(ells, thry_ps, pred_ps):
+def get_split_analysis(ells, thry_ps, pred_ps, bin_edges):
         res_v = res_vector = {}
         res_s = res_scalar = {}
         fixed_fidu = len(thry_ps.shape) == 1
@@ -121,7 +128,7 @@ def get_split_analysis(ells, thry_ps, pred_ps):
 
         # Calculate statistics (all vectors--per ell)
         pred_mean       = np.mean(pred_ps, axis=0)
-        pred_sd         = np.std(pred_ps, axis=0)
+        pred_sd         = np.std(pred_ps, axis=0, ddof=1)
         cosmic_var      = cosmic_var              # Ratio: (Delta D) / D
 
         # Ensemble chi-square 
@@ -206,12 +213,63 @@ def get_split_analysis(ells, thry_ps, pred_ps):
             chi2_lbl = 'ensemble_chi_square'
             res_v[chi2_lbl] = chi2_ens
             res_s[(chi2_lbl, "per_ell", l1, nw)] = accumulate_over(chi2_ens)
-            res_s[(chi2_lbl, "per_ell", l1, nw)] = {'mean': np.average(chi2_ens, weights=weights)}
+            res_s[(chi2_lbl, "per_ell", l1, yw)] = {'mean': np.average(chi2_ens, weights=weights)}
             res_v["thry_mean"] = thry_ps
 
         res_v['pred_mean'] = pred_mean
         res_v['pred_sd']   = pred_sd
+
+        bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+        bin_centers = bin_centers.astype(int)
+
+        res_v['bin_centers'] = bin_centers
+        res_v['bin_means'], res_v['bin_sds'] = bin_predictions(pred_ps, ells, bin_edges)
+
+        res_v['bin_resid_means'], res_v['bin_resid_sds'] = bin_predictions(residual, ells, bin_edges)
+
         return {'vectors': res_v, 'scalars': res_s}
+
+def bin_predictions(pred_ps, ells, bin_edges):
+    """
+    Bin predictions into bandpowers with mode-count weighting.
+
+    Parameters
+    ----------
+    pred_ps : array, shape (n_sims, n_ell)
+        Predicted power spectra.
+    ells : array, shape (n_ell,)
+        Multipole values corresponding to columns of pred_ps.
+    bin_edges : array, shape (n_bins+1,)
+        Boundaries of \ell bins, e.g. [0, 50, 100, 200, ...].
+
+    Returns
+    -------
+    mean_per_bin : array, shape (n_bins,)
+        Mean prediction per bin (across sims).
+    std_per_bin : array, shape (n_bins,)
+        Std of predictions per bin (across sims).
+    """
+    n_sims, n_ell = pred_ps.shape
+    n_bins = len(bin_edges) - 1
+
+    mean_per_bin = np.zeros(n_bins)
+    std_per_bin  = np.zeros(n_bins)
+
+    weights_all = 2 * ells + 1
+
+    for b in range(n_bins):
+        mask = (ells >= bin_edges[b]) & (ells < bin_edges[b+1])
+        if not np.any(mask):
+            continue
+
+        w = weights_all[mask]
+        # average over \ell for each simulation (mode-count weighted)
+        per_sim_bin = np.average(pred_ps[:, mask], axis=1, weights=w)
+
+        mean_per_bin[b] = per_sim_bin.mean()
+        std_per_bin[b]  = per_sim_bin.std(ddof=1)  # sample std
+
+    return mean_per_bin, std_per_bin
 
 
 def accumulate_over(arr):
@@ -225,7 +283,6 @@ def accumulate_over(arr):
         "max":    float(np.max(arr)),
         "min":    float(np.min(arr)),
     }
-
 
 class PerSplitSurrogateAnalysis(PerSplitAnalysis):
     def __init__(self, cfg):

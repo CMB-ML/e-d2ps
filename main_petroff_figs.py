@@ -20,7 +20,8 @@ from cmbml.core import PipelineContext, LogMaker
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 from d2ps_nn import (
     ShowPetroffSingle,
-    ShowPetroffSet
+    ShowPetroffSet,
+    ShowPetroffSetBinned
 )
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ def run_simulations(cfg):
 
     # pipeline_context.add_pipe(ShowPetroffSingle)
     pipeline_context.add_pipe(ShowPetroffSet)
+    pipeline_context.add_pipe(ShowPetroffSetBinned)
 
     pipeline_context.prerun_pipeline()
 

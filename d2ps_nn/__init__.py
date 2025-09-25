@@ -26,3 +26,4 @@ from .stage_executors.__show_chi_sq import ShowChiSquare
 
 from .stage_executors.__show_petroff_like import ShowPetroffSingle
 from .stage_executors.__show_petroff_like import ShowPetroffSet
+from .stage_executors.__show_petroff_like import ShowPetroffSetBinned

@@ -57,11 +57,11 @@ def run_simulations(cfg):
 
     # pipeline_context.add_pipe(MaskCreatorExecutor)
     # pipeline_context.add_pipe(CommonRealPostExecutor)
-    # pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
+    pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
     # pipeline_context.add_pipe(PerSplitSurrogateAnalysis)
-    pipeline_context.add_pipe(ShowRelativeError)
-    pipeline_context.add_pipe(ShowCosmicFractions)
-    pipeline_context.add_pipe(ShowChiSquare)
+    # pipeline_context.add_pipe(ShowRelativeError)
+    # pipeline_context.add_pipe(ShowCosmicFractions)
+    # pipeline_context.add_pipe(ShowChiSquare)
 
     pipeline_context.prerun_pipeline()
 
