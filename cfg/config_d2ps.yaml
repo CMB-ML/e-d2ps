@@ -4,11 +4,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  # - splits         : planck_test
-  - splits         : three_fixed_mod
-  # - splits         : three_fixed_dummy
+  - splits         : all
   - model          : basic_d2ps_nn_l2
-  # - model          : basic_d2ps_nn_wishart
   - model/patches  : toppatch
   - model/analysis : simple_apo
   - model/analysis/metrics    : metrics
@@ -17,7 +14,7 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
-dataset_name       : "${map_fields}_${scenario.nside}_${splits.name}_d1_0rg"
+dataset_name       : "${map_fields}_${scenario.nside}_${splits.name}"
 working_dir        : "${features_type}2ps/"
 fig_model_name     : "${features_type} to PS, 1280ell"
 hydra:
