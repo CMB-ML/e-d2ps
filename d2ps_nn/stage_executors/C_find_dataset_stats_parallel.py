@@ -15,7 +15,7 @@ from cmbml.core import (
     Asset,
     GenericHandler
     )
-from cmbml.utils import make_instrument, Instrument
+from cmbml.utils.planck_instrument import make_instrument, Instrument
 from cmbml.core.asset_handlers import Config # Import for typing hint
 from cmbml.core.asset_handlers.healpy_map_handler import HealpyMap # Import for typing hint
 

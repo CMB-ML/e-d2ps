@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 from tqdm import tqdm
 
 from cmbml.core import BaseStageExecutor, Split, Asset
-from cmbml.utils import make_instrument, Instrument
+from cmbml.utils.planck_instrument import make_instrument, Instrument
 from cmbml.core.asset_handlers import NumpyPowerSpectrum  # Import for typing hint
 from cmbml.core.asset_handlers import NumpyMap
 from cmbml.core.asset_handlers import Config
