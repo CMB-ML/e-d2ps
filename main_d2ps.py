@@ -51,24 +51,24 @@ def run_train(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
             #  HydraConfigCheckerExecutor,
-            #  MakeLutExecutor,
-            #  FindDatasetStatsParallelExecutor,
-            #  PreprocessMapsExecutor,
-            #  PreprocessSpectraExecutor,
-            #  CheckGPULoadExecutor,
-            #  TrainingExecutor,
-            #  PredictExecutor,
-            #  PowerSpectrumAnalysisExecutor,
+             MakeLutExecutor,
+             FindDatasetStatsParallelExecutor,
+             PreprocessMapsExecutor,
+             PreprocessSpectraExecutor,
+             CheckGPULoadExecutor,
+             TrainingExecutor,
+             PredictExecutor,
+             PowerSpectrumAnalysisExecutor,
              PerSplitAnalysis,
-            #  ShowRelativeError,
-            #  ShowCosmicFractions,
-            #  ShowChiSquare,
-            #  ShowPredictionsExecutor,
-            #  ShowBWPredictionsExecutor,
-            #  ShowIndivPredictionsExecutor,
-            #  LossPlotExecutor,
-            #  ErrorAnalysisExecutor,
-            #  ShowPredictionsWithChiSquareExecutor
+             ShowRelativeError,
+             ShowCosmicFractions,
+             ShowChiSquare,
+             ShowPredictionsExecutor,
+             ShowBWPredictionsExecutor,
+             ShowIndivPredictionsExecutor,
+             LossPlotExecutor,
+             ErrorAnalysisExecutor,
+             ShowPredictionsWithChiSquareExecutor
              ]
     run(cfg, pipes)
 
@@ -77,7 +77,7 @@ def run_train(cfg):
 def run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-             HydraConfigCheckerExecutor,
+            #  HydraConfigCheckerExecutor,
              PreprocessMapsExecutor,
              PreprocessSpectraExecutor,
              PredictExecutor,
