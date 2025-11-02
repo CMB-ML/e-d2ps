@@ -26,7 +26,6 @@ from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn import (
-    PerSplitSurrogateAnalysis,
     ShowRelativeError,
     ShowCosmicFractions,
     ShowChiSquare,
