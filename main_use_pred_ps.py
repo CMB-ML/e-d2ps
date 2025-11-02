@@ -60,7 +60,6 @@ def run_simulations(cfg):
 
     pipeline_context = PipelineContext(cfg, log_maker)
     pipes = [
-        PerSplitSurrogateAnalysis,
         ShowRelativeError,
         ShowCosmicFractions,
         ShowChiSquare,
