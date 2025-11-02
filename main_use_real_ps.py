@@ -26,11 +26,17 @@ from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn import (
-    PerSplitSurrogateAnalysis,
+    PerSplitAnalysis,
     ShowRelativeError,
     ShowCosmicFractions,
-    ShowChiSquare
+    ShowChiSquare,
+    ShowPredictionsExecutor,
+    ShowBWPredictionsExecutor,
+    ShowIndivPredictionsExecutor,
+    ErrorAnalysisExecutor,
+    ShowPredictionsWithChiSquareExecutor
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +60,21 @@ def run_simulations(cfg):
     log_maker.log_procedure_to_hydra(source_script=__file__)
 
     pipeline_context = PipelineContext(cfg, log_maker)
+    pipes = [
+        MakeRealPowerSpectrumExecutor,
+        PerSplitAnalysis,
+        ShowRelativeError,
+        ShowCosmicFractions,
+        ShowChiSquare,
+        ShowPredictionsExecutor,
+        ShowBWPredictionsExecutor,
+        ShowIndivPredictionsExecutor,
+        ErrorAnalysisExecutor,
+        ShowPredictionsWithChiSquareExecutor
+    ]
 
-    # pipeline_context.add_pipe(MaskCreatorExecutor)
-    # pipeline_context.add_pipe(CommonRealPostExecutor)
-    pipeline_context.add_pipe(MakeRealPowerSpectrumExecutor)
-    # pipeline_context.add_pipe(PerSplitSurrogateAnalysis)
-    # pipeline_context.add_pipe(ShowRelativeError)
-    # pipeline_context.add_pipe(ShowCosmicFractions)
-    # pipeline_context.add_pipe(ShowChiSquare)
+    for pipe in pipes:
+        pipeline_context.add_pipe(pipe)
 
     pipeline_context.prerun_pipeline()
 

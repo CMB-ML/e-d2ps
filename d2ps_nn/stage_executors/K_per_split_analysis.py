@@ -28,8 +28,8 @@ class PerSplitAnalysis(BaseStageExecutor):
     """
     Goal: Calculate various error metrics for power spectra predictions.
     """
-    def __init__(self, cfg: DictConfig, stage_str="per_split_analysis") -> None:
-        super().__init__(cfg, stage_str=stage_str)
+    def __init__(self, cfg: DictConfig) -> None:
+        super().__init__(cfg, stage_str="per_split_analysis")
 
         self.out_vectors: Asset = self.assets_out["per_vector_report"]
         out_report_handler: TextPowerSpectrum
@@ -283,7 +283,3 @@ def accumulate_over(arr):
         "max":    float(np.max(arr)),
         "min":    float(np.min(arr)),
     }
-
-class PerSplitSurrogateAnalysis(PerSplitAnalysis):
-    def __init__(self, cfg):
-        super().__init__(cfg, stage_str="per_split_surrogate_analysis")
