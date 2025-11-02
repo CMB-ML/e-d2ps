@@ -1,0 +1,69 @@
+defaults:
+  - local_system   : generic_lab
+  - file_system    : common_fs
+  - pipeline       : assembly_surr_real_ps
+  - scenario       : scenario
+  - splits         : all
+  - model          : basic_d2ps_nn_l2
+  - model/sim      : sim
+  - model/analysis : basic_analysis
+  - model/analysis/metrics : metrics
+  - override hydra/job_logging: custom_log
+  - _self_
+
+dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
+working_dir : "CMBNNCS_UNet8/"
+
+fig_model_name: "cmbNNCS Spectra"
+fig_type      : pdf
+
+pipeline:
+  per_split_analysis:
+    assets_in:
+      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+  show_predictions:
+    assets_in:
+      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+  show_predictions_bw:
+    assets_in:
+      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+  show_predictions_indiv:
+    assets_in:
+      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+  error_analysis:
+    assets_in:
+      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+  show_predictions_error_analysis:
+    assets_in:
+      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  verbose          : false
+
+# Settings below this point are used for interpolation.
+# These are not to be used directly in the python
+# They are picked up from here and MAY be used elsewhere in the yamls.
+# In the scenario yaml
+nside          : 512
+detectors      : [100, 143, 217, 353]
+map_fields     : "I"
+
+lmax           : 1280
+
+# For prediction, postprocessing, power spectra generation:
+use_epochs           : ["best"]
+# For single simulation figures (maps & ps figures):
+use_epochs_imgs      : ${use_epochs}
+# For summary statistics:
+use_epochs_map_stats : ${use_epochs}
+# For summary statistics:
+use_epochs_ps_stats  : ${use_epochs}
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 10
+
+# Limit the number of simulations on which to do inference and postprocessing
+# In the splits yaml; null to run on all
+n_infer_cap           : null
+run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
