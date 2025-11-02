@@ -16,7 +16,7 @@ pipeline:
     assets_in:
       ps_pred: {stage: make_real_ps, orig_name: auto_real}
 
-dataset_name: "${map_fields}_${scenario.nside}_${splits.name}
+dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
 working_dir : "Real_PS/"
 hydra:
   run:
