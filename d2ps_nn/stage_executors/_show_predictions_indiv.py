@@ -95,6 +95,11 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                         ps_pred = self.in_ps_pred.read()
                         ps_thry = self.in_ps_thry.read(use_alt_path=use_alt_path)
                     all_theory_ps[sim] = ps_thry[:show_max_l]
+                    # TODO: Fix this. Patch exists to handle Realization Power Spectra,
+                    #       which are produced using a different way of defining ells
+                    #       (thye use lmax; this later method uses use_ells)
+                    if ps_pred.shape[1] == 1281:
+                        ps_pred = ps_pred[:, 2:]
                     all_pred_ps[sim] = ps_pred
 
                 full_ells = np.arange(show_max_l)
