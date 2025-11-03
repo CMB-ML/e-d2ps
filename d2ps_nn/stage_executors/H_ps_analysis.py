@@ -196,6 +196,11 @@ def process_target(task_target: TaskTarget, stat_funcs):
         return {'error': f"Could not read pred data from {pred.path}. Error: {str(e)}", **res}
 
     true_data = true_data[task_target.ells]
+    # TODO: Fix this. Patch exists to handle Realization Power Spectra,
+    #       which are produced using a different way of defining ells
+    #       (thye use lmax; this later method uses use_ells)
+    if pred_data.shape[0] == 1281:
+        pred_data = pred_data[2:]
 
     # Ensure that the shapes match
     if pred_data.shape[0] != true_data.shape[0]:
