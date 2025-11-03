@@ -89,8 +89,8 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                     # TODO: Fix this. Patch exists to handle Realization Power Spectra,
                     #       which are produced using a different way of defining ells
                     #       (thye use lmax; this later method uses use_ells)
-                    if ps_pred.shape[1] == 1281:
-                        ps_pred = ps_pred[:, 2:]
+                    if ps_pred.shape[0] == 1281:
+                        ps_pred = ps_pred[2:]
                     all_theory_ps.append(ps_thry[:show_max_l])
                     all_pred_ps.append(ps_pred)
                     if self.display_n_sims and sim >= self.display_n_sims:

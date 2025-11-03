@@ -18,6 +18,9 @@ fig_model_name: "cmbNNCS Spectra"
 fig_type      : pdf
 
 pipeline:
+  ps_analysis:
+    assets_in:
+      auto_pred: {stage: make_real_ps, orig_name: auto_real}
   per_split_analysis:
     assets_in:
       ps_pred: {stage: make_pred_ps, orig_name: auto_pred}

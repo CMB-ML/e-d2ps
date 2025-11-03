@@ -26,6 +26,7 @@ from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn import (
+    PowerSpectrumAnalysisExecutor,
     PerSplitAnalysis,
     ShowRelativeError,
     ShowCosmicFractions,
@@ -60,6 +61,7 @@ def run_simulations(cfg):
 
     pipeline_context = PipelineContext(cfg, log_maker)
     pipes = [
+        PowerSpectrumAnalysisExecutor,
         PerSplitAnalysis,
         ShowRelativeError,
         ShowCosmicFractions,
