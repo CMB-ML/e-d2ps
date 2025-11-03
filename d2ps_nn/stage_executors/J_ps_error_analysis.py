@@ -71,6 +71,8 @@ class ErrorAnalysisExecutor(BaseStageExecutor):
         for sim in tqdm(split.iter_sims(), desc=f"Processing simulations for epoch {epoch}"):
             with self.name_tracker.set_context("sim_num", sim):
                 pred_ps = self.in_ps_pred.read()
+                if pred_ps.shape[0] == 1281:
+                    pred_ps = pred_ps[2:]
                 all_pred_ps.append(pred_ps)
                 
         all_pred_ps = np.array(all_pred_ps)
