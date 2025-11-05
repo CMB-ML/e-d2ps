@@ -61,16 +61,16 @@ def run_simulations(cfg):
 
     pipeline_context = PipelineContext(cfg, log_maker)
     pipes = [
-        PowerSpectrumAnalysisExecutor,
-        PerSplitAnalysis,
-        ShowRelativeError,
-        ShowCosmicFractions,
-        ShowChiSquare,
+        # PowerSpectrumAnalysisExecutor,
+        # PerSplitAnalysis,
+        # ShowRelativeError,
+        # ShowCosmicFractions,
+        # ShowChiSquare,
         ShowPredictionsExecutor,
-        ShowBWPredictionsExecutor,
-        ShowIndivPredictionsExecutor,
-        ErrorAnalysisExecutor,
-        ShowPredictionsWithChiSquareExecutor
+        # ShowBWPredictionsExecutor,
+        # ShowIndivPredictionsExecutor,
+        # ErrorAnalysisExecutor,
+        # ShowPredictionsWithChiSquareExecutor
     ]
 
     for pipe in pipes:

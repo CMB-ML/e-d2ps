@@ -12,9 +12,12 @@ defaults:
   - _self_
 
 dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
-working_dir : "CMBNNCS_UNet8/"
+# working_dir : "CMBNNCS_UNet8/"
+# fig_model_name: "cmbNNCS Spectra"
 
-fig_model_name: "cmbNNCS Spectra"
+working_dir : "cmbNNCS_UNet8_on_Planck/"
+fig_model_name: "cmbNNCS on Planck"
+
 fig_type      : pdf
 
 pipeline:
