@@ -3,7 +3,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_surr_real_ps
   - scenario       : scenario
-  - splits         : all
+  - splits         : all   # For CMB-ML dataset
+  # - splits         : "1-1"   # For on_Planck
   - model          : basic_d2ps_nn_l2
   - model/sim      : sim
   - model/analysis : basic_analysis
@@ -14,9 +15,16 @@ defaults:
 dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
 # working_dir : "CMBNNCS_UNet8/"
 # fig_model_name: "cmbNNCS Spectra"
+# n_show_cap           : 10
 
-working_dir : "cmbNNCS_UNet8_on_Planck/"
-fig_model_name: "cmbNNCS on Planck"
+# working_dir : "cmbNNCS_UNet8_on_Planck/"
+# fig_model_name: "cmbNNCS on Planck"
+# n_show_cap           : 1
+
+working_dir : "PyILC_CNILC/"
+fig_model_name: "PyILC Spectra"
+n_show_cap           : 10
+
 
 fig_type      : pdf
 
@@ -67,7 +75,6 @@ use_epochs_map_stats : ${use_epochs}
 # For summary statistics:
 use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations for which to generate figures
-n_show_cap           : 10
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
