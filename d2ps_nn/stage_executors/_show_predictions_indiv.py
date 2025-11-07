@@ -63,9 +63,13 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
             if self.top_n > 0 or self.bottom_n > 0:
                 # Get the top_n sims based on MSE
                 key = 'mse'
+                if epoch == "":
+                    lookup_epoch = "nan"
+                else:
+                    lookup_epoch = str(epoch)
                 mask = (
                     (report_data['split'] == split.name) &
-                    (report_data['epoch'] == str(epoch))  # Use the last epoch
+                    (report_data['epoch'] == lookup_epoch)
                 )
                 subset = report_data.loc[mask]
                 if subset.empty:
@@ -139,10 +143,15 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
 
                     if report_data is not None:
                         key = 'mse'
+                        if epoch == "":
+                            lookup_epoch = "nan"
+                        else:
+                            lookup_epoch = str(epoch)
+
                         mask = (
                             (report_data['sim'] == this_sim) &
                             (report_data['split'] == split.name) &
-                            (report_data['epoch'] == str(epoch))
+                            (report_data['epoch'] == lookup_epoch)
                         )
                         subset = report_data.loc[mask]
                         if subset.empty:

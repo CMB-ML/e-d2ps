@@ -109,7 +109,7 @@ class ShowPredictionsWithChiSquareExecutor(BaseStageExecutor):
                     color='blue')
         
         ax2.fill_between(self.ells, pred_mean - std_dev, pred_mean + std_dev, 
-                 color='red', alpha=0.2, label='$\pm 1 \sigma$')
+                 color='red', alpha=0.2, label=r'$\pm 1 \sigma$')
         ax1.set_xlim([0, self.display_lmax])
         ax1.set_ylim([0, 6500])
         ax1.set_xlabel(r"$\ell$")
@@ -120,19 +120,27 @@ class ShowPredictionsWithChiSquareExecutor(BaseStageExecutor):
 
         ax1.set_title(f"Prediction Mean and Theory, Epoch {epoch}")
 
-
         if report_data is not None:
             key = ('chi_square_per_dof')
-            mask = (
-                (report_data['split'] == split.name) &
-                (report_data['epoch'] == epoch)
-            )
+            if epoch == "":
+                mask = (
+                    (report_data['split'] == split.name) &
+                    (
+                        (report_data['epoch'].isna() & (epoch in [None, '', 'nan'])) |
+                        (report_data['epoch'] == str(epoch))
+                    )
+                )
+            else:
+                mask = (
+                    (report_data['split'] == split.name) &
+                    (report_data['epoch'] == str(epoch))
+                )
             subset = report_data.loc[mask]
             if subset.empty:
                 raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
             else:
                 chi_square_per_dof = subset[key].values[0]
-            ax1.text(0.9, 0.7, f"$\Delta \chi ^2$: {chi_square_per_dof:.1f}")
+            ax1.text(0.9, 0.7, fr"$\Delta \chi ^2$: {chi_square_per_dof:.1f}")
 
         ax1.legend()
 

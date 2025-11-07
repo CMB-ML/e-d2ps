@@ -111,9 +111,13 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
 
             # Use the report to find best and worst instances
             key = 'mse'
+            if epoch == "":
+                lookup_epoch = "nan"
+            else:
+                lookup_epoch = str(epoch)
             mask = (
                 (report_data['split'] == split.name) &
-                (report_data['epoch'] == str(epoch))  # Use the last epoch
+                (report_data['epoch'] == lookup_epoch)
             )
             subset = report_data.loc[mask]
             if subset.empty:
