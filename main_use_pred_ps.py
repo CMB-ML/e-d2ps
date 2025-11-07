@@ -54,23 +54,23 @@ def run_simulations(cfg):
     """
     logger.debug(f"Running {__name__} in {__file__}")
 
-    print(OmegaConf.to_yaml(cfg))
+    # print(OmegaConf.to_yaml(cfg))
 
     log_maker = LogMaker(cfg)
     log_maker.log_procedure_to_hydra(source_script=__file__)
 
     pipeline_context = PipelineContext(cfg, log_maker)
     pipes = [
-        PowerSpectrumAnalysisExecutor,
-        PerSplitAnalysis,
-        ShowRelativeError,
-        ShowCosmicFractions,
-        ShowChiSquare,
+        # PowerSpectrumAnalysisExecutor,
+        # PerSplitAnalysis,
+        # ShowRelativeError,
+        # ShowCosmicFractions,
+        # ShowChiSquare,
         ShowPredictionsExecutor,
-        ShowBWPredictionsExecutor,
-        ShowIndivPredictionsExecutor,
-        ErrorAnalysisExecutor,
-        ShowPredictionsWithChiSquareExecutor
+        # ShowBWPredictionsExecutor,
+        # ShowIndivPredictionsExecutor,
+        # ErrorAnalysisExecutor,
+        # ShowPredictionsWithChiSquareExecutor
     ]
 
     for pipe in pipes:
