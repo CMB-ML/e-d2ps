@@ -79,6 +79,8 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                 # self.process_epoch(split, epoch, show_max_l, scale_prep_ps, all_theory_ps, all_prep_ps)
             with self.name_tracker.set_context('epoch', epoch):
                 for sim in split.iter_sims():
+                    if self.display_n_sims and sim >= self.display_n_sims:
+                        break
                     context = dict(
                         split=split.name,
                         sim_num=sim
@@ -93,8 +95,6 @@ class ShowPredictionsExecutor(BaseStageExecutor):
                         ps_pred = ps_pred[2:]
                     all_theory_ps.append(ps_thry[:show_max_l])
                     all_pred_ps.append(ps_pred)
-                    if self.display_n_sims and sim >= self.display_n_sims:
-                        break
 
                 full_ells = np.arange(show_max_l)
                 part_ells = self.ells
