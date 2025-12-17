@@ -33,7 +33,7 @@ fig_type: pdf
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
 nside              : 512
-lmax               : 1280
+lmax               : 1024
 # nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
