@@ -71,7 +71,7 @@ nside          : 512
 detectors      : [100, 143, 217, 353]
 map_fields     : "I"
 
-lmax           : 1280
+lmax           : 1024
 
 # For prediction, postprocessing, power spectra generation:
 # For single simulation figures (maps & ps figures):
