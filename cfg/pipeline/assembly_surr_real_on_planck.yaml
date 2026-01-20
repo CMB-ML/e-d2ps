@@ -1,0 +1,11 @@
+defaults:
+  - pipe_raw
+  - pipe_sim
+  - pipe_noise_model
+  - pipe_sim_analysis
+  - pipe_model_analysis
+  - pipes_on_sims
+  - assembly_planck_as_sim
+  - pipes_on_sims
+  - adapt_on_planck
+  - _self_

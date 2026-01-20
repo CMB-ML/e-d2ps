@@ -1,0 +1,34 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - config_real_ps
+  - override pipeline: assembly_surr_real_on_planck
+  - override splits: "1-1"
+  - _self_
+
+working_dir        : "Real_PS_on_Planck/"
+fig_model_name     : "Realization Spectra of Planck NILC"
+
+planck_ds: PlanckAsDataset_${scenario.nside}
+splits:
+  name: "1850"
+
+pipeline:
+  ps_analysis:
+    assets_in:
+      auto_pred: {stage: make_real_ps, orig_name: auto_real}
+  make_real_ps:
+    assets_in:
+      cmb_map_real:
+        dataset: ${planck_ds}
+  # convert_ps:
+  #   assets_out:
+  #     cmb_ps:
+  #       path_template_alt: ${pipeline.convert_ps.assets_out.cmb_ps.path_template}
+  show_predictions:
+    assets_in:
+      ps_pred: {stage: make_real_ps, orig_name: auto_real}
+      ps_thry: {stage: make_theory_ps, orig_name: cmb_ps}
+    assets_out:
+      fig:
+        # Change file name
+        path_template: "{root}/{dataset}/{working}{stage}/planck_real_ps.{fig_type}"
