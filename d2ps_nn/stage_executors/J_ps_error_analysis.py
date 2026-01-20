@@ -40,7 +40,7 @@ class ErrorAnalysisExecutor(BaseStageExecutor):
         report = []
         for split in self.splits:
             print(f"Processing split: {split.name}")
-            if "F" not in split.name:
+            if not split.ps_fidu_fixed:
                 continue  # Skip if no fixed fiducial power spectrum
             with self.name_tracker.set_context("split", split.name):
                 logger.info(f"Processing split: {split.name}")
@@ -64,7 +64,10 @@ class ErrorAnalysisExecutor(BaseStageExecutor):
         use_alt_path = True if split.ps_fidu_fixed else False
         # Prepare to collect results
         all_pred_ps = []
-        thry_ps = self.in_ps_thry.read(use_alt_path=use_alt_path)
+        try:
+            thry_ps = self.in_ps_thry.read(use_alt_path=use_alt_path)
+        except KeyError as e:
+            raise KeyError("This analysis only works on test splits with a fixed power spectrum.")
         thry_ps = thry_ps[self.ells]  # Ensure we only use the relevant ell range
 
         # Iterate through simulations in the split
