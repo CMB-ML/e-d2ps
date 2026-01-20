@@ -46,7 +46,7 @@ class ShowPredictionsWithChiSquareExecutor(BaseStageExecutor):
 
         for split in self.splits:
             print(f"Processing split: {split.name}")
-            if "F" not in split.name:
+            if not split.ps_fidu_fixed:
                 continue  # Skip if no fixed fiducial power spectrum
             with self.name_tracker.set_context("split", split.name):
                 logger.info(f"Processing split: {split.name}")
