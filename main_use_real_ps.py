@@ -53,14 +53,10 @@ def run_simulations(cfg):
     Raises:
         Exception: If an exception occurs during the pipeline execution.
     """
-    logger.debug(f"Running {__name__} in {__file__}")
+    logger.debug(f"Running on simulations in {__file__}")
 
-    print(OmegaConf.to_yaml(cfg))
+    # print(OmegaConf.to_yaml(cfg))
 
-    log_maker = LogMaker(cfg)
-    log_maker.log_procedure_to_hydra(source_script=__file__)
-
-    pipeline_context = PipelineContext(cfg, log_maker)
     pipes = [
         MakeRealPowerSpectrumExecutor,
         PowerSpectrumAnalysisExecutor,
@@ -74,25 +70,38 @@ def run_simulations(cfg):
         ErrorAnalysisExecutor,
         ShowPredictionsWithChiSquareExecutor
     ]
+    run(cfg, pipes)
 
+
+@hydra.main(version_base=None, config_path="cfg", config_name="config_real_ps_planck")
+def run_planck(cfg):
+    logger.debug(f"Running on Planck in {__file__}")
+    pipes = [
+        MakeRealPowerSpectrumExecutor,
+        ShowPredictionsExecutor
+        ]
+    run(cfg, pipes)
+   
+
+def run(cfg, pipes):
+    log_maker = LogMaker(cfg)
+    log_maker.log_procedure_to_hydra(source_script=__file__)
+
+    pipeline_context = PipelineContext(cfg, log_maker)
     for pipe in pipes:
         pipeline_context.add_pipe(pipe)
 
     pipeline_context.prerun_pipeline()
-
-    had_exception = False
     try:
         pipeline_context.run_pipeline()
     except Exception as e:
-        had_exception = True
-        logger.exception("An exception occurred during the pipeline.", exc_info=e)
+        logger.exception("An exception occured during the pipeline.", exc_info=e)
         raise e
     finally:
-        if had_exception:
-            logger.error("Pipeline failed.")
-        else:
-            logger.info("Pipeline completed.")
+        logger.info("Pipeline completed.")
         log_maker.copy_hydra_run_to_dataset_log()
+
 
 if __name__ == "__main__":
     run_simulations()
+    run_planck()
