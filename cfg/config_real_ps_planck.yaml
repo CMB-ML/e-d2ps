@@ -12,6 +12,9 @@ planck_ds: PlanckAsDataset_${scenario.nside}
 splits:
   name: "1850"
 
+scenario:
+  cmb_beam: 5  # Planck convolved their CMB map to a 5 arcmin beam
+
 pipeline:
   ps_analysis:
     assets_in:
