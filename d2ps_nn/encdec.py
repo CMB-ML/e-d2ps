@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 
 class DoubleConv(nn.Module):
-    def __init__(self, in_features, out_channels, use_batch_norm):
+    def __init__(self, in_features, out_channels, use_batch_norm, dropout_rate=0.1):
         super().__init__()
 
         layers = []
@@ -20,12 +20,14 @@ class DoubleConv(nn.Module):
                       kernel_size=3, padding=1, bias=False))
         if use_batch_norm:
             layers.append(nn.BatchNorm2d(out_channels))
-        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.GELU())
+        if dropout_rate > 0:
+            layers.append(nn.Dropout2d(dropout_rate))
         layers.append(nn.Conv2d(out_channels, out_channels, 
                       kernel_size=3, padding=1, bias=False))
         if use_batch_norm:
             layers.append(nn.BatchNorm2d(out_channels))
-        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.GELU())
 
         self.double_conv = nn.Sequential(*layers)
 
@@ -52,18 +54,21 @@ class FCNDecoder(nn.Module):
                  mid_channels, 
                  out_channels, 
                  use_batch_norm,
+                 dropout_rate=0.1,
                  final_activation=None
                  ):
         super().__init__()
         layers = []
-        layers.append(nn.AdaptiveMaxPool2d((1,1)))  # Squish out spatial information
+        layers.append(nn.AdaptiveAvgPool2d((1,1)))  # changed to adaptiveavgpool from adaptivemaxpool
         layers.append(nn.Flatten())
         layers.append(nn.Linear(in_channels, mid_channels))
 
         if use_batch_norm:
             layers.append(nn.BatchNorm1d(mid_channels))
 
-        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.GELU())
+        if dropout_rate > 0:
+            layers.append(nn.Dropout(dropout_rate))
         layers.append(nn.Linear(mid_channels, out_channels))
 
         if final_activation is not None:

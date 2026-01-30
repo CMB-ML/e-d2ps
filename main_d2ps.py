@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 def run_train(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-            #  HydraConfigCheckerExecutor,
+             HydraConfigCheckerExecutor,
              MakeLutExecutor,
              FindDatasetStatsParallelExecutor,
              PreprocessMapsExecutor,
@@ -107,5 +107,5 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_train()
-    # run_planck()
+    # run_train()
+    run_planck()

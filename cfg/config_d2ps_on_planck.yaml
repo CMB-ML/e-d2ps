@@ -5,8 +5,8 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "${features_type}2ps_on_Planck/"
+working_dir        : "${features_type}2ps_on_Planck_gelu/"
 fig_model_name     : "${features_type} to PS, Model using BN, On Planck"
 
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "${features_type}2ps/"
+trained_wd: "${features_type}2ps_aankit_planck_gelu/"
