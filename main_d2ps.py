@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps")
 def run_train(cfg):
-    logger.debug(f"Running train in {__file__}")
+    logger.debug(f"Running on simulations in {__file__}")
     pipes = [
             #  HydraConfigCheckerExecutor,
              MakeLutExecutor,
@@ -75,7 +75,7 @@ def run_train(cfg):
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_planck")
 def run_planck(cfg):
-    logger.debug(f"Running train in {__file__}")
+    logger.debug(f"Running on Planck in {__file__}")
     pipes = [
             #  HydraConfigCheckerExecutor,
              PreprocessMapsExecutor,
@@ -108,4 +108,4 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_train()
-    # run_planck()
+    run_planck()
