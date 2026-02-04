@@ -40,6 +40,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
         self.first_n = cfg.model.analysis.first_n
         self.top_n = cfg.model.analysis.top_n
         self.bottom_n = cfg.model.analysis.bottom_n
+        self.fig_label = cfg.fig_model_name
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -139,7 +140,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                     elif this_sim in bottom_subset:
                         bw_label = "(among worst)"
 
-                    ax1.set_title(f"{split.name} Sim {this_sim}, Epoch {epoch}, {bw_label}")
+                    ax1.set_title(f"{split.name} Sim {this_sim}, {self.fig_label}, {bw_label}")
 
                     if report_data is not None:
                         key = 'mse'

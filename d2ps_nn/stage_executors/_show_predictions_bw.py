@@ -51,6 +51,7 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
         self.display_lmax = cfg.lmax
         self.top_n = cfg.model.analysis.top_n
         self.bottom_n = cfg.model.analysis.bottom_n
+        self.fig_label = cfg.fig_model_name
 
         self.best_colors = _seq_colors("Blues",  self.top_n)
         self.worst_colors = _seq_colors("Reds",  self.bottom_n)[::-1]
@@ -148,7 +149,7 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
             ax.set_xlabel(r"$\ell$")
             unit_str = (self.units**2).to_string('latex_inline')
             ax.set_ylabel(r"$D_\ell$ [" + unit_str + "]")
-            ax.set_title(f"Best and worst instances in {split.name}")
+            ax.set_title(f"Best and worst instances in {split.name}, {self.fig_label}")
 
             target_proxy = Line2D([0],[0], color="black", lw=0.8, label="Target")
             pred_proxy   = Line2D([0],[0], color="black", lw=2, ls=(0,(3,3)), label="Prediction")
