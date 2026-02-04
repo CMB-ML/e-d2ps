@@ -1,0 +1,8 @@
+defaults:
+  - config_pred_ps_base
+  - _self_
+
+working_dir : "cmbNNCS_UNet8/"
+fig_model_name: "cmbNNCS Spectra"
+n_show_cap           : 10
+use_epochs           : ["best"]
