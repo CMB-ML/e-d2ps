@@ -58,7 +58,7 @@ def run_simulations(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        MakeRealPowerSpectrumExecutor,
+        # MakeRealPowerSpectrumExecutor,
         PowerSpectrumAnalysisExecutor,
         PerSplitAnalysis,
         ShowRelativeError,
@@ -104,4 +104,4 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_simulations()
-    run_planck()
+    # run_planck()
