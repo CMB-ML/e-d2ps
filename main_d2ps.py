@@ -73,9 +73,9 @@ def run_train(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_planck")
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_ref")
 def run_planck(cfg):
-    logger.debug(f"Running on Planck in {__file__}")
+    logger.debug(f"Running on Ref in {__file__}")
     pipes = [
             #  HydraConfigCheckerExecutor,
              PreprocessMapsExecutor,
@@ -107,5 +107,5 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_train()
+    # run_train()
     run_planck()
