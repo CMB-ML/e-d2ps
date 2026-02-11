@@ -8,6 +8,7 @@ multirun/
 # Ignore potentially large files
 *.fits
 *.tar.gz
+*.npy
 
 # Ignore build files
 build/
