@@ -5,7 +5,7 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "${features_type}2ps_on_FFP10"
+working_dir        : "${features_type}2ps_on_FFP10/"
 fig_model_name     : "${features_type} to PS, Model using BN, On FFP10"
 
 planck_ds: FFP10_512
