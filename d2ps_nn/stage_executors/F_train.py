@@ -138,12 +138,13 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             with self.name_tracker.set_context("epoch", "init"):
                 self.out_model.write(model=model, epoch="init")
             start_epoch = 0
-            loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss']
+            loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss', 'Training Loss 2']
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
         all_train_loss = []
+        all_train_loss2 = []
         all_valid_loss = []
 
         for epoch in range(start_epoch, self.n_epochs):
@@ -175,8 +176,17 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
             # Validation
             model.eval()
+            train_loss2 = 0
             valid_loss = 0
             with torch.no_grad():
+                for train_features, train_label in train_dataloader:
+                    train_features = train_features.to(device=self.device, dtype=self.dtype)
+                    train_label = train_label.to(device=self.device, dtype=self.dtype)
+                    output = model(train_features)
+                    train_loss2 += loss_function(output, train_label).item()
+                train_loss2 /= len(train_dataloader)
+                all_train_loss2.append(train_loss2)
+
                 for valid_features, valid_label in valid_dataloader:
                     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
                     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
@@ -187,7 +197,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
             logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
 
-            self.out_loss_record.append([epoch + 1, train_loss, valid_loss])
+            self.out_loss_record.append([epoch + 1, train_loss, valid_loss, train_loss2])
 
             is_best_condition_a = valid_loss == min(all_valid_loss)
             is_best_condition_b = epoch >= self.earliest_best
