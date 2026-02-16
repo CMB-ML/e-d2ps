@@ -1,95 +1,61 @@
-# import logging
+import logging
 
-# import numpy as np
-# from omegaconf import DictConfig
+import numpy as np
+from omegaconf import DictConfig
 
-# from cmbml.core import Split, Asset, BaseStageExecutor
-# from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum
-# from d2ps_nn.utils.get_epochs import get_epochs_with_best
-
-
-# logger = logging.getLogger(__name__)
+from cmbml.core import Split, Asset, BaseStageExecutor
+from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum
+from d2ps_nn.utils.get_epochs import get_epochs_with_best
 
 
-# class PSBundleExecutor(BaseStageExecutor):
-#     """
-#     Goal: Bundle together power spectra for external analysis.
+logger = logging.getLogger(__name__)
 
-#     Use a dataset to iterate through patches (instead of simulations).
-#     """
-#     def __init__(self, cfg: DictConfig) -> None:
-#         super().__init__(cfg, stage_str="bundle")
 
-#         self.out_ps_pred: Asset = self.assets_out["ps_pred"]
-#         self.out_ps_real: Asset = self.assets_out["ps_real"]
-#         self.out_ps_thry: Asset = self.assets_out["ps_thry"]
-#         out_ps_pred_handler: NumpyPowerSpectrum
-#         out_ps_real_handler: NumpyPowerSpectrum
-#         out_ps_thry_handler: NumpyPowerSpectrum
+class BundleExecutor(BaseStageExecutor):
+    """
+    Goal: Bundle together power spectra for external analysis.
 
-#         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
-#         self.in_ps_real: Asset = self.assets_in["ps_real"]
-#         self.in_ps_thry: Asset = self.assets_in["ps_thry"]
-#         in_ps_pred_handler: TextPowerSpectrum
-#         in_ps_real_handler: NumpyPowerSpectrum
-#         in_ps_thry_handler: CambPowerSpectrum
+    Use a dataset to iterate through patches (instead of simulations).
+    """
+    def __init__(self, cfg: DictConfig, stage_str) -> None:
+        super().__init__(cfg, stage_str=stage_str)
+        self.out_ps: Asset = self.assets_out["ps_bundle"]
+        self.in_ps: Asset = self.assets_in["ps"]
 
-#         # Not going to clip the power spectra for now...
-#         # self.lmax          = cfg.model.lmax
-#         self._model_epochs = cfg.use_epochs
+    def execute(self) -> None:
+        logger.debug(f"Running {self.__class__.__name__} execute()")
+        epoch_iter = [None] if self.model_epochs is None else self.model_epochs
 
-#     @property
-#     def model_epochs(self):
-#         """
-#         Returns the epochs to use for prediction.
-#         If the model asset has a 'best' epoch, it will be included in the list.
-#         """
-#         return self._model_epochs
+        for split in self.splits:
+            for epoch in epoch_iter:
+                context = dict(split=split.name, epoch=epoch)
+                with self.name_tracker.set_contexts(context):
+                    self.process(split)
 
-#     def execute(self) -> None:
-#         self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_ps_pred, self.name_tracker)
-#         logger.debug(f"Running {self.__class__.__name__} execute()")
+    def process(self, split: Split) -> None:
+        # Prepared to handle single spectra for a split
+        data = []
+        for sim in split.iter_sims():
+            with self.name_tracker.set_context("sim_num", sim):
+                try:
+                    spectrum = self.in_ps.read()
+                except AttributeError:
+                    spectrum = self.in_ps.read(use_alt_path=False)
+                data.append(spectrum)
+        data = np.array(data)
+        self.out_ps.write(data=data)
 
-#         for split in self.splits:
-#             with self.name_tracker.set_context("split", split.name):
-#                 # Handle the single lump of realization power spectra
-#                 self.process(split, self.in_ps_real, self.out_ps_real)
-#                 self.process(split, self.in_ps_thry, self.out_ps_thry)
+class BundlePredExecutor(BundleExecutor):
+    def __init__(self, cfg: DictConfig) -> None:
+        super().__init__(cfg, stage_str="bundle_pred")
 
-#                 # Handler predictions of power spectra for each epoch
-#                 for model_epoch in self.model_epochs:
-#                     with self.name_tracker.set_context("epoch", model_epoch):
-#                         self.process(split, self.in_ps_pred, self.out_ps_pred)
+class BundleTrueExecutor(BundleExecutor):
+    def __init__(self, cfg: DictConfig) -> None:
+        super().__init__(cfg, stage_str="bundle_true")
 
-#     def process(self, split: Split, in_h: Asset, out_h: Asset) -> None:
-#         """
-#         Get the power spectra, save the power spectra in a single file. 
-#         Written to be agnostic to realization or simulation, using generic 
-#         handlers.
-
-#         Parameters
-#         ----------
-#         split : Split
-#             The split to process.
-#         in_h : Asset
-#             The input asset handler. Must provide a numpy array.
-#         out_h : Asset
-#             The output asset handler. Must provide a numpy array.
-#         """
-#         # Prepared to handle single spectra for a split
-#         if split.ps_fidu_fixed:
-#             spectrum = in_h.read(use_alt_path=split.ps_fidu_fixed)
-#             out_h.write(data=spectrum)
-#             return 
-
-#         data = []
-#         for sim in split.iter_sims():
-#             with self.name_tracker.set_context("sim_num", sim):
-#                 try:
-#                     spectrum = in_h.read()
-#                 except AttributeError:
-#                     spectrum = in_h.read(use_alt_path=False)
-#                 data.append(spectrum)
-#         data = np.array(data)
-#         # data = data[:, :self.lmax + 1]
-#         out_h.write(data=data)
+    def process(self, split: Split) -> None:
+        if split.ps_fidu_fixed:
+            spectrum = self.in_ps.read(use_alt_path=split.ps_fidu_fixed)
+            self.out_ps.write(data=spectrum)
+            return 
+        super().process(split)

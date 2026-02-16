@@ -39,7 +39,8 @@ from d2ps_nn import (
     LossPlotExecutor,
     ShowRelativeError,
     ShowCosmicFractions,
-    ShowChiSquare
+    ShowChiSquare,
+    BundlePredExecutor, BundleTrueExecutor
     )
 
 
@@ -68,12 +69,14 @@ def run_train(cfg):
              ShowIndivPredictionsExecutor,
              LossPlotExecutor,
              ErrorAnalysisExecutor,
-             ShowPredictionsWithChiSquareExecutor
+             ShowPredictionsWithChiSquareExecutor,
+             BundleTrueExecutor,
+             BundlePredExecutor
              ]
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_ref")
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_on_planck")
 def run_planck(cfg):
     logger.debug(f"Running on Ref in {__file__}")
     pipes = [
@@ -82,7 +85,9 @@ def run_planck(cfg):
              PreprocessSpectraExecutor,
              PredictExecutor,
              ShowPredictionsExecutor,
-             PowerSpectrumAnalysisExecutor
+             PowerSpectrumAnalysisExecutor,
+             BundleTrueExecutor,
+             BundlePredExecutor
              ]
     run(cfg, pipes)
 
@@ -107,5 +112,5 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_train()
+    run_train()
     run_planck()

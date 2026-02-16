@@ -7,7 +7,6 @@ from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor
 from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
 from .stage_executors.J_ps_error_analysis import ErrorAnalysisExecutor
-# from .stage_executors.Z_bundle import PSBundleExecutor
 from .stage_executors.K_per_split_analysis import PerSplitAnalysis
 
 from .stage_executors._check_model_size import CheckGPULoadExecutor
@@ -26,3 +25,5 @@ from .stage_executors.__show_chi_sq import ShowChiSquare
 from .stage_executors.__show_petroff_like import ShowPetroffSingle
 from .stage_executors.__show_petroff_like import ShowPetroffSet
 from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
+
+from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor

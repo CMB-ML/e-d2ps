@@ -59,6 +59,9 @@ pipeline:
   show_predictions_error_analysis:
     assets_in:
       ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
+  bundle_pred:
+    assets_in:
+      ps: {stage: make_pred_ps, orig_name: auto_pred}
 
 hydra:
   run:

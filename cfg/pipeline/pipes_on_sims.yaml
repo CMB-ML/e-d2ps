@@ -318,3 +318,28 @@ show_predictions_error_analysis:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_M_Show_Predictions_Error_Analysis
   make_stage_log: False
+
+bundle_pred:
+  assets_out:
+    ps_bundle:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}.npy"
+  assets_in:
+    ps: {stage: predict, orig_name: cmb_ps}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: &bundle_path Analysis_Bundle
+  make_stage_log: False
+
+bundle_true:
+  assets_out:
+    ps_bundle:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/True/{stage}/true_{split}.npy"
+  assets_in:
+    ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  dir_name: *bundle_path
+  make_stage_log: False

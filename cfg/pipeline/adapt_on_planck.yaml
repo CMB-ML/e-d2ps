@@ -49,3 +49,8 @@ show_predictions:
 
 ps_analysis:
   dir_name: Analysis_H_PS_Report_Planck
+
+bundle_true:
+  assets_out:
+    ps_bundle:
+      path_template: "{root}/{dataset}/True/{stage}/true_planck.npy"

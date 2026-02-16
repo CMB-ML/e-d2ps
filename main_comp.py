@@ -20,7 +20,9 @@ from d2ps_nn import (
     ShowBWPredictionsExecutor,
     ShowIndivPredictionsExecutor,
     ErrorAnalysisExecutor,
-    ShowPredictionsWithChiSquareExecutor
+    ShowPredictionsWithChiSquareExecutor,
+    BundlePredExecutor,
+    BundleTrueExecutor
 )
 
 
@@ -42,7 +44,8 @@ def run_real(cfg):
         ShowBWPredictionsExecutor,
         ShowIndivPredictionsExecutor,
         ErrorAnalysisExecutor,
-        ShowPredictionsWithChiSquareExecutor
+        ShowPredictionsWithChiSquareExecutor,
+        BundlePredExecutor
     ]
     run(cfg, pipes)
 
@@ -58,7 +61,8 @@ def run_cmbnncs(cfg):
         ShowBWPredictionsExecutor,
         ShowIndivPredictionsExecutor,
         ErrorAnalysisExecutor,
-        ShowPredictionsWithChiSquareExecutor
+        ShowPredictionsWithChiSquareExecutor,
+        BundlePredExecutor
     ]
     run(cfg, pipes)
 
@@ -74,7 +78,8 @@ def run_pyilc(cfg):
         ShowBWPredictionsExecutor,
         ShowIndivPredictionsExecutor,
         ErrorAnalysisExecutor,
-        ShowPredictionsWithChiSquareExecutor
+        ShowPredictionsWithChiSquareExecutor,
+        BundlePredExecutor
     ]
     run(cfg, pipes)
 
@@ -83,18 +88,25 @@ def run_pyilc(cfg):
 def run_real_pl(cfg):
     pipes = [
         MakeRealPowerSpectrumExecutor,
-        ShowPredictionsExecutor
+        ShowPredictionsExecutor,
+        BundlePredExecutor
         ]
     run(cfg, pipes)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_cmbnncs_pl")
 def run_cmbnncs_planck(cfg):
-    pipes = [ShowPredictionsExecutor]
+    pipes = [
+        ShowPredictionsExecutor,
+        BundlePredExecutor
+        ]
     run(cfg, pipes)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_pyilc_pl")
 def run_pyilc_planck(cfg):
-    pipes = [ShowPredictionsExecutor]
+    pipes = [
+        ShowPredictionsExecutor,
+        BundlePredExecutor
+        ]
     run(cfg, pipes)
 
 

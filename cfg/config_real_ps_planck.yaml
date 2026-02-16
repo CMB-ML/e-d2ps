@@ -35,3 +35,6 @@ pipeline:
       fig:
         # Change file name
         path_template: "{root}/{dataset}/{working}{stage}/planck_real_ps.{fig_type}"
+  bundle_pred:
+    assets_in:
+      ps: {stage: make_real_ps, orig_name: auto_real}
