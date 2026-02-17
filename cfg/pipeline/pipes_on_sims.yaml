@@ -98,37 +98,6 @@ predict: &final_inference
 
 final_infer: *final_inference  # Used so that analysis code can find a consistent name
 
-ps_analysis:
-  assets_out:
-    report:
-      fn: ""
-      path_template: "{root}/{dataset}/{working}{stage}/ps_report.csv"
-      handler: PandasCsvHandler
-  assets_in:
-    theory_ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
-    # auto_real: {stage: make_pred_ps}
-    auto_pred: {stage: predict, orig_name: cmb_ps}
-  splits:
-    - ${splits.run_inference_on}
-  epochs: ${use_epochs_ps_stats}
-  override_n_sims: ${n_test_cap}
-  # wmap_n_ps: 50
-  dir_name: Analysis_H_PS_Report
-
-ps_agg:
-  assets_out:
-    agg_report:
-      fn: ""
-      path_template: "{root}/{dataset}/{working}{stage}/ps_agg_report.csv"
-      handler: PandasCsvHandler
-  assets_in:
-    report: {stage: ps_analysis}
-  splits:
-    - ${splits.run_inference_on}
-  epochs: ${use_epochs_ps_stats}
-  override_n_sims: ${n_test_cap}
-  dir_name: Analysis_H_PS_Report
-
 show_chosen_ells:
   assets_out:
     fig: 
@@ -181,21 +150,7 @@ check_model_size:
   dir_name: Analysis_N_Check_Model_Size
   make_stage_log: False
 
-error_analysis:
-  assets_out:
-    report:
-      fn: ""
-      path_template: "{root}/{dataset}/{working}{stage}/error_analysis_report.csv"
-      handler: PandasCsvHandler
-  assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
-    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
-  splits:
-    - ${splits.run_inference_on}
-  epochs: ${use_epochs_ps_stats}
-  dir_name: Analysis_J_Error_Analysis
-  make_stage_log: False
-
+# per_split_analysis is used in fig_rel_error, fig_cosmic_var, fig_chi_square
 per_split_analysis:
   assets_out:
     per_vector_report:
@@ -252,6 +207,39 @@ fig_chi_square:
   dir_name: Analysis_Figures
   make_stage_log: False
 
+# ps_analysis used in ps_agg, show_predictions_indiv, show_predictions_bw
+ps_analysis:
+  assets_out:
+    report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/ps_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    theory_ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+    # auto_real: {stage: make_pred_ps}
+    auto_pred: {stage: predict, orig_name: cmb_ps}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  override_n_sims: ${n_test_cap}
+  # wmap_n_ps: 50
+  dir_name: Analysis_H_PS_Report
+
+# ps_agg is used in I_ps_agg.py; results are used in show_predictions (_show_predictions)
+ps_agg:
+  assets_out:
+    agg_report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/ps_agg_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    report: {stage: ps_analysis}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  override_n_sims: ${n_test_cap}
+  dir_name: Analysis_H_PS_Report
+
 show_predictions:
   assets_out:
     fig: 
@@ -301,6 +289,22 @@ show_predictions_bw:
   dir_name: Analysis_Figures
   make_stage_log: False
 
+# Used in show_predictions_error_analysis
+error_analysis:
+  assets_out:
+    report:
+      fn: ""
+      path_template: "{root}/{dataset}/{working}{stage}/error_analysis_report.csv"
+      handler: PandasCsvHandler
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_J_Error_Analysis
+  make_stage_log: False
+
 show_predictions_error_analysis:
   assets_out:
     fig: 
@@ -319,6 +323,7 @@ show_predictions_error_analysis:
   dir_name: Analysis_M_Show_Predictions_Error_Analysis
   make_stage_log: False
 
+# Bundling
 bundle_pred:
   assets_out:
     ps_bundle:
