@@ -26,7 +26,7 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose          : false
 
-fig_type: pdf
+fig_type: ['pdf', 'png']
 
 splits:
   Train:
