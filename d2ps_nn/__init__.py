@@ -18,7 +18,7 @@ from .stage_executors._show_predictions_bw import ShowBWPredictionsExecutor
 from .stage_executors._show_predictions_indiv import ShowIndivPredictionsExecutor
 from .stage_executors._show_predictions_error_analysis import ShowPredictionsWithChiSquareExecutor
 
-from .stage_executors.__show_rel_err import ShowRelativeError
+from .stage_executors.__show_rel_err_old import ShowRelativeError
 from .stage_executors.__show_cosmic_fractions import ShowCosmicFractions
 from .stage_executors.__show_chi_sq import ShowChiSquare
 
@@ -27,3 +27,4 @@ from .stage_executors.__show_petroff_like import ShowPetroffSet
 from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
 
 from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor
+from .stage_executors._show_treble_ell import ShowTrebleEll

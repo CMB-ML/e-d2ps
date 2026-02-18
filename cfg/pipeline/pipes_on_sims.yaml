@@ -348,3 +348,17 @@ bundle_true:
     - ${splits.run_inference_on}
   dir_name: *bundle_path
   make_stage_log: False
+
+show_treble_ell:
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_G_treble_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    pred: {stage: bundle_pred, orig_name: ps_bundle}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
