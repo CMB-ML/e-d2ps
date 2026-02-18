@@ -41,7 +41,8 @@ from d2ps_nn import (
     # ShowCosmicFractions,
     # ShowChiSquare,
     BundlePredExecutor, 
-    BundleTrueExecutor
+    BundleTrueExecutor,
+    ShowTrebleEll
     )
 
 
@@ -72,7 +73,8 @@ def run_train(cfg):
             #  ErrorAnalysisExecutor,
             #  ShowPredictionsWithChiSquareExecutor,
              BundleTrueExecutor,
-             BundlePredExecutor
+             BundlePredExecutor,
+             ShowTrebleEll
              ]
     run(cfg, pipes)
 
