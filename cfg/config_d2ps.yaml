@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_1850"  # TODO: Figure out how to get the splits name here. It conflicts when using Planck as Dataset.
-working_dir        : "${features_type}2ps/"
+working_dir        : "${features_type}2ps_half_train/"
 fig_model_name     : "${features_type} to PS, 1280ell"
 hydra:
   run:
@@ -27,6 +27,10 @@ hydra:
   verbose          : false
 
 fig_type: pdf
+
+splits:
+  Train:
+    n_sims: 500
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
