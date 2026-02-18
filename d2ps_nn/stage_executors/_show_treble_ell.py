@@ -38,6 +38,7 @@ class ShowTrebleEll(BaseStageExecutor):
         self.ells = parse_ells(cfg.model.use_ells)
         self.fig_label = cfg.fig_model_name
         self._model_epochs = cfg.use_epochs
+        self.fig_type = cfg.fig_type
 
     @property
     def model_epochs(self):
@@ -49,6 +50,8 @@ class ShowTrebleEll(BaseStageExecutor):
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        self.out_fig.handler.set_fig_types(self.fig_type)
 
         self.fsky = get_fsky(self.in_mask)
 
