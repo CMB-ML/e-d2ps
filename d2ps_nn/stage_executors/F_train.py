@@ -138,20 +138,20 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             with self.name_tracker.set_context("epoch", "init"):
                 self.out_model.write(model=model, epoch="init")
             start_epoch = 0
-            loss_record_headers = ['Epoch', 'Training Loss', 'Validation Loss', 'Training Loss 2']
+            loss_record_headers = ['Epoch', 'Batch Loss', 'Validation Loss', 'Training Loss']
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
+        all_batch_loss = []
         all_train_loss = []
-        all_train_loss2 = []
         all_valid_loss = []
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
                 model.train()
-                train_loss = 0
+                batch_loss = 0
                 for train_features, train_label in pbar:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
@@ -169,23 +169,23 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     batch_train_loss.backward()
                     optimizer.step()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
-                    train_loss += batch_train_loss.item()
-                train_loss /= len(train_dataloader)
-                all_train_loss.append(train_loss)
-            logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
+                    batch_loss += batch_train_loss.item()
+                batch_loss /= len(train_dataloader)
+                all_batch_loss.append(batch_loss)
 
             # Validation
             model.eval()
-            train_loss2 = 0
+            train_loss = 0
             valid_loss = 0
             with torch.no_grad():
                 for train_features, train_label in train_dataloader:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
                     output = model(train_features)
-                    train_loss2 += loss_function(output, train_label).item()
-                train_loss2 /= len(train_dataloader)
-                all_train_loss2.append(train_loss2)
+                    train_loss += loss_function(output, train_label).item()
+                train_loss /= len(train_dataloader)
+                all_train_loss.append(train_loss)
+                logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
 
                 for valid_features, valid_label in valid_dataloader:
                     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
@@ -194,10 +194,10 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     valid_loss += loss_function(output, valid_label).item()
                 valid_loss /= len(valid_dataloader)
                 all_valid_loss.append(valid_loss)
-            note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
-            logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
+                note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
+                logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
 
-            self.out_loss_record.append([epoch + 1, train_loss, valid_loss, train_loss2])
+            self.out_loss_record.append([epoch + 1, batch_loss, valid_loss, train_loss])
 
             is_best_condition_a = valid_loss == min(all_valid_loss)
             is_best_condition_b = epoch >= self.earliest_best
