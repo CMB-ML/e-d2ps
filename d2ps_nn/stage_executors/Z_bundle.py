@@ -6,6 +6,7 @@ from omegaconf import DictConfig
 from cmbml.core import Split, Asset, BaseStageExecutor
 from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
+from d2ps_nn.utils.parse_ell_list import parse_ells
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,13 @@ class BundleExecutor(BaseStageExecutor):
         super().__init__(cfg, stage_str=stage_str)
         self.out_ps: Asset = self.assets_out["ps_bundle"]
         self.in_ps: Asset = self.assets_in["ps"]
+
+        self.ells = parse_ells(cfg.model.use_ells)
+        this_pipe = cfg.pipeline.get(stage_str)
+
+        # Brittle, not a fan of this solution...
+        self.select_ell = this_pipe.assets_in.ps.stage != "predict"
+        pass
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -43,6 +51,8 @@ class BundleExecutor(BaseStageExecutor):
                     spectrum = self.in_ps.read(use_alt_path=False)
                 data.append(spectrum)
         data = np.array(data)
+        if self.select_ell:
+            data = data[:, self.ells]
         self.out_ps.write(data=data)
 
 class BundlePredExecutor(BundleExecutor):
@@ -55,7 +65,8 @@ class BundleTrueExecutor(BundleExecutor):
 
     def process(self, split: Split) -> None:
         if split.ps_fidu_fixed:
-            spectrum = self.in_ps.read(use_alt_path=split.ps_fidu_fixed)
-            self.out_ps.write(data=spectrum)
+            data = self.in_ps.read(use_alt_path=split.ps_fidu_fixed)
+            data = data[self.ells]
+            self.out_ps.write(data=data)
             return 
         super().process(split)
