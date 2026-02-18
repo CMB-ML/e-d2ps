@@ -27,15 +27,22 @@ from d2ps_nn import (
     PreprocessSpectraExecutor,
     TrainingExecutor,
     PredictExecutor,
+    CheckGPULoadExecutor,
     PowerSpectrumAnalysisExecutor,
-    PowerSpectrumAggExecutor,
+    # PerSplitAnalysis,
+    # PowerSpectrumAggExecutor,
     ShowPredictionsExecutor,
     ShowBWPredictionsExecutor,
-    ShowIndivPredictionsExecutor,
-    ErrorAnalysisExecutor,
-    ShowPredictionsWithChiSquareExecutor,
+    # ShowIndivPredictionsExecutor,
+    # ErrorAnalysisExecutor,
+    # ShowPredictionsWithChiSquareExecutor,
     LossPlotExecutor,
-    PerSplitAnalysis,
+    # ShowRelativeError,
+    # ShowCosmicFractions,
+    # ShowChiSquare,
+    BundlePredExecutor, 
+    BundleTrueExecutor,
+    ShowTrebleEll
     )
 
 
@@ -60,43 +67,40 @@ def multi_train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         TrainingExecutor,
-        # PredictExecutor,
-        # PowerSpectrumAnalysisExecutor,
-        # PowerSpectrumAggExecutor,
-        # ShowPredictionsExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # LossPlotExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
-        # PerSplitPerEllAnalysis
+        PredictExecutor,
+        PowerSpectrumAnalysisExecutor,
+        ShowPredictionsExecutor,
+        ShowBWPredictionsExecutor,
+        LossPlotExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
+        ShowTrebleEll
     ]
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_on_planck_prep")
-def prep_run_planck(cfg):
-    logger.debug(f"Running train in {__file__}")
-    pipes = [
-             HydraConfigCheckerExecutor,
-             PreprocessMapsExecutor,
-             PreprocessSpectraExecutor,
-             ]
-    run(cfg, pipes)
+# @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_on_planck_prep")
+# def prep_run_planck(cfg):
+#     logger.debug(f"Running train in {__file__}")
+#     pipes = [
+#              HydraConfigCheckerExecutor,
+#              PreprocessMapsExecutor,
+#              PreprocessSpectraExecutor,
+#              ]
+#     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_on_planck")
-def run_planck(cfg):
-    logger.debug(f"Running train in {__file__}")
-    pipes = [
-             HydraConfigCheckerExecutor,
-             PredictExecutor,
-             PowerSpectrumAnalysisExecutor,
-             ShowPredictionsExecutor,
-             PerSplitAnalysis
-             ]
-    run(cfg, pipes)
+# @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_on_planck")
+# def run_planck(cfg):
+#     logger.debug(f"Running train in {__file__}")
+#     pipes = [
+#              HydraConfigCheckerExecutor,
+#              PredictExecutor,
+#              PowerSpectrumAnalysisExecutor,
+#              ShowPredictionsExecutor,
+#             #  PerSplitAnalysis
+#              ]
+#     run(cfg, pipes)
 
 
 def run(cfg, pipes):
@@ -119,8 +123,8 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # prep_run()
-    # multi_train_runs()
+    prep_run()
+    multi_train_runs()
     # prep_run_planck()
     # run_planck()
     pass
