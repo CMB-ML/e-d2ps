@@ -20,6 +20,7 @@ from cmbml.core import (
                       LogMaker
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
+from cmbml.analysis import LossPlotExecutor
 from d2ps_nn import (
     MakeLutExecutor,
     FindDatasetStatsParallelExecutor,
@@ -36,7 +37,6 @@ from d2ps_nn import (
     # ShowIndivPredictionsExecutor,
     # ErrorAnalysisExecutor,
     # ShowPredictionsWithChiSquareExecutor,
-    LossPlotExecutor,
     # ShowRelativeError,
     # ShowCosmicFractions,
     # ShowChiSquare,
@@ -53,28 +53,28 @@ logger = logging.getLogger(__name__)
 def run_train(cfg):
     logger.debug(f"Running on simulations in {__file__}")
     pipes = [
-            #  HydraConfigCheckerExecutor,
-             MakeLutExecutor,
-             FindDatasetStatsParallelExecutor,
-             PreprocessMapsExecutor,
-             PreprocessSpectraExecutor,
-             CheckGPULoadExecutor,
-             TrainingExecutor,
-             PredictExecutor,
-             PowerSpectrumAnalysisExecutor,
-            #  PerSplitAnalysis,
-            #  ShowRelativeError,
-            #  ShowCosmicFractions,
-            #  ShowChiSquare,
-             ShowPredictionsExecutor,
-             ShowBWPredictionsExecutor,
+            # #  HydraConfigCheckerExecutor,
+            #  MakeLutExecutor,
+            #  FindDatasetStatsParallelExecutor,
+            #  PreprocessMapsExecutor,
+            #  PreprocessSpectraExecutor,
+            #  CheckGPULoadExecutor,
+            #  TrainingExecutor,
+            #  PredictExecutor,
+            #  PowerSpectrumAnalysisExecutor,
+            # #  PerSplitAnalysis,
+            # #  ShowRelativeError,
+            # #  ShowCosmicFractions,
+            # #  ShowChiSquare,
+            #  ShowPredictionsExecutor,
+            #  ShowBWPredictionsExecutor,
             #  ShowIndivPredictionsExecutor,
              LossPlotExecutor,
             #  ErrorAnalysisExecutor,
             #  ShowPredictionsWithChiSquareExecutor,
-             BundleTrueExecutor,
-             BundlePredExecutor,
-             ShowTrebleEll
+            #  BundleTrueExecutor,
+            #  BundlePredExecutor,
+            #  ShowTrebleEll
              ]
     run(cfg, pipes)
 
@@ -116,4 +116,4 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_train()
-    run_planck()
+    # run_planck()
