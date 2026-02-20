@@ -49,7 +49,7 @@ from d2ps_nn import (
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_prep")
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep1")
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
@@ -62,8 +62,8 @@ def prep_run(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi")
-def multi_train_runs(cfg):
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep2")
+def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         TrainingExecutor,
@@ -79,7 +79,7 @@ def multi_train_runs(cfg):
     run(cfg, pipes)
 
 
-# @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_on_planck_prep")
+# @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep1_on_planck")
 # def prep_run_planck(cfg):
 #     logger.debug(f"Running train in {__file__}")
 #     pipes = [
@@ -90,7 +90,7 @@ def multi_train_runs(cfg):
 #     run(cfg, pipes)
 
 
-# @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_multi_on_planck")
+# @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep2_on_planck")
 # def run_planck(cfg):
 #     logger.debug(f"Running train in {__file__}")
 #     pipes = [
@@ -124,7 +124,7 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     prep_run()
-    multi_train_runs()
+    train_runs()
     # prep_run_planck()
     # run_planck()
     pass

@@ -1,4 +1,4 @@
-make_lut:
+make_lut:  # B_make_lut.py / MakeLutExecutor
   assets_out:
     lut: 
       handler: NumpyMap
@@ -151,7 +151,7 @@ check_model_size:
   make_stage_log: False
 
 # per_split_analysis is used in fig_rel_error, fig_cosmic_var, fig_chi_square
-per_split_analysis:
+per_split_analysis:  # K_per_split_analysis.py / PerSplitAnalysis
   assets_out:
     per_vector_report:
       handler: TextPowerSpectrum
@@ -168,7 +168,7 @@ per_split_analysis:
   dir_name: Analysis_K_per_split_analysis
   make_stage_log: False
 
-fig_rel_error:
+fig_rel_error:  # __show_rel_err_old.py / ShowRelativeError
   assets_out:
     fig:
       handler: MPLFigure
@@ -181,7 +181,7 @@ fig_rel_error:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-fig_cosmic_var:
+fig_cosmic_var:  #  __show_cosmic_fractions.py / ShowCosmicFractions
   assets_out:
     fig:
       handler: MPLFigure
@@ -194,7 +194,7 @@ fig_cosmic_var:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-fig_chi_square:
+fig_chi_square:  # __show_chi_square.py / ShowChiSquare
   assets_out:
     fig:
       handler: MPLFigure
@@ -208,7 +208,7 @@ fig_chi_square:
   make_stage_log: False
 
 # ps_analysis used in ps_agg, show_predictions_indiv, show_predictions_bw
-ps_analysis:
+ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
   assets_out:
     report:
       fn: ""
