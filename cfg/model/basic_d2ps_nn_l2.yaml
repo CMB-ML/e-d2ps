@@ -23,7 +23,7 @@ use_batch_norm_dec: false
 # Ablation params
 dropout_rate: 0.0
 activation: relu
-pooling: avg
+pooling: max
 
 # Other model parameters
 n_init_features: 16
@@ -36,7 +36,7 @@ preprocess:
 
 train:
   # Operate on CPU or CUDA; null for auto selection.
-  device            : cuda:0
+  device            : null
 
   # Data loading
   batch_size        : 5
@@ -52,7 +52,7 @@ train:
   earliest_best     : 0  # Earliest epoch to save the best model
                          #   when debugging with small datasets and low total epochs, 
                          #   set to 0 to allow finding a best model at the very start
-  checkpoint_every  : 150     # checkpoint every this number of epochs
+  checkpoint_every  : 10     # checkpoint every this number of epochs
   extra_check       : []  # Extra checkpoints to save
   # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 

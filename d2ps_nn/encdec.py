@@ -81,7 +81,7 @@ class FCNDecoder(nn.Module):
                  use_batch_norm,
                  dropout_rate=0.0,
                  activation='relu',
-                 pooling='avg', 
+                 pooling='max', 
                  final_activation=None
                  ):
         super().__init__()
