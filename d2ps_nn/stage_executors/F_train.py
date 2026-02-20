@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
-from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
+from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler, NumpyPowerSpectrum
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TrainDataset
@@ -25,8 +25,10 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         self.out_model: Asset = self.assets_out["model"]
         self.out_loss_record: Asset = self.assets_out["loss_record"]
+        self.out_batch_loss_record: Asset = self.assets_out["batch_loss_record"]
         out_model_handler: PyTorchModel
         out_loss_record: AppendingCsvHandler
+        out_batch_loss_record: NumpyPowerSpectrum
 
         self.in_trgt_asset: Asset = self.assets_in["cmb_ps"]
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
@@ -153,12 +155,14 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         n_epoch_digits = len(str(self.n_epochs))
 
+        all_indiv_batch_loss = []
         all_batch_loss = []
         all_train_loss = []
         all_valid_loss = []
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
+            this_epoch_batch_loss = []
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
                 model.train()
                 batch_loss = 0
@@ -178,10 +182,12 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
                     optimizer.step()
+                    this_epoch_batch_loss.append(batch_train_loss.item())
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     batch_loss += batch_train_loss.item()
                 batch_loss /= len(train_dataloader)
                 all_batch_loss.append(batch_loss)
+                all_indiv_batch_loss.append(this_epoch_batch_loss)
 
             # Validation
             model.eval()
@@ -226,6 +232,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                                          optimizer=optimizer,
                                          epoch=epoch + 1)
 
+        self.out_batch_loss_record.write(data=all_indiv_batch_loss)
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")

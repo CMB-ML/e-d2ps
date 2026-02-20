@@ -66,6 +66,9 @@ train:
     loss_record:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+    batch_loss_record:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/batch_loss_record.npy"
   assets_in:
     # cmb_ps: {stage: preprocess_spectra}
     cmb_ps: {stage: preprocess_spectra}
