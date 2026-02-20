@@ -41,9 +41,11 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
         self.top_n = cfg.model.analysis.top_n
         self.bottom_n = cfg.model.analysis.bottom_n
         self.fig_label = cfg.fig_model_name
+        self.fig_type = cfg.fig_type
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        self.out_fig.handler.set_fig_types(self.fig_type)
 
         for split in self.splits:
             # if "F" not in split.name:

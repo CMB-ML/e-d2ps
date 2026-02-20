@@ -45,6 +45,8 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
         in_ps_thry_handler: CambPowerSpectrum
         in_report_handler: PandasCsvHandler
 
+        self.fig_type = cfg.fig_type
+
         self.units = u.Unit(cfg.scenario.units)
 
         self.ells = parse_ells(cfg.model.use_ells)
@@ -58,6 +60,7 @@ class ShowBWPredictionsExecutor(BaseStageExecutor):
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        self.out_fig.handler.set_fig_types(self.fig_type)
 
         if self.top_n <= 0 and self.bottom_n <=0:
             logger.info("Settings for top_n and bottom_n result in no figure.")
