@@ -39,6 +39,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
         self.display_n_sims = cfg.n_show_cap
         self.fig_label = cfg.fig_model_name
         self._model_epochs = cfg.use_epochs
+        self.fig_type = cfg.fig_type
 
     @property
     def model_epochs(self):
@@ -51,6 +52,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
     def execute(self) -> None:
         self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_ps_pred, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        self.out_fig.handler.set_fig_types(self.fig_type)
 
         for split in self.splits:
             # if "F" not in split.name:
