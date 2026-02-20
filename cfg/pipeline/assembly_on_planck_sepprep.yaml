@@ -4,7 +4,7 @@ defaults:
   - pipes_on_sims
   # Adjustments needed:
   - adapt_on_planck
-  - adapt_multi
+  - adapt_sepprep
   - _self_
 
 preprocess_maps:
