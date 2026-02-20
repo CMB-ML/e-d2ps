@@ -95,8 +95,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         # Potentially confusing... the order is determined by the order of
         #   splits for this stage in the pipeline yaml.
-        train_split = self.splits[0]
-        valid_split = self.splits[1]
+        train_split = self.splits.get("train")
+        valid_split = self.splits.get("valid")
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader = DataLoader(
@@ -121,7 +121,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         if self.restart_epoch is not None:
             logger.info(f"Restarting training at epoch {self.restart_epoch}")
-            # The following returns the epoch number stored in the checkpoint 
+            # The following returns the epoch number stored in the checkpoint
             #     as well as loading the model and optimizer with checkpoint information
             with self.name_tracker.set_context("epoch", self.restart_epoch):
                 start_epoch = self.in_model.read(model=model, 
@@ -131,7 +131,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                                                  )
             if start_epoch == "init":
                 start_epoch = 0
-            self.out_loss_record.start()  # New lines will be added, naively 
+            self.out_loss_record.start()  # New lines will be added, naively
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
             logger.info(f"Starting new model.")
