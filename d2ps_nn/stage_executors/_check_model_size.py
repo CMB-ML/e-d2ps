@@ -62,6 +62,16 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
         self.model_n_levels = cfg.model.n_levels
         self.model_note = cfg.model.note
 
+        self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
+        self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
+        self.dropout_rate = cfg.model.dropout_rate
+        self.activation = cfg.model.activation
+        if self.activation is None:
+            raise ValueError("Activation cannot be None. Please specify 'relu' or 'gelu' in config.")
+        self.pooling = cfg.model.pooling
+        if self.pooling is None:
+            raise ValueError("Please specify 'avg' or 'max'.")
+
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
@@ -83,6 +93,11 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
                              final_activation=final_activation,
                              n_init_features=self.model_n_init_features,
                              n_levels=self.model_n_levels,
+                             use_batch_norm_enc=self.use_batch_norm_enc,   # ADDED
+                             use_batch_norm_dec=self.use_batch_norm_dec,   # ADDED
+                             dropout_rate=self.dropout_rate,               # ADDED
+                             activation=self.activation,                   # ADDED
+                             pooling=self.pooling,
                              note=self.model_note
                              )
 
