@@ -188,7 +188,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             train_loss = 0
             valid_loss = 0
             with torch.no_grad():
-                for train_features, train_label in train_dataloader:
+                for train_features, train_label in tqdm(train_dataloader, leave=False):
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
                     output = model(train_features)
@@ -197,7 +197,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                 all_train_loss.append(train_loss)
                 logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
 
-                for valid_features, valid_label in valid_dataloader:
+                for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
                     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
                     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
                     output = model(valid_features)
