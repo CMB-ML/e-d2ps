@@ -28,6 +28,10 @@ hydra:
 
 fig_type: ['pdf', 'png']
 
+splits:
+  Train:
+    n_sims: 1000
+
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.

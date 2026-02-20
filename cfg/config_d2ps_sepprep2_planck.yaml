@@ -1,6 +1,6 @@
 defaults:
-  - config_d2ps_sepprep
-  - override pipeline: assembly_on_planck_sepprep1
+  - config_d2ps
+  - override pipeline: assembly_on_planck_sepprep
   - override splits: "1-1"
   - _self_
 
