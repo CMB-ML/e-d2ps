@@ -59,6 +59,13 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
         self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
 
+        self.dropout_rate = cfg.model.dropout_rate
+        self.activation = cfg.model.activation
+        if self.activation is None:
+            raise ValueError("Activation cannot be None. Please specify 'relu' or gelu' in config.")
+        self.pooling = cfg.model.pooling
+        if self.pooling is None:
+            raise ValueError("Please specify 'avg' or 'max'.")
         self.model_n_init_features = cfg.model.n_init_features
         self.model_n_levels = cfg.model.n_levels
         self.model_note = cfg.model.note
@@ -87,6 +94,9 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                              n_levels=self.model_n_levels,
                              use_batch_norm_enc=self.use_batch_norm_enc,
                              use_batch_norm_dec=self.use_batch_norm_dec,
+                             activation=self.activation,
+                             dropout_rate=self.dropout_rate,
+                             pooling=self.pooling,
                              note=self.model_note
                              )
 
