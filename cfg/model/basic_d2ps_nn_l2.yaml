@@ -1,4 +1,4 @@
-# Consistent properties for all stages:
+d# Consistent properties for all stages:
 dtype     : float
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
@@ -16,10 +16,14 @@ scale_ps  : null
 final_activation: null
 use_batch_norm_enc: true
 use_batch_norm_dec: false
-
 # For Wishart loss function
 # scale_ps  : Cl
 # final_activation: softplus
+
+# Ablation params
+dropout_rate: 0.0
+activation: relu
+pooling: max
 
 # Other model parameters
 n_init_features: 16

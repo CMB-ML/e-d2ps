@@ -1,6 +1,6 @@
 defaults:
-  - config_d2ps_sepprep
-  - override pipeline: assembly_on_planck_sepprep1
+  - config_d2ps
+  - override pipeline: assembly_on_planck_sepprep
   - override splits: "1-1"
   - _self_
 
@@ -16,6 +16,6 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      iter_num    :  1 #, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      iter_num    :  1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 
 iter_num: 0

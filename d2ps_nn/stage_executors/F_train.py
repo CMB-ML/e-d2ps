@@ -59,6 +59,13 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
         self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
 
+        self.dropout_rate = cfg.model.dropout_rate
+        self.activation = cfg.model.activation
+        if self.activation is None:
+            raise ValueError("Activation cannot be None. Please specify 'relu' or gelu' in config.")
+        self.pooling = cfg.model.pooling
+        if self.pooling is None:
+            raise ValueError("Please specify 'avg' or 'max'.")
         self.model_n_init_features = cfg.model.n_init_features
         self.model_n_levels = cfg.model.n_levels
         self.model_note = cfg.model.note
@@ -87,6 +94,9 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                              n_levels=self.model_n_levels,
                              use_batch_norm_enc=self.use_batch_norm_enc,
                              use_batch_norm_dec=self.use_batch_norm_dec,
+                             activation=self.activation,
+                             dropout_rate=self.dropout_rate,
+                             pooling=self.pooling,
                              note=self.model_note
                              )
 
@@ -95,8 +105,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         # Potentially confusing... the order is determined by the order of
         #   splits for this stage in the pipeline yaml.
-        train_split = self.splits[0]
-        valid_split = self.splits[1]
+        train_split = self.splits.get("train")
+        valid_split = self.splits.get("valid")
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader = DataLoader(
@@ -121,7 +131,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         if self.restart_epoch is not None:
             logger.info(f"Restarting training at epoch {self.restart_epoch}")
-            # The following returns the epoch number stored in the checkpoint 
+            # The following returns the epoch number stored in the checkpoint
             #     as well as loading the model and optimizer with checkpoint information
             with self.name_tracker.set_context("epoch", self.restart_epoch):
                 start_epoch = self.in_model.read(model=model, 
@@ -131,7 +141,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                                                  )
             if start_epoch == "init":
                 start_epoch = 0
-            self.out_loss_record.start()  # New lines will be added, naively 
+            self.out_loss_record.start()  # New lines will be added, naively
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
             logger.info(f"Starting new model.")
