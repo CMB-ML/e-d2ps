@@ -54,11 +54,11 @@ def run_train(cfg):
     logger.debug(f"Running on simulations in {__file__}")
     pipes = [
             #  HydraConfigCheckerExecutor,
-            #  MakeLutExecutor,
-            #  FindDatasetStatsParallelExecutor,
-            #  PreprocessMapsExecutor,
-            #  PreprocessSpectraExecutor,
-            #  CheckGPULoadExecutor,
+             MakeLutExecutor,
+             FindDatasetStatsParallelExecutor,
+             PreprocessMapsExecutor,
+             PreprocessSpectraExecutor,
+             CheckGPULoadExecutor,
              TrainingExecutor,
              PredictExecutor,
              PowerSpectrumAnalysisExecutor,
@@ -116,4 +116,4 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_train()
-    run_planck()
+    # run_planck()

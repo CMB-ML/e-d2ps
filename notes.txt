@@ -1,0 +1,61 @@
+Options
+Training issues
+- Batch loss recording and tracking
+- More epochs
+- More training instances
+- Learning rate
+- Use per-ell loss, normalized to expected variance
+
+Comparison issues
+- Check results at other epochs
+- Plot results on validation, training sets
+
+Preprocessing issues
+- Normalize PS (mu=0, sigma=1)
+- MinMaxScale PS (0,1)
+
+Dataset distribution issues
+- Check map mean temperatures
+
+Model Structure issues
+- Conv model, switch to FCN
+- Different preparations of maps; no seams, just different features
+
+Fundamental issues
+- Use NaMaster
+
+
+
+
+Order:
+- Done:
+    - 128, 250 instances, 300 epochs (track batch loss) x1, batch size 5
+            - 55 minutes total
+    - 128, 250 instances, 300 epochs (track batch loss) x1, batch size 50
+            - 40 minutes total
+    - 128, 1000 instances, 300 epochs (track batch loss) x1, batch size 5
+            - 3 hours total
+    - 128, 1000 instances, 300 epochs (track batch loss) x1, batch size 50
+            - 2 hours total
+- Currently running: 
+    - (CMML0) 512,  1k instances, 300 epochs, multirun x1 (baseline)
+        - ~10m per epoch; 50 hours total (~Feb 23 7 AM)
+    - (CMML2) 128, 20k instances, 300 epochs, multirun x2 (Will stop early, though)
+        - ~10m per epoch; 100 hours total (~Feb 25 3 AM)
+    - (83809) 128, 250 instances,  300 epochs, x4, batch size 5
+        - Est. 4 hours
+        - Just getting 4 more in addition to the one above
+
+Tonight:
+    - 128,  1k instances,  300 epochs, x5 (baseline) (~15 hours, est)
+
+- 128,  1k instances, 3000 epochs, x1
+- 128, 500 instances,  300 epochs, x5 (~8 hours, r. est)
+- 128,  2k instances,  300 epochs, x5 (~24 hours, r. est)
+- 128,  5k instances,  300 epochs, x5 (~48 hours, r. est)
+- 128, 10k instances,  300 epochs, x1 (~72 hours, r. est)
+
+- 512, 250 instances,  300 epochs, x1
+- 512, 500 instances,  300 epochs, x1
+
+

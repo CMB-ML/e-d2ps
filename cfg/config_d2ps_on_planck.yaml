@@ -9,4 +9,4 @@ working_dir        : "${features_type}2ps_on_Planck/"
 fig_model_name     : "${features_type} to PS, Model using BN, On Planck"
 
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "${features_type}2ps/"
+trained_wd: "${features_type}2ps_250_bl_300ep_lg_batch/"

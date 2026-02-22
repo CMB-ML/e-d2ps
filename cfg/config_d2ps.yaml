@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"  # TODO: Figure out how to get the splits name here. It conflicts when using Planck as Dataset.
-working_dir        : "${features_type}2ps/"
+working_dir        : "${features_type}2ps_250_bl_300ep_lg_batch/"
 fig_model_name     : "${features_type} to PS, 1280ell"
 hydra:
   run:
@@ -47,7 +47,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 3
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

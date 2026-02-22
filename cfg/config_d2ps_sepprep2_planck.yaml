@@ -4,18 +4,18 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}_on_Planck/"
+working_dir        : "Multi_${features_type}2ps_${splits.Train.n_sims}_300ep_bs${batch_size}/iter_${iter_num}_on_Planck"
 prep_working_dir   : "d2ps-prep/"
 
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+trained_wd: "Multi_${features_type}2ps_${splits.Train.n_sims}_300ep_bs${batch_size}/iter_${iter_num}"
 
-fig_model_name     : "${features_type} to PS, Model using BN, On Planck, Iteration ${iter_num}"
+fig_model_name: "${features_type} to PS, Model using BN, On Planck"
 
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      iter_num    :  1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      batch_size: 5, 50
 
-iter_num: 0
+batch_size: 5
