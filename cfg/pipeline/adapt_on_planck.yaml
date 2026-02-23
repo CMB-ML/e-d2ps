@@ -36,6 +36,7 @@ predict: &final_inference
   assets_in:
     model:
       working: ${trained_wd}
+  dir_name: G_Predict_on_Planck
   splits: *test_only
 
 show_predictions:
