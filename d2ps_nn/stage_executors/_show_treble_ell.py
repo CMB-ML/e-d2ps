@@ -122,8 +122,8 @@ def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler):
              color="k", 
              label="RMS")
 
-    ax2.set_xlabel(r"Multipole $\ell$")
-    ax2.set_ylabel("Relative Error")
+    ax2.set_xlabel(r"Multipole [$\ell$]")
+    ax2.set_ylabel(r"$[\sigma_\mathrm{CV}]$")
 
     ax1.set_xlim(0, ells[-1])
     ax2.set_xlim(0, ells[-1])
