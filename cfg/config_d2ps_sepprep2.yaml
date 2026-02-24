@@ -5,12 +5,13 @@ defaults:
   - _self_
 
 # !!! Be sure to end working_dir with / 
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+working_dir        : "D2PS_Multi_LR/${features_type}2ps_${learning_rate}/"
 prep_working_dir   : "d2ps-prep/"
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      iter_num    :  1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      learning_rate:  2e-6, 5e-6, 1e-5, 2e-5, 5e-5, 1e-4, 2e-4
 
 iter_num: 0
+learning_rate: 2e-4  # Baseline parameter we've used
