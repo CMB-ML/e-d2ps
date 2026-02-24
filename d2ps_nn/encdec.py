@@ -153,13 +153,8 @@ class SimpleEncDec(nn.Module):
         )
 
     def forward(self, x):
-        skips = []
         x = self.in_c(x)
-        skips.append(x)
-
         for down in self.dns:
             x = down(x)
-            skips.append(x)
-
         x = self.out(x)
         return x

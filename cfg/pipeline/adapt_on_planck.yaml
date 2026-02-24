@@ -8,7 +8,7 @@
 #       - Working directory for training "Training Dir" (source only)
 #       - Output when using Planck as dataset with trained model
 
-preprocess_maps:
+preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_in:
     # Pull maps from Planck Dir
     cmb_map:
@@ -25,20 +25,21 @@ preprocess_maps:
   splits: &test_only
     - test
 
-preprocess_spectra:
+preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_in:
     cmb_ps:
       dataset: ${planck_ds}
   dir_name: E_Prep_Spectra_Planck 
   splits: *test_only
 
-predict: &final_inference
+predict: &final_inference # G_predict.py / PredictExecutor
   assets_in:
     model:
       working: ${trained_wd}
+  dir_name: G_Predict_on_Planck
   splits: *test_only
 
-show_predictions:
+show_predictions: # _show_predictions.py / ShowPredictionsExecutor
   assets_out:
     fig:
       # Change file name
@@ -47,10 +48,11 @@ show_predictions:
     ps_thry:
       dataset: ${planck_ds}
 
-ps_analysis:
+# ps_analysis used in ps_agg, show_predictions_indiv, show_predictions_bw
+ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
   dir_name: Analysis_H_PS_Report_Planck
 
-bundle_true:
+bundle_true: # Z_bundle.py / BundleTrueExecutor
   assets_out:
     ps_bundle:
       path_template: "{root}/{dataset}/True/{stage}/true_planck.npy"

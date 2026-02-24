@@ -5,7 +5,7 @@ make_lut:  # B_make_lut.py / MakeLutExecutor
       path_template: "{root}/{dataset}/{working}{stage}/lut.npy"
   dir_name: B_LUT
 
-get_dataset_stats:
+get_dataset_stats: # C_find_dataset_stats_parallel.py / FindDatasetStatsParallelExecutor
   assets_out:
     dataset_stats: 
       handler: Config
@@ -17,7 +17,7 @@ get_dataset_stats:
     - train
   dir_name: C_PreprocessingPrep
 
-preprocess_maps:
+preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_out:
     obs_maps:
       handler: NumpyMap
@@ -40,7 +40,7 @@ preprocess_maps:
     - valid
     - test
 
-preprocess_spectra:
+preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_out:
     cmb_ps:
       handler: TextPowerSpectrum
@@ -58,7 +58,7 @@ preprocess_spectra:
     - valid
     - test
 
-train:
+train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor
   assets_out:
     model: 
       handler: PyTorchModel
@@ -82,7 +82,7 @@ train:
   make_stage_log: True
 
 # predict:
-predict: &final_inference
+predict: &final_inference # G_predict.py / PredictExecutor
   assets_out:
     cmb_ps: 
       handler: TextPowerSpectrum
@@ -101,7 +101,7 @@ predict: &final_inference
 
 final_infer: *final_inference  # Used so that analysis code can find a consistent name
 
-show_chosen_ells:
+show_chosen_ells: # _show_chosen_ells.py / ShowChosenEllsExecutor
   assets_out:
     fig: 
       handler: MPLFigure
@@ -115,7 +115,7 @@ show_chosen_ells:
   dir_name: Analysis_L_Show_Chosen_Ells
   make_stage_log: False
 
-loss_plot:
+loss_plot: # _loss_plot.py / LossPlotExecutor
   assets_out:
     fig:
       handler: MPLFigure
@@ -125,7 +125,7 @@ loss_plot:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-loss_summary:
+loss_summary: # _loss_summary.py / LossSummaryExecutor
   assets_out:
     summary:
       handler: TextHandler
@@ -229,7 +229,7 @@ ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
   dir_name: Analysis_H_PS_Report
 
 # ps_agg is used in I_ps_agg.py; results are used in show_predictions (_show_predictions)
-ps_agg:
+ps_agg: # I_ps_agg.py / PowerSpectrumAggExecutor
   assets_out:
     agg_report:
       fn: ""
@@ -243,7 +243,7 @@ ps_agg:
   override_n_sims: ${n_test_cap}
   dir_name: Analysis_H_PS_Report
 
-show_predictions:
+show_predictions: # _show_predictions.py / ShowPredictionsExecutor
   assets_out:
     fig: 
       handler: MPLFigure
@@ -262,7 +262,7 @@ show_predictions:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-show_predictions_indiv:
+show_predictions_indiv: # _show_predictions_indiv.py / ShowIndivPredictionsExecutor
   assets_out:
     fig: 
       handler: MPLFigure
@@ -277,7 +277,7 @@ show_predictions_indiv:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-show_predictions_bw:
+show_predictions_bw: # _show_predictions_bw.py / ShowBWPredictionsExecutor
   assets_out:
     fig: 
       handler: MPLFigure
@@ -293,7 +293,7 @@ show_predictions_bw:
   make_stage_log: False
 
 # Used in show_predictions_error_analysis
-error_analysis:
+error_analysis: # J_ps_error_analysis.py / ErrorAnalysisExecutor
   assets_out:
     report:
       fn: ""
@@ -308,7 +308,7 @@ error_analysis:
   dir_name: Analysis_J_Error_Analysis
   make_stage_log: False
 
-show_predictions_error_analysis:
+show_predictions_error_analysis: # _show_predictions_error_analysis.py / ShowPredictionsWithChiSquareExecutor
   assets_out:
     fig: 
       handler: Figure
@@ -327,7 +327,7 @@ show_predictions_error_analysis:
   make_stage_log: False
 
 # Bundling
-bundle_pred:
+bundle_pred: # Z_bundle.py / BundlePredExecutor
   assets_out:
     ps_bundle:
       handler: NumpyPowerSpectrum
@@ -340,7 +340,7 @@ bundle_pred:
   dir_name: &bundle_path Analysis_Bundle
   make_stage_log: False
 
-bundle_true:
+bundle_true: # Z_bundle.py / BundleTrueExecutor
   assets_out:
     ps_bundle:
       handler: NumpyPowerSpectrum
@@ -352,7 +352,7 @@ bundle_true:
   dir_name: *bundle_path
   make_stage_log: False
 
-show_treble_ell:
+show_treble_ell: # _show_treble_ell.py / ShowTrebleEll
   assets_out:
     fig: 
       handler: MPLFigure

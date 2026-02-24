@@ -63,9 +63,9 @@ class ShowTrebleEll(BaseStageExecutor):
     def process_split(self, split: Split) -> None:
         for epoch in self.model_epochs:
             with self.name_tracker.set_context("epoch", epoch):
-                self.process_epoch()
+                self.process_epoch(split)
 
-    def process_epoch(self) -> None:
+    def process_epoch(self, split: Split) -> None:
         pred = self.in_pred.read()
         thry = self.in_thry.read()
         if len(thry.shape) == 1:
@@ -75,7 +75,7 @@ class ShowTrebleEll(BaseStageExecutor):
                  pred=pred,
                  fsky=self.fsky,
                  units=self.units,
-                 fig_label=self.fig_label,
+                 fig_label=self.fig_label + " " + split.name,
                  fig_handler=self.out_fig)
 
 def get_fsky(mask_asset: Asset):
@@ -130,7 +130,7 @@ def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler):
     ax1.set_ylim(0, 7000)
     ax2.set_ylim(0, 4)
 
-    fig.suptitle(f"Predicted Spectrum and Relative Error, {fig_label}", fontsize=14)
+    fig.suptitle(f"{fig_label}", fontsize=14)
 
     plt.tight_layout()
     fig_handler.write(fig=fig)
