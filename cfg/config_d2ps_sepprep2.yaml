@@ -3,7 +3,7 @@ defaults:
   - config_d2ps
   - override pipeline: assembly_on_sims_sepprep
   - _self_
-working_dir        : "Multi_${features_type}2ps_${splits.Train.n_sims}_300ep_bs${batch_size}/iter_${iter_num}"
+working_dir        : "Multi_${features_type}2ps_${splits.Train.n_sims}_300ep_bs${batch_size}/iter_${iter_num}/"
 prep_working_dir   : "d2ps-prep/"
 hydra:
   mode: MULTIRUN
