@@ -1,4 +1,4 @@
-fig_petroff_single:
+fig_petroff_single:  # __show_petroff_like.py / ShowPetroffSingle
   assets_out:
     fig:
       handler: MPLFigure
@@ -13,7 +13,7 @@ fig_petroff_single:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-fig_petroff_set:
+fig_petroff_set:  # __show_petroff_like.py / ShowPetroffSet
   assets_out:
     fig:
       handler: MPLFigure
@@ -30,7 +30,7 @@ fig_petroff_set:
   dir_name: Analysis_Figures
   make_stage_log: False
 
-fig_petroff_set_bin:
+fig_petroff_set_bin:  # __show_petroff_like.py / ShowPetroffSetBinned
   assets_out:
     fig:
       handler: MPLFigure

@@ -17,7 +17,7 @@ get_dataset_stats: # C_find_dataset_stats_parallel.py / FindDatasetStatsParallel
     - train
   dir_name: C_PreprocessingPrep
 
-preprocess_maps: D_preprocess_maps_serial.py / PreprocessMapsExecutor
+preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_out:
     obs_maps:
       handler: NumpyMap

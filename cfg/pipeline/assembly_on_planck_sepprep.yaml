@@ -7,7 +7,7 @@ defaults:
   - adapt_sepprep
   - _self_
 
-preprocess_maps:
+preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_in:
     lut:
       working: ${working_dir}
