@@ -10,7 +10,8 @@ hydra:
   sweeper:
     params:
       # batch_size: 5, 50
-      iter_num: 1, 2 #, 3, 4
+      iter_num: 3, 4, 5 #, 3, 4
+      # iter_num: 1, 2 #, 3, 4
 
 batch_size: 5
 iter_num: 0
