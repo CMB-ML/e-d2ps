@@ -17,4 +17,4 @@ iter_num: 0
 
 splits:
   Train:
-    n_sims: 1000
+    n_sims: 5000
