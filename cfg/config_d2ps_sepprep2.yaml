@@ -10,11 +10,11 @@ hydra:
   sweeper:
     params:
       # batch_size: 5, 50
-      iter_num: 1, 2, 3, 4
+      iter_num: 1, 2 #, 3, 4
 
 batch_size: 5
 iter_num: 0
 
 splits:
   Train:
-    n_sims: 250
+    n_sims: 2000
