@@ -24,11 +24,6 @@ class BundleExecutor(BaseStageExecutor):
         self.in_ps: Asset = self.assets_in["ps"]
 
         self.ells = parse_ells(cfg.model.use_ells)
-        this_pipe = cfg.pipeline.get(stage_str)
-
-        # Brittle, not a fan of this solution...
-        self.select_ell = this_pipe.assets_in.ps.stage != "predict"
-        pass
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -58,10 +53,12 @@ class BundleExecutor(BaseStageExecutor):
 class BundlePredExecutor(BundleExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="bundle_pred")
+        self.select_ell = not(cfg.get("trim_ell_after_predict", False))
 
 class BundleTrueExecutor(BundleExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="bundle_true")
+        self.select_ell = True
 
     def process(self, split: Split) -> None:
         if split.ps_fidu_fixed:

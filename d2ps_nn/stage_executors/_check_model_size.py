@@ -94,7 +94,7 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
                              n_init_features=self.model_n_init_features,
                              n_levels=self.model_n_levels,
                              use_batch_norm_enc=self.use_batch_norm_enc,   # ADDED
-                             use_batch_norm_dec=self.use_batch_norm_dec,   # ADDED
+                             norm_kind_dec=self.use_batch_norm_dec,   # ADDED
                              dropout_rate=self.dropout_rate,               # ADDED
                              activation=self.activation,                   # ADDED
                              pooling=self.pooling,

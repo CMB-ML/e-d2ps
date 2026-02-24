@@ -5,7 +5,7 @@ fig_petroff_single:
       path_template: "{root}/{dataset}/{working}{stage}/fig_G_petroff_{split}_ep_{epoch}_{sim}.{fig_type}"
   assets_in:
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     ps_real: {stage: make_real_ps, orig_name: auto_real, working: Real_PS/}
   splits:
     - ${splits.run_inference_on}

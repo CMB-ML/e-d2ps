@@ -35,23 +35,33 @@ def get_pooling(pooling):
     else:
         raise ValueError(f"Unknowing pooling: {pooling}. Choose from: avg, max.")
 
+def make_norm2d(n_channels, kind: str):
+    if kind == "bn":
+        return nn.BatchNorm2d((n_channels))
+    elif kind == "gn":
+        for n_groups in (32, 16, 8, 4, 2, 1):
+            if n_channels % n_groups == 0 and n_channels // n_groups > 1:
+                return nn.GroupNorm(n_groups, n_channels)
+        raise ValueError(f"No prescribed group count for {n_channels} channels")
+    raise ValueError(f"kind {kind} not recognized when setting group or batch norm.")
+
 class DoubleConv(nn.Module):
-    def __init__(self, in_features, out_channels, use_batch_norm, dropout_rate=0.0, activation='relu'):
+    def __init__(self, in_features, out_channels, norm_kind, dropout_rate=0.0, activation='relu'):
         super().__init__()
 
         layers = []
 
         layers.append(nn.Conv2d(in_features, out_channels, 
                       kernel_size=3, padding=1, bias=False))
-        if use_batch_norm:
-            layers.append(nn.BatchNorm2d(out_channels))
+        if norm_kind is not None:
+            layers.append(make_norm2d(out_channels, norm_kind))
         layers.append(get_activation(activation))
         if dropout_rate > 0:
             layers.append(nn.Dropout2d(dropout_rate))
         layers.append(nn.Conv2d(out_channels, out_channels, 
                       kernel_size=3, padding=1, bias=False))
-        if use_batch_norm:
-            layers.append(nn.BatchNorm2d(out_channels))
+        if norm_kind is not None:
+            layers.append(make_norm2d(out_channels, norm_kind))
         layers.append(get_activation(activation))
 
         self.double_conv = nn.Sequential(*layers)
@@ -61,12 +71,12 @@ class DoubleConv(nn.Module):
 
 
 class Down(nn.Module):
-    def __init__(self, in_channels, use_batch_norm, dropout_rate=0.0, activation='relu'):
+    def __init__(self, in_channels, norm_kind="gn", dropout_rate=0.0, activation='relu'):
         super().__init__()
         out_channels = in_channels * 2
         self.down_conv = nn.Sequential(
             nn.MaxPool2d(kernel_size=2),
-            DoubleConv(in_channels, out_channels, use_batch_norm, dropout_rate, activation)
+            DoubleConv(in_channels, out_channels, norm_kind, dropout_rate, activation)
         )
 
     def forward(self, x):
@@ -78,7 +88,7 @@ class FCNDecoder(nn.Module):
     def __init__(self, in_channels, 
                  mid_channels, 
                  out_channels, 
-                 use_batch_norm,
+                 norm_kind,
                  dropout_rate=0.0,
                  activation='relu',
                  pooling='max', 
@@ -88,12 +98,14 @@ class FCNDecoder(nn.Module):
         layers = []
         layers.append(get_pooling(pooling))
         layers.append(nn.Flatten())
-        layers.append(nn.Linear(in_channels, mid_channels, bias=not use_batch_norm))
+        bias = not norm_kind is None
+        layers.append(nn.Linear(in_channels, mid_channels, bias=bias))
 
-        if use_batch_norm:
+        if norm_kind is not None:
+            raise NotImplementedError("Whoops")
             layers.append(nn.BatchNorm1d(mid_channels))
 
-        layers.append(get_activation(activation))
+        layers.append(get_activation("gelu"))
         if dropout_rate > 0:
             layers.append(nn.Dropout(dropout_rate))
         layers.append(nn.Linear(mid_channels, out_channels))
@@ -106,6 +118,33 @@ class FCNDecoder(nn.Module):
         x = self.fc(x)
         return x
 
+    def _batch_debug(self, tag, t, layer_repr):
+        with torch.no_grad():
+            B = t.shape[0]
+            flat = t.flatten(1)  # [B, D]
+            d01 = (flat[0] - flat[1]).abs().max().item() if B >= 2 else float("nan")
+            same01 = torch.equal(flat[0], flat[1]) if B >= 2 else False
+            dmin = torch.pdist(flat).min().item() if B >= 2 else float("nan")
+            print(f"{tag:>12} {layer_repr} shape={tuple(t.shape)} mean={t.mean().item():.3e} std={t.std().item():.3e} "
+                f"d01={d01:.3e} same01={same01} dmin={dmin:.3e}")
+
+    # def forward(self, x):
+    #     self._batch_debug("in", x, "None")
+
+    #     for i in range(len(self.fc)):
+    #         x = self.fc[i](x)   # pooling
+    #         self._batch_debug(f"after {i}", x, self.fc[i].__repr__())
+
+    #     # y = self.fc[1](y)   # flatten
+    #     # self._batch_debug("after flatten", y)
+
+    #     # y = self.fc[2](y)   # linear1
+    #     # self._batch_debug("after linear1", y)
+
+    #     # for layer in self.fc[3:]:
+    #     #     y = layer(y)
+
+    #     return x
 
 class SimpleEncDec(nn.Module):
     def __init__(
@@ -115,8 +154,8 @@ class SimpleEncDec(nn.Module):
                  final_activation=None,
                  n_init_features=16,
                  n_levels=5,
-                 use_batch_norm_enc=True,
-                 use_batch_norm_dec=False,
+                 norm_kind_enc="gn",
+                 norm_kind_dec=None,
                  dropout_rate=0.0,
                  activation='relu',
                  pooling='avg',
@@ -127,7 +166,7 @@ class SimpleEncDec(nn.Module):
 
         self.in_c = DoubleConv(in_features=n_in_channels,
                                out_channels=n_init_features,
-                               use_batch_norm=use_batch_norm_enc,
+                               norm_kind=norm_kind_enc,
                                dropout_rate=dropout_rate,
                                activation=activation)
 
@@ -135,7 +174,7 @@ class SimpleEncDec(nn.Module):
         curr_features = n_init_features
         for _ in range(n_levels):
             downs.append(Down(curr_features, 
-                              use_batch_norm=use_batch_norm_enc,
+                              norm_kind=norm_kind_enc,
                               dropout_rate=dropout_rate,
                               activation=activation))
             curr_features *= 2
@@ -145,7 +184,7 @@ class SimpleEncDec(nn.Module):
             in_channels=curr_features,
             mid_channels=curr_features // 2,
             out_channels=n_ells,
-            use_batch_norm=use_batch_norm_dec,
+            norm_kind=norm_kind_dec,
             dropout_rate=dropout_rate,
             activation=activation,
             pooling=pooling,
@@ -153,13 +192,28 @@ class SimpleEncDec(nn.Module):
         )
 
     def forward(self, x):
-        skips = []
+        # with torch.no_grad():
+        #     print("in:", x.shape)        
         x = self.in_c(x)
-        skips.append(x)
-
+        # with torch.no_grad():
+        #     print("in_c:", x.shape)
+        #     i=0
         for down in self.dns:
             x = down(x)
-            skips.append(x)
-
+            # with torch.no_grad():
+            #     i += 1
+            #     print(f"down{i}:", x.shape)
+        # with torch.no_grad():
+        #     encoder_out_shape = x.shape
+        #     encoder_delta = (x[0]-x[1]).abs().max().item()
+        #     encoder_std = x.std().item()
         x = self.out(x)
+        # with torch.no_grad():
+        #     print("Out", x.shape)
+        # with torch.no_grad():
+        #     decoder_out_shape = x.shape
+        #     decoder_delta = (x[0]-x[1]).abs().max().item()
+        #     decoder_std = x.std().item()
+        #     print(f"enc shape: {encoder_out_shape} enc_delta: {encoder_delta:.2e} enc_std: {encoder_std:.2e} dec shape: {decoder_out_shape} dec_delta: {decoder_delta:.2e} dec_std: {decoder_std:.2e}")
+
         return x

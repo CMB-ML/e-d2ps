@@ -14,8 +14,8 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
-dataset_name       : "${map_fields}_${scenario.nside}_1850"  # TODO: Figure out how to get the splits name here. It conflicts when using Planck as Dataset.
-working_dir        : "${features_type}2ps/"
+dataset_name       : "${map_fields}_${scenario.nside}_20850"  # TODO: Figure out how to get the splits name here. It conflicts when using Planck as Dataset.
+working_dir        : "${features_type}2ps_TEST_STD/"
 fig_model_name     : "${features_type} to PS, 1280ell"
 hydra:
   run:
@@ -32,11 +32,14 @@ splits:
   Train:
     n_sims: 1000
 
+# Temporary fix for long-term issue
+trim_ell_after_predict: True
+
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 512
+nside              : 128
 lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
 
@@ -47,7 +50,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 10
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

@@ -23,12 +23,12 @@ use_batch_norm_dec: false
 # Ablation params
 dropout_rate: 0.0
 activation: relu
-pooling: max
+pooling: avg
 
 # Other model parameters
 n_init_features: 16
-# n_levels: 7  # For 128
-n_levels: 9  # For 512
+n_levels: 7  # For 128
+# n_levels: 9  # For 512
 note: null
 
 preprocess:
@@ -42,7 +42,7 @@ train:
   batch_size        : 5
   num_loader_workers: 0
   # Training parameters
-  learning_rate     : 0.0002
+  learning_rate     : 0.002
 
   # Epochs
   n_epochs          : ${num_epochs}

@@ -62,6 +62,10 @@ class PredictExecutor(BasePyTorchModelExecutor):
         self.model_n_levels        = cfg.model.n_levels
         self.model_note            = cfg.model.note
 
+        self.norm_kind_enc = "gn"
+        self.norm_kind_dec = None
+
+
         self._model_epochs = cfg.use_epochs
 
     @property
@@ -109,8 +113,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
                                   final_activation=final_activation,
                                   n_init_features=self.model_n_init_features,
                                   n_levels=self.model_n_levels,
-                                  use_batch_norm_enc=self.use_batch_norm_enc,
-                                  use_batch_norm_dec=self.use_batch_norm_dec,
+                                  norm_kind_enc=self.norm_kind_enc,
+                                  norm_kind_dec=self.norm_kind_dec,
                                   dropout_rate=self.dropout_rate,
                                   activation=self.activation,       
                                   pooling=self.pooling,

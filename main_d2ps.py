@@ -25,9 +25,12 @@ from d2ps_nn import (
     MakeLutExecutor,
     FindDatasetStatsParallelExecutor,
     PreprocessMapsExecutor,
-    PreprocessSpectraExecutor,
+    # PreprocessSpectraExecutor,
+    GetSpectraStatsExecutor,
+    StandardizeSpectraExecutor,
     TrainingExecutor,
     PredictExecutor,
+    UnStandardizeSpectraExecutor,
     CheckGPULoadExecutor,
     PowerSpectrumAnalysisExecutor,
     # PerSplitAnalysis,
@@ -54,24 +57,19 @@ def run_train(cfg):
     logger.debug(f"Running on simulations in {__file__}")
     pipes = [
             #  HydraConfigCheckerExecutor,
-             MakeLutExecutor,
-             FindDatasetStatsParallelExecutor,
-             PreprocessMapsExecutor,
-             PreprocessSpectraExecutor,
-             CheckGPULoadExecutor,
-             TrainingExecutor,
+            #  MakeLutExecutor,
+            #  FindDatasetStatsParallelExecutor,
+            #  PreprocessMapsExecutor,
+            #  GetSpectraStatsExecutor,
+            #  StandardizeSpectraExecutor,
+            #  CheckGPULoadExecutor,
+            #  TrainingExecutor,
              PredictExecutor,
+             UnStandardizeSpectraExecutor,
              PowerSpectrumAnalysisExecutor,
-            #  PerSplitAnalysis,
-            #  ShowRelativeError,
-            #  ShowCosmicFractions,
-            #  ShowChiSquare,
              ShowPredictionsExecutor,
              ShowBWPredictionsExecutor,
-            #  ShowIndivPredictionsExecutor,
              LossPlotExecutor,
-            #  ErrorAnalysisExecutor,
-            #  ShowPredictionsWithChiSquareExecutor,
              BundleTrueExecutor,
              BundlePredExecutor,
              ShowTrebleEll
@@ -85,8 +83,9 @@ def run_planck(cfg):
     pipes = [
             #  HydraConfigCheckerExecutor,
              PreprocessMapsExecutor,
-             PreprocessSpectraExecutor,
+             StandardizeSpectraExecutor,
              PredictExecutor,
+             UnStandardizeSpectraExecutor,
              ShowPredictionsExecutor,
              PowerSpectrumAnalysisExecutor,
              BundleTrueExecutor,
@@ -116,4 +115,4 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_train()
-    run_planck()
+    # run_planck()

@@ -17,6 +17,22 @@ get_dataset_stats:
     - train
   dir_name: C_PreprocessingPrep
 
+get_spectra_stats:
+  assets_out:
+    mean_ps:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/ps_mean.npy"
+    stdv_ps:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/ps_stdv.npy"
+  assets_in:
+    cmb_ps:
+      stage: make_theory_ps
+      working: Simulation_Working/
+  splits:
+    - train
+  dir_name: C_PreprocessingPrep    
+
 preprocess_maps:
   assets_out:
     obs_maps:
@@ -58,6 +74,26 @@ preprocess_spectra:
     - valid
     - test
 
+preprocess_spectra_standardize:
+  assets_out:
+    cmb_ps:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
+      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep.txt"
+      # handler: NumpyPowerSpectrum
+      # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
+  assets_in:
+    cmb_ps:
+      stage: make_theory_ps
+      working: Simulation_Working/
+    mean_ps: {stage: get_spectra_stats}
+    stdv_ps: {stage: get_spectra_stats}
+  dir_name: E_Prep_Spectra
+  splits:
+    - train
+    - valid
+    - test
+
 train:
   assets_out:
     model: 
@@ -67,11 +103,12 @@ train:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
   assets_in:
-    # cmb_ps: {stage: preprocess_spectra}
-    cmb_ps: {stage: preprocess_spectra}
+    cmb_ps: {stage: preprocess_spectra_standardize}
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
     model: {stage: train}
+    mean_ps: {stage: get_spectra_stats}
+    stdv_ps: {stage: get_spectra_stats}
   splits:
     - train
     - valid
@@ -79,7 +116,7 @@ train:
   make_stage_log: True
 
 # predict:
-predict: &final_inference
+predict:
   assets_out:
     cmb_ps: 
       handler: TextPowerSpectrum
@@ -94,6 +131,21 @@ predict: &final_inference
     - ${splits.run_inference_on}
   epochs: ${use_epochs}
   dir_name: G_Predict
+  make_stage_log: True
+
+postprocess_spectra_standardize: &final_inference
+  assets_out:
+    cmb_ps:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.txt"
+  assets_in:
+    cmb_ps: {stage: predict}
+    mean_ps: {stage: get_spectra_stats}
+    stdv_ps: {stage: get_spectra_stats}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs}
+  dir_name: H_Postprocess
   make_stage_log: True
 
 final_infer: *final_inference  # Used so that analysis code can find a consistent name
@@ -160,7 +212,7 @@ per_split_analysis:  # K_per_split_analysis.py / PerSplitAnalysis
       handler: PandasCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/{split}/metrics_ep_{epoch}.csv"
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
   splits:
     - ${splits.run_inference_on}
@@ -217,7 +269,7 @@ ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
   assets_in:
     theory_ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
     # auto_real: {stage: make_pred_ps}
-    auto_pred: {stage: predict, orig_name: cmb_ps}
+    auto_pred: {stage: final_infer, orig_name: cmb_ps}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
@@ -246,7 +298,7 @@ show_predictions:
       handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/fig_D_predictions_{split}_ep_{epoch}.{fig_type}"
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
     ps_thry:
       stage: make_theory_ps
@@ -265,7 +317,7 @@ show_predictions_indiv:
       handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/fig_E_indiv_pred_{split}_ep_{epoch}_{sim}.{fig_type}"
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
     report: {stage: ps_analysis}
   splits:
@@ -280,7 +332,7 @@ show_predictions_bw:
       handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/fig_F_bw_pred_{split}_ep_{epoch}.{fig_type}"
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
     report: {stage: ps_analysis}
   splits:
@@ -297,7 +349,7 @@ error_analysis:
       path_template: "{root}/{dataset}/{working}{stage}/error_analysis_report.csv"
       handler: PandasCsvHandler
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
   splits:
     - ${splits.run_inference_on}
@@ -314,7 +366,7 @@ show_predictions_error_analysis:
       handler: Figure
       path_template: "{root}/{dataset}/{working}{stage}/{split}/ps_pred_mean_{epoch}_many.{fig_type}"
   assets_in:
-    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_pred: {stage: final_infer, orig_name: cmb_ps}
     ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
     report: {stage: error_analysis, orig_name: report}
   splits:
@@ -330,7 +382,7 @@ bundle_pred:
       handler: NumpyPowerSpectrum
       path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}.npy"
   assets_in:
-    ps: {stage: predict, orig_name: cmb_ps}
+    ps: {stage: final_infer, orig_name: cmb_ps}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
