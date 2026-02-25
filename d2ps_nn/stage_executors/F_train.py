@@ -124,6 +124,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             num_workers=self.num_workers
             )
 
+        logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} sims.")
+
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
