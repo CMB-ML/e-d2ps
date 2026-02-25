@@ -30,15 +30,15 @@ fig_type: ['pdf', 'png']
 
 splits:
   Train:
-    n_sims: 1000
+    n_sims: ${n_sims}
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 128
+# nside              : 128
 lmax               : 1280
-# nside              : 512  # When changing this, change mask apodization as well!
+nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
 # features_type      : cmb
