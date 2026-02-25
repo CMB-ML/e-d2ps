@@ -3,6 +3,8 @@ defaults:
   - config_d2ps
   - override pipeline: assembly_on_sims_sepprep
   - _self_
+
+# !!! Be sure to end working_dir with / 
 working_dir        : "${features_type}2ps/"
 # working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
 prep_working_dir   : "d2ps-prep/"
