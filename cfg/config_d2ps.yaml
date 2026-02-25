@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all_big
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/patches  : toppatch
   - model/analysis : simple_apo
