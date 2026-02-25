@@ -4,11 +4,11 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "${features_type}2ps_${splits.Train.n_sims}_300ep_bs${batch_size}/"
+working_dir        : "${features_type}2ps_${splits.Train.n_sims}_300ep/"
 prep_working_dir   : "d2ps-prep/"
 
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "${features_type}2ps_${splits.Train.n_sims}_300ep_bs${batch_size}/"
+trained_wd: "${features_type}2ps_${splits.Train.n_sims}_300ep/"
 
 fig_model_name     : "${features_type} to PS, On Planck, Iteration ${iter_num}"
 
