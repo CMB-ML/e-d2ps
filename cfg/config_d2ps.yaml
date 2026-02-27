@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "D2PS_Multiple_Repeats_PRACTICE/${features_type}2ps_${iter_num}/"
+working_dir        : &wd "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Iteration ${iter_num}"
@@ -38,9 +38,9 @@ planck_ds: PlanckAsDataset_${scenario.nside}
 
 fig_type: ['pdf', 'png']
 
-splits:
-  Train:
-    n_sims: 1000
+# splits:
+#   Train:
+#     n_sims: 20000
 
 # Limit the number of simulations for which to generate figures
 n_show_cap           : 10
@@ -75,5 +75,5 @@ use_epochs_ps_stats  : ${use_epochs}
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
-n_infer_cap           : 200
-run_inference_on      : valid  # Either "test" ("train" should work, but is not recommended)
+n_infer_cap           : null
+run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
