@@ -4,18 +4,20 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}_on_Planck/"
+working_dir        : "D2PS_Multi_LR/${features_type}2ps_${learning_rate}/"
 prep_working_dir   : "d2ps-prep/"
 
 planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+trained_wd: "D2PS_Multi_LR/${features_type}2ps_${learning_rate}/"
 
-fig_model_name     : "${features_type} to PS, Model using BN, On Planck, Iteration ${iter_num}"
+fig_model_name     : "${features_type} to PS, On Planck, Learning rate ${learning_rate}"
 
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      iter_num    :  1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      # learning_rate:  2e-6, 5e-6, 1e-5, 2e-5, 5e-5, 1e-4
+      learning_rate:  1e-6, 5e-7, 2e-7, 1e-7, 5e-8, 2e-8 
 
 iter_num: 0
+learning_rate: 2e-4  # Baseline parameter we've used
