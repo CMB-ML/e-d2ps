@@ -19,6 +19,7 @@ working_dir        : &wd "D2PS_Multiple_Repeats_PRACTICE/${features_type}2ps_${i
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Iteration ${iter_num}"
+pl_fig_model_name  : "${features_type} to PS, Iteration ${iter_num}, On Planck"
 hydra:
   mode: MULTIRUN
   run:
@@ -74,5 +75,5 @@ use_epochs_ps_stats  : ${use_epochs}
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
-n_infer_cap           : null
-run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
+n_infer_cap           : 200
+run_inference_on      : valid  # Either "test" ("train" should work, but is not recommended)

@@ -4,4 +4,4 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-fig_model_name     : "${features_type} to PS, On Planck, Iteration ${iter_num}"
+fig_model_name     : ${pl_fig_model_name}
