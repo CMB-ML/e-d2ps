@@ -4,18 +4,4 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}_on_Planck/"
-prep_working_dir   : "d2ps-prep/"
-
-planck_ds: PlanckAsDataset_${scenario.nside}
-trained_wd: "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
-
-fig_model_name     : "${features_type} to PS, Model using BN, On Planck, Iteration ${iter_num}"
-
-hydra:
-  mode: MULTIRUN
-  sweeper:
-    params:
-      iter_num    :  1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-
-iter_num: 0
+fig_model_name     : "${features_type} to PS, On Planck, Iteration ${iter_num}"
