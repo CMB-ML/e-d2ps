@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+working_dir        : &wd "D2PS_Multiple_Repeats_PRACTICE/${features_type}2ps_${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Iteration ${iter_num}"
@@ -30,7 +30,7 @@ hydra:
   verbose          : false
   sweeper:
     params:
-      iter_num    :  1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      iter_num    :  1 #, 2, 3, 4, 5, 6, 7, 8, 9, 10
 iter_num: 0
 
 planck_ds: PlanckAsDataset_${scenario.nside}
@@ -40,6 +40,10 @@ fig_type: ['pdf', 'png']
 splits:
   Train:
     n_sims: 1000
+
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 10
+n_show_treble_ell    : null
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
@@ -67,8 +71,6 @@ use_epochs_imgs      : ${use_epochs}
 use_epochs_map_stats : ${use_epochs}
 # For summary statistics:
 use_epochs_ps_stats  : ${use_epochs}
-# Limit the number of simulations for which to generate figures
-n_show_cap           : 10
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
