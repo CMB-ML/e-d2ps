@@ -27,8 +27,8 @@ pooling: max
 
 # Other model parameters
 n_init_features: 16
-# n_levels: 7  # For 128
-n_levels: 9  # For 512
+n_levels: 7  # For 128
+# n_levels: 9  # For 512
 note: null
 
 preprocess:
@@ -53,7 +53,7 @@ train:
                          #   when debugging with small datasets and low total epochs, 
                          #   set to 0 to allow finding a best model at the very start
   checkpoint_every  : 10     # checkpoint every this number of epochs
-  extra_check       : []  # Extra checkpoints to save
+  extra_check       : [1]  # Extra checkpoints to save
   # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 
   # loss: l1

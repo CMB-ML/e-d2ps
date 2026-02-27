@@ -5,6 +5,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
+from torch.optim.lr_scheduler import SequentialLR, LinearLR, CosineAnnealingLR
 
 from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
@@ -129,7 +130,40 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        # adamw_weight_decay = 1e-4
+        # optimizer = torch.optim.AdamW(model.parameters(), 
+        #                               lr=self.learning_rate,
+        #                               weight_decay=adamw_weight_decay)
+
+        # total_steps = self.n_epochs * len(train_dataloader)
+        # warmup_ratio = 0.01
+        # warmup_start_factor = 0.01
+        # warmup_steps = max(1, int(warmup_ratio * total_steps))
+        # warmup = LinearLR(optimizer, start_factor=warmup_start_factor, total_iters=warmup_steps)
+
+        # cosine_alpha = 0
+        # cosine = CosineAnnealingLR(optimizer, 
+        #                            T_max=total_steps - warmup_steps,
+        #                            eta_min=cosine_alpha * self.learning_rate)
+        # scheduler = SequentialLR(
+        #     optimizer,
+        #     schedulers=[warmup, cosine],
+        #     milestones=[warmup_steps]
+        # )
+
+        optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate, weight_decay=1e-4)
+
+        total_steps = int(self.n_epochs * len(train_dataloader))
+        warmup_steps = max(1, int(round(0.05 * total_steps)))
+
+        warmup = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=0.01, total_iters=warmup_steps)
+        cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=max(1, total_steps - warmup_steps), eta_min=0.0
+        )
+
+        scheduler = torch.optim.lr_scheduler.SequentialLR(
+            optimizer, schedulers=[warmup, cosine], milestones=[warmup_steps]
+        )
 
         if self.restart_epoch is not None:
             logger.info(f"Restarting training at epoch {self.restart_epoch}")
@@ -139,7 +173,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                 start_epoch = self.in_model.read(model=model, 
                                                  epoch=self.restart_epoch, 
                                                  optimizer=optimizer, 
-                                                #  scheduler=scheduler
+                                                 scheduler=scheduler
                                                  )
             if start_epoch == "init":
                 start_epoch = 0
@@ -180,6 +214,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
                     optimizer.step()
+                    scheduler.step()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     batch_loss += batch_train_loss.item()
                 batch_loss /= len(train_dataloader)
@@ -226,6 +261,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                 with self.name_tracker.set_context("epoch", epoch + 1):
                     self.out_model.write(model=model,
                                          optimizer=optimizer,
+                                         scheduler=scheduler,
                                          epoch=epoch + 1)
 
 
