@@ -4,7 +4,4 @@ defaults:
   - override splits: "1-1"
   - _self_
 
-working_dir        : "d2ps-prep/"
-prep_working_dir   : ${working_dir}
-
-planck_ds: PlanckAsDataset_${scenario.nside}
+working_dir        : ${prep_working_dir}

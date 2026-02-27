@@ -2,4 +2,4 @@ defaults:
   - config_d2ps
   - _self_
 
-working_dir        : "d2ps-prep/"
+working_dir        : ${prep_working_dir}

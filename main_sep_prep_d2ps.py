@@ -20,7 +20,6 @@ from cmbml.core import (
                       LogMaker
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
-from cmbml.analysis import LossPlotExecutor
 from d2ps_nn import (
     MakeLutExecutor,
     FindDatasetStatsParallelExecutor,
@@ -34,6 +33,7 @@ from d2ps_nn import (
     # PowerSpectrumAggExecutor,
     ShowPredictionsExecutor,
     ShowBWPredictionsExecutor,
+    LossPlotExecutor,
     # ShowIndivPredictionsExecutor,
     # ErrorAnalysisExecutor,
     # ShowPredictionsWithChiSquareExecutor,

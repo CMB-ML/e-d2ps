@@ -39,6 +39,7 @@ class ShowTrebleEll(BaseStageExecutor):
         self.fig_label = cfg.fig_model_name
         self._model_epochs = cfg.use_epochs
         self.fig_type = cfg.fig_type
+        self.n_show_treble_ell = cfg.n_show_treble_ell
 
     @property
     def model_epochs(self):
@@ -76,7 +77,8 @@ class ShowTrebleEll(BaseStageExecutor):
                  fsky=self.fsky,
                  units=self.units,
                  fig_label=self.fig_label + " " + split.name,
-                 fig_handler=self.out_fig)
+                 fig_handler=self.out_fig,
+                 n_show=self.n_show_treble_ell)
 
 def get_fsky(mask_asset: Asset):
     if mask_asset is None:
@@ -84,29 +86,33 @@ def get_fsky(mask_asset: Asset):
     mask = mask_asset.read()
     return np.mean(mask**2)
 
-def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler):
+def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler, n_show=None, example=0):
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=(8, 6), dpi=300, sharex=True,
         gridspec_kw={"height_ratios": [2, 1]}
     )
 
+    # Handle fixed spectra splits
+    t_example = 0 if thry.shape[0] == 1 else example
+
     # Top plot: prediction mean with +/-1 s.d. band
-    ex_cosmic_stdev = dl2cosm_stdev(ells, thry[0], fsky)
-    mnus_cv = thry[0] - ex_cosmic_stdev
-    plus_cv = thry[0] + ex_cosmic_stdev
+    ex_cosmic_stdev = dl2cosm_stdev(ells, thry[t_example], fsky)
+    mnus_cv = thry[t_example] - ex_cosmic_stdev
+    plus_cv = thry[t_example] + ex_cosmic_stdev
     ax1.fill_between(ells, mnus_cv, plus_cv, 
                      color="k", 
                      edgecolor=None,
                      alpha=0.2, 
                      label=r"$\pm1\sigma$")
-    ax1.plot(ells, thry[0], color='black', lw=1, label="Theory")
-    ax1.plot(ells, pred[0], label="Prediction, sim0000")
+    ax1.plot(ells, thry[t_example], color='black', lw=1, label="Theory")
+    ax1.plot(ells, pred[example], label="Prediction, sim0000")
 
     ax1.set_ylabel(r"$D_\ell$ [" + units.to_string("latex_inline") + "]")
     ax1.legend(loc="best")
 
     # Bottom plot: relative error
-    n_show = 200
+    if n_show is None:
+        n_show = thry.shape[0]
     # Individual "shadows"
     for i in range(n_show):
         use_thry = 0 if thry.shape[0] == 1 else i
@@ -115,7 +121,7 @@ def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler):
                  lw=0.2,
                  alpha=0.5)
     ax2.plot(ells, 
-             np.abs(treble_ell(ells, thry[0], pred[0], fsky)),
+             np.abs(treble_ell(ells, thry[t_example], pred[example], fsky)),
              color="tab:blue",
              lw=1)
     ax2.plot(ells, treble_rms(ells, thry, pred, fsky), 
