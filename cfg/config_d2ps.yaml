@@ -38,9 +38,9 @@ planck_ds: PlanckAsDataset_${scenario.nside}
 
 fig_type: ['pdf', 'png']
 
-# splits:
-#   Train:
-#     n_sims: 20000
+splits:
+  Train:
+    n_sims: 20000
 
 # Limit the number of simulations for which to generate figures
 n_show_cap           : 10
