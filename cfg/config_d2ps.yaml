@@ -15,32 +15,30 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+working_dir        : &wd "D2PS_Multi_LR/${features_type}2ps_${learning_rate}_${num_sims}_${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Iteration ${iter_num}"
-pl_fig_model_name  : "${features_type} to PS, Iteration ${iter_num}, On Planck"
+fig_model_name     : "${features_type} to PS, Learning rate ${learning_rate}, ${num_sims}"
+pl_fig_model_name  : "${features_type} to PS, On Planck, Learning rate ${learning_rate}, ${num_sims}"
 hydra:
   mode: MULTIRUN
-  run:
-    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
-  sweep:
-    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
-    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
-                                                #   This is a minor bug, not worth fixing.
-  verbose          : false
   sweeper:
     params:
-      iter_num    :  1 #, 2, 3, 4, 5, 6, 7, 8, 9, 10
+      learning_rate:  1e-5
+      num_sims: 250, 500, 1000, 2000, 5000
+      iter_num: 0
+
 iter_num: 0
+learning_rate: 0  # Placeholder
+num_sims: 0
+
+splits:
+  Train:
+    n_sims: num_sims
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
 fig_type: ['pdf', 'png']
-
-# splits:
-#   Train:
-#     n_sims: 20000
 
 # Limit the number of simulations for which to generate figures
 n_show_cap           : 10
