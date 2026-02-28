@@ -44,6 +44,10 @@ splits:
   Train:
     n_sims: ${n_sims}
 
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 10
+n_show_treble_ell    : null
+
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
