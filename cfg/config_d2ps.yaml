@@ -14,12 +14,12 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
-dataset_name       : "${map_fields}_${scenario.nside}_1850"
+dataset_name       : "${map_fields}_${scenario.nside}_2850"
 working_dir        : &wd "${features_type}2ps__lr${learning_rate}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, LR 1e-5"
-pl_fig_model_name  : "${features_type} to PS, LR 1e-5, On Planck"
+fig_model_name     : "${features_type} to PS, LR 1e-5, 2000 Sims"
+pl_fig_model_name  : "${features_type} to PS, LR 1e-5, 2000 Sims, On Planck"
 hydra:
   mode: MULTIRUN
   run:
@@ -34,7 +34,7 @@ hydra:
       iter_num    :  1 #, 2, 3, 4, 5, 6, 7, 8, 9, 10
 iter_num: 0
 learning_rate: 1e-5
-n_sims: 1000
+n_sims: 2000
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
