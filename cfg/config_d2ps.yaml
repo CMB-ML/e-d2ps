@@ -34,7 +34,7 @@ num_sims: 0
 
 splits:
   Train:
-    n_sims: num_sims
+    n_sims: ${num_sims}
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
