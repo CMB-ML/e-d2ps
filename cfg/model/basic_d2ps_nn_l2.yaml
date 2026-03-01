@@ -1,4 +1,4 @@
-d# Consistent properties for all stages:
+# Consistent properties for all stages:
 dtype     : float
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
@@ -39,7 +39,7 @@ train:
   device            : null
 
   # Data loading
-  batch_size        : 5
+  batch_size        : 25
   num_loader_workers: 0
   # Training parameters
   learning_rate     : ${learning_rate}

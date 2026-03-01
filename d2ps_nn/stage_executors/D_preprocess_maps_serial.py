@@ -89,6 +89,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         # Process observations
         for channel, asset in self.in_features.feature_iter():
             obs_map = asset.read()
+            obs_map = obs_map.astype(np.float32)
             map_stats = self.get_dataset_stats(channel)
             out = self.process_map(obs_map, map_stats)
             self.out_feat.write(data=out)

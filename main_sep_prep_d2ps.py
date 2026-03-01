@@ -122,4 +122,4 @@ if __name__ == "__main__":
     # prep_run()
     train_runs()
     # prep_run_planck()
-    run_planck()
+    # run_planck()
