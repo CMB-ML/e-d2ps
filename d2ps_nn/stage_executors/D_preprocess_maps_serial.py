@@ -16,8 +16,10 @@ from cmbml.core.asset_handlers import Config
 from cmbml.core.asset_handlers import CambPowerSpectrum
 from cmbml.core.asset_handlers import HealpyMap
 from cmbml.utils.map_fields_helper import map_field_str2int
+
 from d2ps_nn.utils.minmax_scale import minmax_scale
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.numpy_dtype import get_np_dtype
 
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
             msg = f"Unsupported features type: {cfg.features_type}. Supported types are 'cmb' and 'obs'."
             raise ValueError(msg)
 
+        # Handles either observations or ground-truth CMB maps
         self.in_features = FeatureAsset.select(self.assets_in, 
                                                cfg.features_type, 
                                                self.instrument)
@@ -55,6 +58,8 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         if self.scaling and self.scaling != "minmax":
             msg = f"Only minmax scaling is supported, not {self.scaling}."
             raise NotImplementedError(msg)
+
+        self.dtype = get_np_dtype(cfg.model.dtype)
 
         self.lut = None
         self.dataset_stats = None
@@ -88,7 +93,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
     def process_sim(self, split) -> None:
         # Process observations
         for channel, asset in self.in_features.feature_iter():
-            obs_map = asset.read()
+            obs_map = asset.read(precision=self.dtype)
             map_stats = self.get_dataset_stats(channel)
             out = self.process_map(obs_map, map_stats)
             self.out_feat.write(data=out)
