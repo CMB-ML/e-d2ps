@@ -16,8 +16,10 @@ from cmbml.core.asset_handlers import Config
 from cmbml.core.asset_handlers import CambPowerSpectrum
 from cmbml.core.asset_handlers import HealpyMap
 from cmbml.utils.map_fields_helper import map_field_str2int
+
 from d2ps_nn.utils.minmax_scale import minmax_scale
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.numpy_dtype import get_np_dtype
 
 
 logger = logging.getLogger(__name__)
@@ -57,13 +59,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
             msg = f"Only minmax scaling is supported, not {self.scaling}."
             raise NotImplementedError(msg)
 
-        spec_dtype = cfg.model.dtype
-        if spec_dtype == "float":
-            self.dtype = np.float32
-        elif spec_dtype == "double":
-            self.dtype = np.float64
-        else:
-            raise ValueError('Only "float" and "double" are accepted as dtypes.')
+        self.dtype = get_np_dtype(cfg.model.dtype)
 
         self.lut = None
         self.dataset_stats = None
