@@ -42,6 +42,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
             msg = f"Unsupported features type: {cfg.features_type}. Supported types are 'cmb' and 'obs'."
             raise ValueError(msg)
 
+        # Handles either observations or ground-truth CMB maps
         self.in_features = FeatureAsset.select(self.assets_in, 
                                                cfg.features_type, 
                                                self.instrument)
@@ -55,6 +56,14 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         if self.scaling and self.scaling != "minmax":
             msg = f"Only minmax scaling is supported, not {self.scaling}."
             raise NotImplementedError(msg)
+
+        spec_dtype = cfg.model.dtype
+        if spec_dtype == "float":
+            self.dtype = np.float32
+        elif spec_dtype == "double":
+            self.dtype = np.float64
+        else:
+            raise ValueError('Only "float" and "double" are accepted as dtypes.')
 
         self.lut = None
         self.dataset_stats = None
@@ -88,7 +97,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
     def process_sim(self, split) -> None:
         # Process observations
         for channel, asset in self.in_features.feature_iter():
-            obs_map = asset.read()
+            obs_map = asset.read(precision=self.dtype)
             map_stats = self.get_dataset_stats(channel)
             out = self.process_map(obs_map, map_stats)
             self.out_feat.write(data=out)
