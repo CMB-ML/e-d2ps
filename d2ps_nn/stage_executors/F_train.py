@@ -72,6 +72,9 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.model_n_levels = cfg.model.n_levels
         self.model_note = cfg.model.note
         self.earliest_best = cfg.model.train.earliest_best
+        self.features_type = cfg.features_type
+        self.use_preload = cfg.model.train.get("use_preload", False)
+        logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. This eats RAM! BE CAREFUL!")
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -245,7 +248,9 @@ class TrainingExecutor(BasePyTorchModelExecutor):
 
         freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
 
-        dataset = PreloadTrainDataset(
+        dataset_class = PreloadTrainDataset if self.use_preload else TrainDataset
+
+        dataset = dataset_class(
             n_sims = split.n_sims,
             freqs = freqs,
             map_fields=self.map_fields,
