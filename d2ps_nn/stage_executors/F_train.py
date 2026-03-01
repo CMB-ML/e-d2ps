@@ -10,7 +10,7 @@ from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
-from d2ps_nn.dataset import TrainDataset
+from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.encdec import SimpleEncDec
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
@@ -70,6 +70,9 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.model_n_levels = cfg.model.n_levels
         self.model_note = cfg.model.note
         self.earliest_best = cfg.model.train.earliest_best
+        self.features_type = cfg.features_type
+        self.use_preload = cfg.model.train.get("use_preload", False)
+        logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. This eats RAM! BE CAREFUL!")
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -85,10 +88,12 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         logger.info(f"Creating model")
+        n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
+
         model = SimpleEncDec(
                             #  l_max=use_lmax,
                              n_ells=len(self.ells),
-                             n_in_channels=len(self.instrument.dets),
+                             n_in_channels=n_channels,
                              final_activation=final_activation,
                              n_init_features=self.model_n_init_features,
                              n_levels=self.model_n_levels,
@@ -239,9 +244,13 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         trgt_path_template = self.make_fn_template(split, self.in_trgt_asset)
         feat_path_template = self.make_fn_template(split, self.in_feat_asset)
 
-        dataset = TrainDataset(
+        freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
+
+        dataset_class = PreloadTrainDataset if self.use_preload else TrainDataset
+
+        dataset = dataset_class(
             n_sims = split.n_sims,
-            freqs = self.instrument.dets.keys(),
+            freqs = freqs,
             map_fields=self.map_fields,
             label_path_template=trgt_path_template,
             # label_path_template=label_path_template,

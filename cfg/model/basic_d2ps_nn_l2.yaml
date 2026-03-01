@@ -39,6 +39,7 @@ train:
   device            : null
 
   # Data loading
+  use_preload       : false
   batch_size        : 5
   num_loader_workers: 0
   # Training parameters
