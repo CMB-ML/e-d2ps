@@ -1,4 +1,4 @@
-d# Consistent properties for all stages:
+# Consistent properties for all stages:
 dtype     : float   # "float" is 32-bit; "double" is 64-bit. Conversions used in preprocess map, train, predict
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
