@@ -61,6 +61,7 @@ class PredictExecutor(BasePyTorchModelExecutor):
         self.model_n_init_features = cfg.model.n_init_features
         self.model_n_levels        = cfg.model.n_levels
         self.model_note            = cfg.model.note
+        self.features_type = cfg.features_type
 
         self._model_epochs = cfg.use_epochs
 
@@ -100,12 +101,14 @@ class PredictExecutor(BasePyTorchModelExecutor):
         else:
             raise ValueError(f"Unknown final activation: {self.final_activation}")
 
+        n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
+
         # It would likely be safer to have this within the loop, right before read()
         #    But this should work and be faster (especially with larger models)
         self.model = SimpleEncDec(
                                 #   l_max=use_lmax,
                                   n_ells=len(self.ells),
-                                  n_in_channels=len(self.instrument.dets),
+                                  n_in_channels=n_channels,
                                   final_activation=final_activation,
                                   n_init_features=self.model_n_init_features,
                                   n_levels=self.model_n_levels,
@@ -151,10 +154,11 @@ class PredictExecutor(BasePyTorchModelExecutor):
 
     def set_up_dataset(self, template_split: Split) -> TestDataset:
         obs_path_template = self.make_fn_template(template_split, self.in_feat_asset)
+        freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
 
         dataset = TestDataset(
             n_sims = template_split.n_sims,
-            freqs = self.instrument.dets.keys(),
+            freqs = freqs,
             map_fields=self.map_fields,
             feature_path_template=obs_path_template,
             feature_handler=self.in_feat_asset.handler
