@@ -49,14 +49,14 @@ from d2ps_nn import (
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep1")
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep1_prep_all")
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
-        MakeLutExecutor,
-        FindDatasetStatsParallelExecutor,
+        # MakeLutExecutor,
+        # FindDatasetStatsParallelExecutor,
         PreprocessMapsExecutor,
-        PreprocessSpectraExecutor
+        # PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 
@@ -119,7 +119,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # prep_run()
+    prep_run()
     train_runs()
     # prep_run_planck()
     # run_planck()

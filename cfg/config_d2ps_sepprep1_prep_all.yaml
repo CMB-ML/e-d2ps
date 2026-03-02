@@ -1,0 +1,5 @@
+defaults:
+  - config_d2ps_prep_all
+  - _self_
+
+working_dir        : ${prep_working_dir}

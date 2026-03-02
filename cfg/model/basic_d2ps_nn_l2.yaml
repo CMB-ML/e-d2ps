@@ -1,9 +1,5 @@
 # Consistent properties for all stages:
-<<<<<<< HEAD
-dtype     : float
-=======
 dtype     : float   # "float" is 32-bit; "double" is 64-bit. Conversions used in preprocess map, train, predict
->>>>>>> dev
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
 # Use ells follows numpy format [ell_min:ell_max:step] with multiple
