@@ -341,7 +341,7 @@ bundle_true: # Z_bundle.py / BundleTrueExecutor
   assets_out:
     ps_bundle:
       handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/True/{stage}/true_{split}.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/true_{split}.npy"
   assets_in:
     ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
   splits:

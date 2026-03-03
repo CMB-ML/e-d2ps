@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "D2PS_Multi_LR/${features_type}2ps_${learning_rate}_${num_sims}_${iter_num}/"
+working_dir        : &wd "Find_LR/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Learning rate ${learning_rate}, ${num_sims}"
@@ -24,9 +24,10 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      learning_rate:  5e-6
-      num_sims: 250, 500, 1000, 2000, 5000
-      iter_num: 0
+      learning_rate:  1e-2
+      num_sims: 5 #, 500, 1000, 2000, 5000
+      iter_num: 0  # , 1, 2
+      freeze_bn: true  #, false
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -43,6 +44,8 @@ splits:
     n_sims: ${num_sims}
 
 planck_ds: PlanckAsDataset_${scenario.nside}
+
+freeze_bn: true
 
 fig_type: ['pdf', 'png']
 
@@ -65,11 +68,14 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 3000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : ["best"]
+# use_epochs           : ["final", 601,801,1001,1201,1401,1601,1801,2001,2201,2401,2601,2801]
+# use_epochs           : ["final", 601,801,1001,1201,1401,1601,1801,2001,2201,2401,2601,2801,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800]
+use_epochs           : ["final",500,1000,1500,2000,2500]
+# use_epochs           : [600]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
@@ -80,4 +86,4 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)

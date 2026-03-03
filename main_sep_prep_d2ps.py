@@ -67,13 +67,13 @@ def train_runs(cfg):
     pipes = [
         TrainingExecutor,
         PredictExecutor,
-        PowerSpectrumAnalysisExecutor,
+        # PowerSpectrumAnalysisExecutor,
         ShowPredictionsExecutor,
-        ShowBWPredictionsExecutor,
+        # ShowBWPredictionsExecutor,
         LossPlotExecutor,
         BundleTrueExecutor,
         BundlePredExecutor,
-        ShowTrebleEll
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -119,7 +119,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    prep_run()
+    # prep_run()
     train_runs()
     # prep_run_planck()
     # run_planck()
