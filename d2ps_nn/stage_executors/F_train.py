@@ -142,11 +142,11 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
-
         start_lr = 1e-7
         end_lr = 1e-2
         steps = 3000
+
+        optimizer = torch.optim.Adam(model.parameters(), lr=start_lr)
 
         gamma = (end_lr / start_lr) ** (1 / steps)
 
