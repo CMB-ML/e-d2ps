@@ -18,15 +18,17 @@ dataset_name       : "${map_fields}_${scenario.nside}_20850"
 working_dir        : &wd "Find_LR/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Learning rate ${learning_rate}, ${num_sims}"
+fig_model_name     : "${features_type} to PS, ${num_sims} Simulations"
 pl_fig_model_name  : "${features_type} to PS, On Planck, Learning rate ${learning_rate}, ${num_sims}"
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      learning_rate:  1e-2
+      learning_rate:  1e-9, 1e-8, 1e-7, 1e-6, 1e-5
+      # learning_rate:  1e-5
       num_sims: 5 #, 500, 1000, 2000, 5000
-      iter_num: 0  # , 1, 2
+      iter_num: 0, 1, 2, 3, 4
+      # iter_num: 0
       freeze_bn: true  #, false
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
@@ -68,7 +70,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 3000
+num_epochs         : 350
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

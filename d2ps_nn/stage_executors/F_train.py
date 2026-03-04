@@ -142,134 +142,52 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
-        start_lr = 1e-7
-        end_lr = 1e-2
-        steps = 3000
+        burn_in_steps = 50
+        burn_in_lr    = 1e-9
+        ramp_start_lr = self.learning_rate
+        ramp_end_lr   = ramp_start_lr * 1e3
+        total_steps   = len(train_dataloader) * self.n_epochs
+        ramp_steps    = total_steps - burn_in_steps
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=start_lr)
+        optimizer = torch.optim.Adam(model.parameters(), lr=burn_in_lr)
+        scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer, 
+                                                        factor=1.0, 
+                                                        total_iters=burn_in_steps)
 
-        gamma = (end_lr / start_lr) ** (1 / steps)
-
-        for g in optimizer.param_groups:
-            g["lr"] = start_lr
-
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
-
-        if self.restart_epoch is not None:
-            logger.info(f"Restarting training at epoch {self.restart_epoch}")
-            # The following returns the epoch number stored in the checkpoint
-            #     as well as loading the model and optimizer with checkpoint information
-            with self.name_tracker.set_context("epoch", self.restart_epoch):
-                start_epoch = self.in_model.read(model=model, 
-                                                 epoch=self.restart_epoch, 
-                                                 optimizer=optimizer, 
-                                                #  scheduler=scheduler
-                                                 )
-            if start_epoch == "init":
-                start_epoch = 0
-            self.out_loss_record.start()  # New lines will be added, naively
-                                          #  Naively = appended; if resuming, manual cleaning may be needed.
-        else:
-            logger.info(f"Starting new model.")
-            with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model, epoch="init")
-            start_epoch = 0
-            loss_record_headers = ['Epoch', 'Training Loss', 'Learning Rate']
-            self.out_loss_record.write(data=loss_record_headers)
+        logger.info(f"Starting new model.")
+        with self.name_tracker.set_context("epoch", "init"):
+            self.out_model.write(model=model, epoch="init")
+        start_epoch = 0
+        loss_record_headers = ['Epoch', 'Training Loss', 'Learning Rate']
+        self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
-
-        all_batch_loss = []
-        all_lr = []
-        all_valid_loss = []
+        step_counter = 0
 
         for epoch in range(start_epoch, self.n_epochs):
-            # Training
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
-                
                 model.train()
-                batch_loss = 0
                 for train_features, train_label in pbar:
+                    if step_counter == burn_in_steps:
+                        optimizer = torch.optim.Adam(model.parameters(), 
+                                                    lr=ramp_start_lr)
+                        gamma = (ramp_end_lr / ramp_start_lr) ** (1.0 / (ramp_steps))
+                        scheduler = torch.optim.lr_scheduler.ExponentialLR(
+                            optimizer,
+                            gamma=gamma
+                        )
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
-                    # with torch.no_grad():
-                    #     model.eval()
-                    #     out0 = model(train_features)
-                    #     loss0 = loss_function(out0, train_label)
-                    #     model.train()
-                    #     out1 = model(train_features)
-                    #     loss1 = loss_function(out1, train_label)
-
                     optimizer.zero_grad()
-                    
                     output = model(train_features)
-
-                    # print(output[:,:5])
-                    # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
-                    # loss = loss_function(output, train_label)
-                    # loss.backward()
-                    # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
-                    # exit()
-
-
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
                     optimizer.step()
                     scheduler.step()
+                    step_counter += 1
                     pbar.set_postfix({'Loss': batch_train_loss.item(), 'LR': optimizer.param_groups[0]["lr"]})
-                    batch_loss += batch_train_loss.item()
-                batch_loss /= len(train_dataloader)
-                all_batch_loss.append(batch_loss)
-            lr = optimizer.param_groups[0]["lr"]
-
-            # # Validation
-            # model.eval()
-            # train_loss = 0
-            # valid_loss = 0
-            # with torch.no_grad():
-            #     for train_features, train_label in tqdm(train_dataloader, leave=False):
-            #         train_features = train_features.to(device=self.device, dtype=self.dtype)
-            #         train_label = train_label.to(device=self.device, dtype=self.dtype)
-            #         output = model(train_features)
-            #         train_loss += loss_function(output, train_label).item()
-            #     train_loss /= len(train_dataloader)
-            #     all_train_loss.append(train_loss)
-            #     logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
-
-                # for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
-                #     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
-                #     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
-                #     output = model(valid_features)
-                #     valid_loss += loss_function(output, valid_label).item()
-                # valid_loss /= len(valid_dataloader)
-                # all_valid_loss.append(valid_loss)
-                # note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
-                # logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
-
-            self.out_loss_record.append([epoch + 1, batch_loss, lr])  # , train_loss])
-
-            # is_best_condition_a = valid_loss == min(all_valid_loss)
-            # is_best_condition_b = epoch >= self.earliest_best
-            # if is_best_condition_a and is_best_condition_b:
-            # with self.name_tracker.set_context("epoch", "best"):
-            #     self.out_model.write(model=model,
-            #                         epoch="best"
-            #                         )
-
-            # Checkpoint every so many epochs
-            condition_a = (epoch + 1) in self.extra_check
-            condition_b = (epoch + 1) % self.checkpoint == 0
-            # condition_c = (epoch + 1) % self.checkpoint == 1
-            condition_c = False
-            if (condition_a or condition_b or condition_c):
-                with self.name_tracker.set_context("epoch", epoch + 1):
-                    self.out_model.write(model=model,
-                                         optimizer=optimizer,
-                                         epoch=epoch + 1)
-
-
-        with self.name_tracker.set_context("epoch", "final"):
-            self.out_model.write(model=model, epoch="final")
+                    lr = optimizer.param_groups[0]["lr"]
+                    self.out_loss_record.append([step_counter, batch_train_loss.item(), lr])  # , train_loss])
 
     def set_up_dataset(self, split: Split) -> None:
         # TODO: Unsure if this change is needed

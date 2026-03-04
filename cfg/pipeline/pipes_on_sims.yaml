@@ -122,6 +122,19 @@ loss_plot: # _loss_plot.py / LossPlotExecutor
   dir_name: Analysis_Figures
   make_stage_log: False
 
+lr_plot: # _loss_plot.py / LRPlotExecutor
+  assets_out:
+    fig1:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/lr_plot.{fig_type}"
+    fig2:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/dlr_plot.{fig_type}"
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
 loss_summary: # _loss_summary.py / LossSummaryExecutor
   assets_out:
     summary:
