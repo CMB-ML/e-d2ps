@@ -105,20 +105,34 @@ class PredictExecutor(BasePyTorchModelExecutor):
 
         # It would likely be safer to have this within the loop, right before read()
         #    But this should work and be faster (especially with larger models)
+        # self.model = SimpleEncDec(
+        #                         #   l_max=use_lmax,
+        #                           n_ells=len(self.ells),
+        #                           n_in_channels=n_channels,
+        #                           final_activation=final_activation,
+        #                           n_init_features=self.model_n_init_features,
+        #                           n_levels=self.model_n_levels,
+        #                           use_batch_norm_enc=self.use_batch_norm_enc,
+        #                           use_batch_norm_dec=self.use_batch_norm_dec,
+        #                           dropout_rate=self.dropout_rate,
+        #                           activation=self.activation,       
+        #                           pooling=self.pooling,
+        #                           note=self.model_note
+        #                           )
         self.model = SimpleEncDec(
-                                #   l_max=use_lmax,
-                                  n_ells=len(self.ells),
-                                  n_in_channels=n_channels,
-                                  final_activation=final_activation,
-                                  n_init_features=self.model_n_init_features,
-                                  n_levels=self.model_n_levels,
-                                  use_batch_norm_enc=self.use_batch_norm_enc,
-                                  use_batch_norm_dec=self.use_batch_norm_dec,
-                                  dropout_rate=self.dropout_rate,
-                                  activation=self.activation,       
-                                  pooling=self.pooling,
-                                  note=self.model_note
-                                  )
+                            #  l_max=use_lmax,
+                             n_ells=1279,
+                             n_in_channels=1,
+                             final_activation=None,
+                             n_init_features=16,
+                             n_levels=7,
+                             use_batch_norm_enc=False,
+                             use_batch_norm_dec=False,
+                             activation="relu",
+                             dropout_rate=0,
+                             pooling="max",
+                             note=""
+                             )
 
         self.model.eval().to(self.device)
 

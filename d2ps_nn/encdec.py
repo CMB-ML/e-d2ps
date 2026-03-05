@@ -42,14 +42,14 @@ class DoubleConv(nn.Module):
         layers = []
 
         layers.append(nn.Conv2d(in_features, out_channels, 
-                      kernel_size=3, padding=1, bias=False))
+                      kernel_size=3, padding=1, bias=True))
         if use_batch_norm:
             layers.append(nn.BatchNorm2d(out_channels))
         layers.append(get_activation(activation))
         if dropout_rate > 0:
             layers.append(nn.Dropout2d(dropout_rate))
         layers.append(nn.Conv2d(out_channels, out_channels, 
-                      kernel_size=3, padding=1, bias=False))
+                      kernel_size=3, padding=1, bias=True))
         if use_batch_norm:
             layers.append(nn.BatchNorm2d(out_channels))
         layers.append(get_activation(activation))

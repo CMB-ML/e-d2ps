@@ -14,6 +14,7 @@ from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.encdec import SimpleEncDec
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
+import numpy as np
 
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.features_type = cfg.features_type
         self.use_preload = cfg.model.train.get("use_preload", False)
         logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. This eats RAM! BE CAREFUL!")
+        self.freeze_bn = cfg.freeze_bn
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -82,56 +84,60 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         # When using Wishart loss, we need to skip the monopole and dipole
         # use_lmax = self.lmax - 2 if self.skip_mono_dipole else self.lmax
 
-        if self.final_activation == "softplus":
-            final_activation = torch.nn.Softplus()
-        elif not self.final_activation:
-            final_activation = None
-        else:
-            raise ValueError(f"Unknown final activation: {self.final_activation}")
+        # if self.final_activation == "softplus":
+        #     final_activation = torch.nn.Softplus()
+        # elif not self.final_activation:
+        #     final_activation = None
+        # else:
+        #     raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         logger.info(f"Creating model")
         n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
 
         model = SimpleEncDec(
                             #  l_max=use_lmax,
-                             n_ells=len(self.ells),
-                             n_in_channels=n_channels,
-                             final_activation=final_activation,
-                             n_init_features=self.model_n_init_features,
-                             n_levels=self.model_n_levels,
-                             use_batch_norm_enc=self.use_batch_norm_enc,
-                             use_batch_norm_dec=self.use_batch_norm_dec,
-                             activation=self.activation,
-                             dropout_rate=self.dropout_rate,
-                             pooling=self.pooling,
-                             note=self.model_note
+                             n_ells=1279,
+                             n_in_channels=1,
+                             final_activation=None,
+                             n_init_features=16,
+                             n_levels=7,
+                             use_batch_norm_enc=False,
+                             use_batch_norm_dec=False,
+                             activation="relu",
+                             dropout_rate=0,
+                             pooling="max",
+                             note=""
                              )
 
         model = model.to(self.device)
-        logger.info(f"Model created!")
+        # logger.info(f"Model created!")
+
+        if self.freeze_bn:
+            model.apply(freeze_bn)
+            logger.info("Batch Norm Frozen")
 
         # Potentially confusing... the order is determined by the order of
         #   splits for this stage in the pipeline yaml.
         train_split = self.splits.get("train")
-        valid_split = self.splits.get("valid")
+        # valid_split = self.splits.get("valid")
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader = DataLoader(
             train_dataset, 
             batch_size=self.batch_size, 
-            shuffle=True,
-            num_workers=self.num_workers
-            )
-
-        valid_dataset = self.set_up_dataset(valid_split)
-        valid_dataloader = DataLoader(
-            valid_dataset, 
-            batch_size=self.batch_size, 
             shuffle=False,
             num_workers=self.num_workers
             )
 
-        logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} batches, batch size {self.batch_size}.")
+        # valid_dataset = self.set_up_dataset(valid_split)
+        # valid_dataloader = DataLoader(
+        #     valid_dataset, 
+        #     batch_size=self.batch_size, 
+        #     shuffle=False,
+        #     num_workers=self.num_workers
+        #     )
+
+        # logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} batches, batch size {self.batch_size}.")
 
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
@@ -157,13 +163,13 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             with self.name_tracker.set_context("epoch", "init"):
                 self.out_model.write(model=model, epoch="init")
             start_epoch = 0
-            loss_record_headers = ['Epoch', 'Batch Loss', 'Validation Loss', 'Training Loss']
+            loss_record_headers = ['Epoch', 'Training Loss']
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
         all_batch_loss = []
-        all_train_loss = []
+        all_lr = []
         all_valid_loss = []
 
         for epoch in range(start_epoch, self.n_epochs):
@@ -174,15 +180,25 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                 for train_features, train_label in pbar:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
+                    # with torch.no_grad():
+                    #     model.eval()
+                    #     out0 = model(train_features)
+                    #     loss0 = loss_function(out0, train_label)
+                    #     model.train()
+                    #     out1 = model(train_features)
+                    #     loss1 = loss_function(out1, train_label)
 
                     optimizer.zero_grad()
                     
                     output = model(train_features)
+
+                    # print(output[:,:5])
                     # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # loss = loss_function(output, train_label)
                     # loss.backward()
                     # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # exit()
+
 
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
@@ -192,44 +208,46 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                 batch_loss /= len(train_dataloader)
                 all_batch_loss.append(batch_loss)
 
-            # Validation
-            model.eval()
-            train_loss = 0
-            valid_loss = 0
-            with torch.no_grad():
-                for train_features, train_label in tqdm(train_dataloader, leave=False):
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    train_label = train_label.to(device=self.device, dtype=self.dtype)
-                    output = model(train_features)
-                    train_loss += loss_function(output, train_label).item()
-                train_loss /= len(train_dataloader)
-                all_train_loss.append(train_loss)
-                logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
+            # # Validation
+            # model.eval()
+            # train_loss = 0
+            # valid_loss = 0
+            # with torch.no_grad():
+            #     for train_features, train_label in tqdm(train_dataloader, leave=False):
+            #         train_features = train_features.to(device=self.device, dtype=self.dtype)
+            #         train_label = train_label.to(device=self.device, dtype=self.dtype)
+            #         output = model(train_features)
+            #         train_loss += loss_function(output, train_label).item()
+            #     train_loss /= len(train_dataloader)
+            #     all_train_loss.append(train_loss)
+            #     logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Training loss: {train_loss:.02e}")
 
-                for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
-                    valid_features = valid_features.to(device=self.device, dtype=self.dtype)
-                    valid_label = valid_label.to(device=self.device, dtype=self.dtype)
-                    output = model(valid_features)
-                    valid_loss += loss_function(output, valid_label).item()
-                valid_loss /= len(valid_dataloader)
-                all_valid_loss.append(valid_loss)
-                note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
-                logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
+                # for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
+                #     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
+                #     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
+                #     output = model(valid_features)
+                #     valid_loss += loss_function(output, valid_label).item()
+                # valid_loss /= len(valid_dataloader)
+                # all_valid_loss.append(valid_loss)
+                # note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
+                # logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
 
-            self.out_loss_record.append([epoch + 1, batch_loss, valid_loss, train_loss])
+            self.out_loss_record.append([epoch + 1, batch_loss])  # , train_loss])
 
-            is_best_condition_a = valid_loss == min(all_valid_loss)
-            is_best_condition_b = epoch >= self.earliest_best
-            if is_best_condition_a and is_best_condition_b:
-                with self.name_tracker.set_context("epoch", "best"):
-                    self.out_model.write(model=model,
-                                        epoch="best"
-                                        )
+            # is_best_condition_a = valid_loss == min(all_valid_loss)
+            # is_best_condition_b = epoch >= self.earliest_best
+            # if is_best_condition_a and is_best_condition_b:
+            # with self.name_tracker.set_context("epoch", "best"):
+            #     self.out_model.write(model=model,
+            #                         epoch="best"
+            #                         )
 
             # Checkpoint every so many epochs
             condition_a = (epoch + 1) in self.extra_check
             condition_b = (epoch + 1) % self.checkpoint == 0
-            if (condition_a or condition_b):
+            # condition_c = (epoch + 1) % self.checkpoint == 1
+            condition_c = False
+            if (condition_a or condition_b or condition_c):
                 with self.name_tracker.set_context("epoch", epoch + 1):
                     self.out_model.write(model=model,
                                          optimizer=optimizer,
@@ -293,3 +311,10 @@ def get_loss(loss_key, ells):
     else:
         raise ValueError(f"Unknown loss function: {loss_key}")
     return loss_function
+
+
+def freeze_bn(m):
+    if isinstance(m, torch.nn.modules.batchnorm._BatchNorm):
+        m.eval()
+        m.weight.requires_grad_(False)
+        m.bias.requires_grad_(False)
