@@ -26,10 +26,11 @@ hydra:
     params:
       learning_rate:  1e-7, 1e-6, 1e-5
       # learning_rate:  1e-5
-      num_sims: 100 #, 500, 1000, 2000, 5000
+      num_sims: 200 #, 500, 1000, 2000, 5000
       iter_num: 0, 1, 2
       # iter_num: 0
       freeze_bn: true  #, false
+      batch_size: 50
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -40,6 +41,7 @@ hydra:
 iter_num: 0
 learning_rate: 0  # Placeholder
 num_sims: 0
+batch_size: 0
 
 splits:
   Train:
