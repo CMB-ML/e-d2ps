@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "Find_LR/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
+working_dir        : &wd "Find_LR_${num_sims}/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, ${num_sims} Simulations"
@@ -26,7 +26,7 @@ hydra:
     params:
       learning_rate:  1e-9, 1e-8, 1e-7, 1e-6, 1e-5
       # learning_rate:  1e-5
-      num_sims: 5 #, 500, 1000, 2000, 5000
+      num_sims: 1 #, 500, 1000, 2000, 5000
       iter_num: 0, 1, 2, 3, 4
       # iter_num: 0
       freeze_bn: true  #, false
