@@ -24,10 +24,10 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      learning_rate:  1e-9, 1e-8, 1e-7, 1e-6, 1e-5
+      learning_rate:  1e-7, 1e-6, 1e-5
       # learning_rate:  1e-5
-      num_sims: 1 #, 500, 1000, 2000, 5000
-      iter_num: 0, 1, 2, 3, 4
+      num_sims: 100 #, 500, 1000, 2000, 5000
+      iter_num: 0, 1, 2
       # iter_num: 0
       freeze_bn: true  #, false
   run:
