@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "Find_LR_${num_sims}/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
+working_dir        : &wd "Find_LR_${num_sims}_BS${batch_size}/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, ${num_sims} Simulations"
