@@ -56,7 +56,7 @@ def prep_run(cfg):
     pipes = [
         # MakeLutExecutor,
         # FindDatasetStatsParallelExecutor,
-        PreprocessMapsExecutor,
+        # PreprocessMapsExecutor,
         # PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
@@ -66,16 +66,16 @@ def prep_run(cfg):
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # TrainingExecutor,
-        # # PredictExecutor,
-        # # # PowerSpectrumAnalysisExecutor,
-        # # ShowPredictionsExecutor,
-        # # # ShowBWPredictionsExecutor,
+        TrainingExecutor,
+        # PredictExecutor,
+        # PowerSpectrumAnalysisExecutor,
+        # ShowPredictionsExecutor,
+        # ShowBWPredictionsExecutor,
         # LossPlotExecutor,
         LRPlotExecutor
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        # # ShowTrebleEll
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 
