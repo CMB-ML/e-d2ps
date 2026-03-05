@@ -245,14 +245,15 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             # Checkpoint every so many epochs
             condition_a = (epoch + 1) in self.extra_check
             condition_b = (epoch + 1) % self.checkpoint == 0
-            # condition_c = (epoch + 1) % self.checkpoint == 1
+            condition_c = batch_loss < 1e-8
             condition_c = False
             if (condition_a or condition_b or condition_c):
                 with self.name_tracker.set_context("epoch", epoch + 1):
                     self.out_model.write(model=model,
                                          optimizer=optimizer,
                                          epoch=epoch + 1)
-
+            if batch_loss < 1e-4:
+                break
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")

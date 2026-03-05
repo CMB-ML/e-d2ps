@@ -25,7 +25,7 @@ hydra:
   sweeper:
     params:
       learning_rate:  5e-6, 1e-5, 2.5e-5, 5e-5
-      num_sims: 5  #, 500, 1000, 2000, 5000
+      num_sims: 1  #, 500, 1000, 2000, 5000
       iter_num: 0, 1, 2
       freeze_bn: true  #, false
   run:

@@ -23,7 +23,7 @@ class LossPlotExecutor(BaseStageExecutor):
         self.out_fig.handler.set_fig_types(self.fig_type)
         fig, ax = make_loss_plot(some_path=self.in_loss_csv.path,
                                  fig_label=self.fig_label,
-                                 ylim=(1e2,1e7),
+                                 ylim=(1e-4,1e7),
                                  sm_sigma2=20)
         self.out_fig.write(fig=fig)
 
@@ -108,6 +108,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
         if ylim is not None:
             ax.set_ylim(*ylim)
+        ax.set_xlim(0,3000)
 
         custom_legend = [
             Line2D([0], [0], color="tab:blue", linestyle="-", linewidth=2, label="Training Loss"),
