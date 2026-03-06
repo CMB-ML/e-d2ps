@@ -108,7 +108,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
         if ylim is not None:
             ax.set_ylim(*ylim)
-        ax.set_xlim(0,3000)
+        ax.set_xlim(0,30000)
 
         custom_legend = [
             Line2D([0], [0], color="tab:blue", linestyle="-", linewidth=2, label="Training Loss"),

@@ -136,12 +136,22 @@ class PredictExecutor(BasePyTorchModelExecutor):
 
         self.model.eval().to(self.device)
 
+        first_model = True
+
         with torch.no_grad():  # We don't need gradients for prediction
             for model_epoch in self.model_epochs:
                 for split in self.splits:
                     context_dict = dict(split=split.name, epoch=model_epoch)
                     with self.name_tracker.set_contexts(context_dict):
-                        self.in_model_asset.read(model=self.model, epoch=model_epoch)
+                        try:
+                            self.in_model_asset.read(model=self.model, epoch=model_epoch)
+                        except FileNotFoundError as e:
+                            if first_model:
+                                raise e
+                            else:
+                                logger.warning(f"Failed to load model for epoch {model_epoch}. Assuming early stop.")
+                                break
+                        first_model = False
                         self.process_split(split, model_epoch)
 
     def process_split(self, split, epoch) -> None:
