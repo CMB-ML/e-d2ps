@@ -15,7 +15,7 @@ defaults:
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "Fixed_${num_sims}_LR_Sweep/${features_type}2ps_${num_sims}_${learning_rate}_${iter_num}_BN-UseFalse_BiasTrue/"
+working_dir        : &wd "Fixed_N_LR_Sweep/${features_type}2ps_N${num_sims}_LR${learning_rate}_ep${num_epochs}_BS${batch_size}_BN-UseFalse_BiasTrue/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Learning rate ${learning_rate}, ${num_sims}"
@@ -24,10 +24,7 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      learning_rate:  1e-7, 2.5e-7, 5e-7, 1e-6, 2.5e-6  # 5e-6, 1e-5, 2.5e-5  #, 5e-5
-      num_sims: 2  #, 500, 1000, 2000, 5000
-      iter_num: 30000  # , 1, 2
-      freeze_bn: true  #, false
+      learning_rate:  1e-7, 2.5e-7, 5e-7, 1e-6, 2.5e-6
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -35,9 +32,12 @@ hydra:
     subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
                                                 #   This is a minor bug, not worth fixing.
 
+batch_size: 200  # All
 iter_num: 0
 learning_rate: 0  # Placeholder
-num_sims: 0
+num_sims: 5
+# In the model yaml
+num_epochs         : 30000
 
 splits:
   Train:
@@ -67,8 +67,6 @@ features_type      : cmb
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
-# In the model yaml
-num_epochs         : 30000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

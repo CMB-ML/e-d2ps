@@ -76,7 +76,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.features_type = cfg.features_type
         self.use_preload = cfg.model.train.get("use_preload", False)
         logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. This eats RAM! BE CAREFUL!")
-        self.freeze_bn = cfg.freeze_bn
+        # self.freeze_bn = cfg.freeze_bn
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -112,9 +112,9 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         model = model.to(self.device)
         # logger.info(f"Model created!")
 
-        if self.freeze_bn:
-            model.apply(freeze_bn)
-            logger.info("Batch Norm Frozen")
+        # if self.freeze_bn:
+        #     model.apply(freeze_bn)
+        #     logger.info("Batch Norm Frozen")
 
         # Potentially confusing... the order is determined by the order of
         #   splits for this stage in the pipeline yaml.
