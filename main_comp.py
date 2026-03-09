@@ -83,6 +83,22 @@ def run_pyilc(cfg):
     ]
     run(cfg, pipes)
 
+@hydra.main(version_base=None, config_path="cfg", config_name="config_surr2")
+def run_surrogate2(cfg):
+    pipes = [
+        PowerSpectrumAnalysisExecutor,
+        PerSplitAnalysis,
+        ShowChiSquare,
+        ShowRelativeError,
+        ShowCosmicFractions,
+        ShowPredictionsExecutor,
+        ShowBWPredictionsExecutor,
+        ShowIndivPredictionsExecutor,
+        ErrorAnalysisExecutor,
+        ShowPredictionsWithChiSquareExecutor,
+        BundlePredExecutor
+    ]
+    run(cfg, pipes)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_real_ps_planck")
 def run_real_pl(cfg):
@@ -148,9 +164,10 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_real()
-    run_real_pl()
-    run_cmbnncs()
-    run_cmbnncs_planck()
-    run_pyilc()
-    run_pyilc_planck()
+    # run_real()
+    # run_real_pl()
+    # run_cmbnncs()
+    # run_cmbnncs_planck()
+    # run_pyilc()
+    # run_pyilc_planck()
+    run_surrogate2()

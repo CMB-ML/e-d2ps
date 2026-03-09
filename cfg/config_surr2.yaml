@@ -1,0 +1,36 @@
+defaults:
+  - config_pred_ps_base
+  - _self_
+
+dataset_name: "I_128_1850_near_test_1"
+
+working_dir : "Simulation_Working/"
+fig_model_name: "Surrogate2 Spectra"
+n_show_cap           : 10
+use_epochs           : [""]
+
+pipeline:
+  ps_analysis:
+    assets_in:
+      auto_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  per_split_analysis:
+    assets_in:
+      ps_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  show_predictions:
+    assets_in:
+      ps_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  show_predictions_bw:
+    assets_in:
+      ps_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  show_predictions_indiv:
+    assets_in:
+      ps_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  error_analysis:
+    assets_in:
+      ps_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  show_predictions_error_analysis:
+    assets_in:
+      ps_pred: {stage: make_near_theory_ps, orig_name: cmb_ps}
+  bundle_pred:
+    assets_in:
+      ps: {stage: make_near_theory_ps, orig_name: cmb_ps}
