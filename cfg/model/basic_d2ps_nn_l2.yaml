@@ -14,7 +14,7 @@ use_ells  : "[2:${lmax}+1:1]"
 # For non-Wishart loss function
 scale_ps  : null
 final_activation: null
-use_batch_norm_enc: true
+use_batch_norm_enc: false
 use_batch_norm_dec: false
 # For Wishart loss function
 # scale_ps  : Cl
@@ -43,7 +43,7 @@ train:
   batch_size        : 5
   num_loader_workers: 0
   # Training parameters
-  learning_rate     : 0.0002
+  learning_rate     : ${learning_rate}
 
   # Epochs
   n_epochs          : ${num_epochs}
@@ -53,7 +53,7 @@ train:
   earliest_best     : 0  # Earliest epoch to save the best model
                          #   when debugging with small datasets and low total epochs, 
                          #   set to 0 to allow finding a best model at the very start
-  checkpoint_every  : 10     # checkpoint every this number of epochs
+  checkpoint_every  : 30000000     # checkpoint every this number of epochs
   extra_check       : []  # Extra checkpoints to save
   # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 
