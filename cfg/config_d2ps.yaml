@@ -21,6 +21,8 @@ fig_model_name     : "${features_type} to PS"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 learning_rate: 5e-6
 
+n_sims: "this_should_run_with_multi"
+
 planck_ds: PlanckAsDataset_${scenario.nside}
 
 fig_type: ['pdf', 'png']
