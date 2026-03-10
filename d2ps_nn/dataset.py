@@ -42,77 +42,95 @@ class TrainDataset(Dataset):
 
         label_tensor = torch.as_tensor(label)
 
-        features = _get_features_idx(freqs=self.freqs,
-                                     path_template=self.feature_path_template,
-                                     handler=self.feature_handler,
-                                     n_fields=self.n_map_fields,
-                                     sim_idx=sim_idx)
-
-        features_tensor = tuple([torch.as_tensor(f) for f in features])
-        features_tensor = torch.stack(features_tensor, dim=0)
-
-        if features_tensor.ndim == 4: # Separate faces
-            # C, F, H, W = features_tensor.shape
-            if 12 in features_tensor.shape:
-                if features_tensor.shape[0] == 12:
-                    pass
-                elif features_tensor.shape[1] == 12:
-                    # C, F, H, W --> F, C, H, W
-                    features_tensor = features_tensor.permute(1, 0, 2, 3)
-                else:
-                    raise ValueError(f"Unexpected feature shape {features_tensor.shape}")
+        features_tensor = _build_feature_tensor(freqs=self.freqs,
+                                                path_template=self.feature_path_template,
+                                                handler=self.feature_handler,
+                                                n_fields=self.n_map_fields,
+                                                sim_idx=sim_idx)
         return features_tensor, label_tensor
+
+
+def _build_feature_tensor(freqs, path_template, handler, n_fields, sim_idx):
+    features = _get_features_idx(
+        freqs=freqs,
+        path_template=path_template,
+        handler=handler,
+        n_fields=n_fields,
+        sim_idx=sim_idx,
+    )
+
+    features_tensor = tuple(torch.as_tensor(f) for f in features)
+    features_tensor = torch.stack(features_tensor, dim=0)
+
+    if features_tensor.ndim == 4:  # likely (C,F,H,W) or (F,C,H,W)
+        if 12 in features_tensor.shape:
+            if features_tensor.shape[0] == 12:
+                pass
+            elif features_tensor.shape[1] == 12:
+                features_tensor = features_tensor.permute(1, 0, 2, 3)
+            else:
+                raise ValueError(f"Unexpected feature shape {features_tensor.shape}")
+
+    return features_tensor
 
 
 class PreloadTrainDataset(Dataset):
     """
     For use with pre-processed maps.
+    Preloads all labels and features into RAM.
     """
-    def __init__(self, 
-                 n_sims,
-                 freqs,
-                 map_fields: str,
-                 label_path_template,
-                 label_handler,
-                 feature_path_template,
-                 feature_handler,
-                 ):
+    def __init__(
+        self,
+        n_sims,
+        freqs,
+        map_fields: str,
+        label_path_template,
+        label_handler,
+        feature_path_template,
+        feature_handler,
+    ):
         self.n_sims = n_sims
         self.freqs = freqs
         self.label_path_template = label_path_template
         self.label_handler = label_handler
         self.feature_path_template = feature_path_template
         self.feature_handler = feature_handler
-        self.n_map_fields:int = len(map_fields)
+        self.n_map_fields: int = len(map_fields)
 
-        logger.info("Creating Label set")
-        all_labels = [_get_label_idx(path_template=self.label_path_template,
-                                     handler=self.label_handler,
-                                     n_fields=self.n_map_fields,
-                                     sim_idx=sim_idx)
-                                     for sim_idx in range(self.n_sims)
-                                     ]
-        all_labels = np.stack(all_labels, axis=0)
-        self.all_labels = all_labels
+        logger.info("Creating label set")
+        all_labels = [
+            _get_label_idx(
+                path_template=self.label_path_template,
+                handler=self.label_handler,
+                n_fields=self.n_map_fields,
+                sim_idx=sim_idx,
+            )
+            for sim_idx in range(self.n_sims)
+        ]
+        self.all_labels = np.stack(all_labels, axis=0)
 
-        logger.info("Creating Features set")
-        first_feat = _get_features_idx(freqs=self.freqs,
-                                       path_template=self.feature_path_template,
-                                       handler=self.feature_handler,
-                                       n_fields=self.n_map_fields,
-                                       sim_idx=0)
-        
-        C = len(first_feat)
-        H, W = first_feat[0].shape
-        all_feats = np.empty((n_sims, C, H, W), dtype=np.float32)
-        for sim_idx in tqdm(range(self.n_sims)):
-            this_feat = (_get_features_idx(freqs=self.freqs,
-                                           path_template=self.feature_path_template,
-                                           handler=self.feature_handler,
-                                           n_fields=self.n_map_fields,
-                                           sim_idx=sim_idx))
-            for ci, ch in enumerate(this_feat):
-                all_feats[sim_idx, ci] = ch
+        logger.info("Creating feature set (number in set is 1 more than tqdm says)")
+        first_feat = _build_feature_tensor(
+            freqs=self.freqs,
+            path_template=self.feature_path_template,
+            handler=self.feature_handler,
+            n_fields=self.n_map_fields,
+            sim_idx=0,
+        ).numpy()
+
+        all_feats = np.empty((self.n_sims, *first_feat.shape), dtype=np.float32)
+        all_feats[0] = first_feat
+
+        for sim_idx in tqdm(range(1, self.n_sims)):
+            this_feat = _build_feature_tensor(
+                freqs=self.freqs,
+                path_template=self.feature_path_template,
+                handler=self.feature_handler,
+                n_fields=self.n_map_fields,
+                sim_idx=sim_idx,
+            ).numpy()
+            all_feats[sim_idx] = this_feat
+
         self.all_feats = all_feats
 
     def __len__(self):
