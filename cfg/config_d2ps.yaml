@@ -14,7 +14,7 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_tlpEncAggDec_PosEnc/Initial_Nsims${n_sims}_iter${iter_num}/"
+working_dir        : &wd "${features_type}2ps_tlpEncAggDec_PosEnc_SepFaces/Initial_Nsims${n_sims}_iter${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep-tlpEncAggDec/"
 fig_model_name     : "${features_type} to PS"
@@ -25,8 +25,8 @@ use_pos_enc_lut: true
 n_sims: "this_should_run_with_multi"
 
 # Only these options currently
-nn_model: TLPEncAggDec
-# nn_model: TLPEncAggDec_SepFaces
+# nn_model: TLPEncAggDec
+nn_model: TLPEncAggDec_SepFaces
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
