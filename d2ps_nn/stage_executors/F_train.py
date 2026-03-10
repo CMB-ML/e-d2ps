@@ -7,11 +7,11 @@ from torch.utils.data import DataLoader
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
-from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
+from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler, TextPowerSpectrum
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
-from d2ps_nn.encdec import SimpleEncDec
+from d2ps_nn.models import SimpleEncDec
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 
@@ -33,7 +33,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                                                  cfg.features_type, 
                                                  self.instrument)
         self.in_model: Asset = self.assets_in["model"]
-        in_cmb_map_handler: NumpyMap
+        in_trgt_asset: TextPowerSpectrum
         in_obs_map_handler: NumpyMap
         in_model_handler: PyTorchModel
 

@@ -12,7 +12,7 @@ from cmbml.core.asset_handlers import Config, HealpyMap, NumpyMap
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TestDataset
-from d2ps_nn.encdec import SimpleEncDec
+from d2ps_nn.models import SimpleEncDec
 # from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells

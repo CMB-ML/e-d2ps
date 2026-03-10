@@ -27,7 +27,7 @@ from d2ps_nn import (
     PreprocessSpectraExecutor,
     TrainingExecutor,
     PredictExecutor,
-    CheckGPULoadExecutor,
+    CheckGPULoadExecutor_TLPEncDec,
     PowerSpectrumAnalysisExecutor,
     # PerSplitAnalysis,
     # PowerSpectrumAggExecutor,

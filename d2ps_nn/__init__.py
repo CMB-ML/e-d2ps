@@ -9,7 +9,8 @@ from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
 from .stage_executors.J_ps_error_analysis import ErrorAnalysisExecutor
 from .stage_executors.K_per_split_analysis import PerSplitAnalysis
 
-from .stage_executors._check_model_size import CheckGPULoadExecutor
+from .stage_executors._check_model_size_simple_encdec import CheckGPULoadExecutor_SimpleEncDec
+from .stage_executors._check_model_size_tlp_encdec import CheckGPULoadExecutor_TLPEncDec
 from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
 from .stage_executors._show_predictions import ShowPredictionsExecutor
 from .stage_executors._loss_summary import LossSummaryExecutor

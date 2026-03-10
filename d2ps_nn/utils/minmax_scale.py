@@ -2,6 +2,10 @@ import numpy as np
 
 
 def prep_scaling(data: np.ndarray, vmin: np.ndarray, vmax: np.ndarray):
+    raise NotImplementedError("This is unused, untested, and may break with the new conversion.")
+    # This was originally intended for a version that would preprocess maps on loading.
+    # Instead, the current pipeline preprocesses ahead of time, handling each channel separately.
+    
     # if the data is 1D or 2D, we aren't doing PyTorch stuff.
     if data.ndim in [1, 2]:
         return vmin, vmax
@@ -14,12 +18,14 @@ def prep_scaling(data: np.ndarray, vmin: np.ndarray, vmax: np.ndarray):
 
 
 def minmax_scale(data: np.ndarray, vmin: np.ndarray, vmax: np.ndarray):
-    vmin, vmax = prep_scaling(data, vmin, vmax)
+    # Do not use prep_scaling()
+    # vmin, vmax = prep_scaling(data, vmin, vmax)
     return (data - vmin) / (vmax - vmin)
 
 
 def minmax_unscale(data: np.ndarray, vmin: np.ndarray, vmax: np.ndarray):
-    vmin, vmax = prep_scaling(data, vmin, vmax)
+    # Do not use prep_scaling()
+    # vmin, vmax = prep_scaling(data, vmin, vmax)
     return data * (vmax - vmin) + vmin
 
 

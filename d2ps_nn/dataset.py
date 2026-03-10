@@ -51,6 +51,16 @@ class TrainDataset(Dataset):
         features_tensor = tuple([torch.as_tensor(f) for f in features])
         features_tensor = torch.stack(features_tensor, dim=0)
 
+        if features_tensor.ndim == 4: # Separate faces
+            # C, F, H, W = features_tensor.shape
+            if 12 in features_tensor.shape:
+                if features_tensor.shape[0] == 12:
+                    pass
+                elif features_tensor.shape[1] == 12:
+                    # C, F, H, W --> F, C, H, W
+                    features_tensor = features_tensor.permute(1, 0, 2, 3)
+                else:
+                    raise ValueError(f"Unexpected feature shape {features_tensor.shape}")
         return features_tensor, label_tensor
 
 

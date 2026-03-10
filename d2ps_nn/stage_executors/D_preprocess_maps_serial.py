@@ -108,12 +108,12 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         out = []
         for field_str in self.map_fields:
             field_int = map_field_str2int(field_str)
-            m = map_data[field_int][self.lut]
+            m = map_data[field_int]
             if self.scaling == "minmax":
                 m = minmax_scale(m, 
                                  dataset_stats[field_str]["vmin"], 
                                  dataset_stats[field_str]["vmax"])
-            out.append(m)
+            out.append(m[self.lut])
         out = np.array(out)
         return out
 

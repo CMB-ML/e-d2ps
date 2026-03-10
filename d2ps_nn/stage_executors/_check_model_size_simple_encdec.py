@@ -11,7 +11,7 @@ from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TrainDataset
-from d2ps_nn.encdec import SimpleEncDec
+from d2ps_nn.models import SimpleEncDec
 from d2ps_nn.stage_executors.F_train import get_loss
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
@@ -20,7 +20,7 @@ from d2ps_nn.utils.select_features import FeatureAsset
 logger = logging.getLogger(__name__)
 
 
-class CheckGPULoadExecutor(BasePyTorchModelExecutor):
+class CheckGPULoadExecutor_SimpleEncDec(BasePyTorchModelExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="train")
 
@@ -122,6 +122,7 @@ class CheckGPULoadExecutor(BasePyTorchModelExecutor):
 
         output = model(train_features)
 
+        logger.info(f"Output shape: {output.shape}")
         logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
 
         loss = loss_function(output, train_label)

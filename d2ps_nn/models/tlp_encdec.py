@@ -23,17 +23,6 @@ def get_activation(activation):
     else:
         raise ValueError(f"Unknown activation: {activation}. Choose from: relu, gelu.")
 
-def get_pooling(pooling):
-    """Return pooling module based on string name"""
-    if pooling is None:
-        raise ValueError("Please specify 'avg' or 'max' pooling.")
-    pooling = pooling.lower()
-    if pooling == 'avg':
-        return nn.AdaptiveAvgPool2d((1,1))
-    elif pooling == 'max':
-        return nn.AdaptiveMaxPool2d((1,1))
-    else:
-        raise ValueError(f"Unknowing pooling: {pooling}. Choose from: avg, max.")
 
 class DoubleConv(nn.Module):
     def __init__(self, in_features, out_channels, use_batch_norm, dropout_rate=0.0, activation='relu'):
@@ -74,6 +63,48 @@ class Down(nn.Module):
         return x
 
 
+class FaceEncoder(nn.Module):
+    def __init__(self,
+                 n_in_channels,
+                 n_init_features,
+                 use_batch_norm_enc,
+                 dropout_rate,
+                 activation,
+                 n_levels):
+        super().__init__()
+        self.in_c = DoubleConv(in_features=n_in_channels,
+                               out_channels=n_init_features,
+                               use_batch_norm=use_batch_norm_enc,
+                               dropout_rate=dropout_rate,
+                               activation=activation)
+
+        downs = []
+        curr_features = n_init_features
+        for _ in range(n_levels):
+            downs.append(Down(curr_features, 
+                              use_batch_norm=use_batch_norm_enc,
+                              dropout_rate=dropout_rate,
+                              activation=activation))
+            curr_features *= 2
+        self.dns = nn.ModuleList(downs)
+        self.bottleneck_features = curr_features
+
+    def forward(self, x):
+        x = self.in_c(x)
+        for down in self.dns:
+            x = down(x)
+        return x
+
+
+class Aggregator(nn.Module):
+    def forward(self, x):
+        # This assumes the Encoder has fully compressed each face (H,W==1)
+        # x: (B, F, D, 1, 1)
+        x = x.squeeze(-1).squeeze(-1)   # (B, F, D)
+        x = x.mean(dim=1)               # (B, D)
+        return x
+
+
 class FCNDecoder(nn.Module):
     def __init__(self, in_channels, 
                  mid_channels, 
@@ -81,13 +112,10 @@ class FCNDecoder(nn.Module):
                  use_batch_norm,
                  dropout_rate=0.0,
                  activation='relu',
-                 pooling='max', 
                  final_activation=None
                  ):
         super().__init__()
         layers = []
-        layers.append(get_pooling(pooling))
-        layers.append(nn.Flatten())
         layers.append(nn.Linear(in_channels, mid_channels, bias=not use_batch_norm))
 
         if use_batch_norm:
@@ -107,54 +135,67 @@ class FCNDecoder(nn.Module):
         return x
 
 
-class SimpleEncDec(nn.Module):
+class TLPEncAggDec(nn.Module):
     def __init__(
                  self,
+                 nside,
                  n_ells,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
                  n_init_features=16,
-                 n_levels=5,
+                 n_levels=7,
                  use_batch_norm_enc=True,
                  use_batch_norm_dec=False,
                  dropout_rate=0.0,
                  activation='relu',
-                 pooling='avg',
-                 note='',
+                 note=''
                  ):
         super().__init__()
         self.note = note
 
-        self.in_c = DoubleConv(in_features=n_in_channels,
-                               out_channels=n_init_features,
-                               use_batch_norm=use_batch_norm_enc,
-                               dropout_rate=dropout_rate,
-                               activation=activation)
+        if nside != 2**n_levels:
+            raise ValueError("This model assumes full compression to 1x1 px after Encoder")
 
-        downs = []
-        curr_features = n_init_features
-        for _ in range(n_levels):
-            downs.append(Down(curr_features, 
-                              use_batch_norm=use_batch_norm_enc,
-                              dropout_rate=dropout_rate,
-                              activation=activation))
-            curr_features *= 2
-        self.dns = nn.ModuleList(downs)
+        self.enc = FaceEncoder(
+            n_in_channels = n_in_channels,
+            n_init_features=n_init_features,
+            use_batch_norm_enc=use_batch_norm_enc,
+            dropout_rate=dropout_rate,
+            activation=activation,
+            n_levels=n_levels
+        )
 
-        self.out = FCNDecoder(
-            in_channels=curr_features,
-            mid_channels=curr_features // 2,
+        self.agg = Aggregator()
+
+        self.dec = FCNDecoder(
+            in_channels=self.enc.bottleneck_features,
+            mid_channels=self.enc.bottleneck_features // 2,
             out_channels=n_ells,
             use_batch_norm=use_batch_norm_dec,
             dropout_rate=dropout_rate,
             activation=activation,
-            pooling=pooling,
             final_activation=final_activation
         )
 
     def forward(self, x):
-        x = self.in_c(x)
-        for down in self.dns:
-            x = down(x)
-        x = self.out(x)
-        return x
+        if x.ndim != 5:
+            raise ValueError(
+                f"Expected input shape (B, 12, C, H, W); got {tuple(x.shape)}"
+            )
+        B, F, C, H, W = x.shape
+        if F != 12:
+            raise ValueError(
+                f"Expected 12 faces; got {x.shape[1]}"
+            )
+        face_embeddings = []
+        for f in range(F):
+            z_f = self.enc(x[:, f])              # x[:, f] -> (B, C, H, W)
+            face_embeddings.append(z_f)
+        z = torch.stack(face_embeddings, dim=1)  # (B, F, D, 1, 1)
+        if z.shape[-2:] != (1, 1):
+            raise RuntimeError(
+                f"Expected encoder output spatial shape (1,1), got {z.shape[-2:]}"
+            )
+        z = self.agg(z)                          # (B, D)
+        y = self.dec(z)                          # (B, lmax)
+        return y
