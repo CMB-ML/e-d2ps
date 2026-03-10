@@ -178,24 +178,96 @@ class TLPEncAggDec(nn.Module):
         )
 
     def forward(self, x):
-        if x.ndim != 5:
-            raise ValueError(
-                f"Expected input shape (B, 12, C, H, W); got {tuple(x.shape)}"
-            )
-        B, F, C, H, W = x.shape
-        if F != 12:
-            raise ValueError(
-                f"Expected 12 faces; got {x.shape[1]}"
-            )
+        check_main_input(x)
         face_embeddings = []
-        for f in range(F):
+        for f in range(12):
             z_f = self.enc(x[:, f])              # x[:, f] -> (B, C, H, W)
             face_embeddings.append(z_f)
         z = torch.stack(face_embeddings, dim=1)  # (B, F, D, 1, 1)
-        if z.shape[-2:] != (1, 1):
-            raise RuntimeError(
-                f"Expected encoder output spatial shape (1,1), got {z.shape[-2:]}"
-            )
+        check_features(z)
         z = self.agg(z)                          # (B, D)
         y = self.dec(z)                          # (B, lmax)
         return y
+
+
+def check_main_input(x):
+    if x.ndim != 5:
+        raise ValueError(
+            f"Expected input shape (B, 12, C, H, W); got {tuple(x.shape)}"
+        )
+    B, F, C, H, W = x.shape
+    if F != 12:
+        raise ValueError(
+            f"Expected 12 faces; got {x.shape[1]}"
+        )
+
+
+def check_features(z):
+    if z.shape[-2:] != (1, 1):
+        raise RuntimeError(
+            f"Expected encoder output spatial shape (1,1), got {z.shape[-2:]}"
+        )
+
+
+class TLPEncAggDec_SepFaces(nn.Module):
+    def __init__(
+                 self,
+                 nside,
+                 n_ells,
+                 n_in_channels,  # Should be the number of detectors
+                 final_activation=None,
+                 n_init_features=16,
+                 n_levels=7,
+                 use_batch_norm_enc=True,
+                 use_batch_norm_dec=False,
+                 dropout_rate=0.0,
+                 activation='relu',
+                 note=''
+                 ):
+        super().__init__()
+        self.note = note
+
+        if nside != 2**n_levels:
+            raise ValueError("This model assumes full compression to 1x1 px after Encoder")
+
+        # Use separate encoders for equatorial and polar TLPs, as those classes have different disortion
+        face_encoder_params = dict(
+            n_in_channels=n_in_channels,
+            n_init_features=n_init_features,
+            use_batch_norm_enc=use_batch_norm_enc,
+            dropout_rate=dropout_rate,
+            activation=activation,
+            n_levels=n_levels
+        )
+        self.enc_polar = FaceEncoder(**face_encoder_params)
+        self.enc_equatorial = FaceEncoder(**face_encoder_params)
+
+        self.agg = Aggregator()
+
+        self.dec = FCNDecoder(
+            in_channels=self.enc_polar.bottleneck_features,
+            mid_channels=self.enc_polar.bottleneck_features // 2,
+            out_channels=n_ells,
+            use_batch_norm=use_batch_norm_dec,
+            dropout_rate=dropout_rate,
+            activation=activation,
+            final_activation=final_activation
+        )
+
+    def forward(self, x):
+        check_main_input(x)
+        face_embeddings = []
+        for f in range(12):
+            z_f = self.get_face_enc(f)(x[:, f])  # x[:, f] -> (B, C, H, W)
+            face_embeddings.append(z_f)
+        z = torch.stack(face_embeddings, dim=1)  # (B, F, D, 1, 1)
+        check_features(z)
+        z = self.agg(z)                          # (B, D)
+        y = self.dec(z)                          # (B, lmax)
+        return y
+
+    def get_face_enc(self, f):
+        if f in [4,5,6,7]:
+            return self.enc_equatorial
+        else:
+            return self.enc_polar

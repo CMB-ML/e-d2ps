@@ -11,7 +11,7 @@ from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
-from d2ps_nn.models import TLPEncAggDec
+from d2ps_nn.models import TLPEncAggDec, TLPEncAggDec_SepFaces
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 import numpy as np
@@ -77,6 +77,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         self.use_preload = cfg.model.train.get("use_preload", False)
         logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. This eats RAM! BE CAREFUL!")
         # self.freeze_bn = cfg.freeze_bn
+        self.nn_model = cfg.nn_model
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -94,18 +95,29 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         logger.info(f"Creating model")
         n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
 
-        model = TLPEncAggDec(
+        if self.final_activation == "softplus":
+            final_activation = torch.nn.Softplus()
+        elif not self.final_activation:
+            final_activation = None
+        else:
+            raise ValueError(f"Unknown final activation: {self.final_activation}")
+
+        if self.nn_model == "TLPEncAggDec":
+            use_model = TLPEncAggDec
+        elif self.nn_model == "TLPEncAggDec_SepFaces":
+            use_model =TLPEncAggDec_SepFaces
+        model = use_model(
                              nside=self.nside,
-                             n_ells=1279,
-                             n_in_channels=1,
-                             final_activation=None,
-                             n_init_features=16,
-                             n_levels=7,
-                             use_batch_norm_enc=False,
-                             use_batch_norm_dec=False,
-                             activation="relu",
-                             dropout_rate=0,
-                             note=""
+                             n_ells=len(self.ells),
+                             n_in_channels=n_channels,
+                             final_activation=final_activation,
+                             n_init_features=self.model_n_init_features,
+                             n_levels=self.model_n_levels,
+                             use_batch_norm_enc=self.use_batch_norm_enc,
+                             use_batch_norm_dec=self.use_batch_norm_dec,
+                             dropout_rate=self.dropout_rate,
+                             activation=self.activation,
+                             note=self.model_note
                              )
 
         model = model.to(self.device)

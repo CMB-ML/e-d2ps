@@ -27,7 +27,7 @@ from d2ps_nn import (
     PreprocessSpectraExecutor,
     TrainingExecutor,
     PredictExecutor,
-    # CheckGPULoadExecutor_SimpleEncDec,
+    CheckGPULoadExecutor_SimpleEncDec,
     CheckGPULoadExecutor_TLPEncDec,
     PowerSpectrumAnalysisExecutor,
     # PerSplitAnalysis,
@@ -66,15 +66,17 @@ def prep_run(cfg):
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
+        # CheckGPULoadExecutor_SimpleEncDec,
+        # CheckGPULoadExecutor_TLPEncDec,
         TrainingExecutor,
-        # PredictExecutor,
-        # PowerSpectrumAnalysisExecutor,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
+        # # PredictExecutor,
+        # # PowerSpectrumAnalysisExecutor,
+        # # ShowPredictionsExecutor,
+        # # ShowBWPredictionsExecutor,
         LossPlotExecutor,
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
-        # ShowTrebleEll
+        # # BundleTrueExecutor,
+        # # BundlePredExecutor,
+        # # ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -120,7 +122,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    prep_run()
+    # prep_run()
     train_runs()
     # prep_run_planck()
     # run_planck()

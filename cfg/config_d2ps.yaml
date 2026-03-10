@@ -14,7 +14,7 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_tlpEncAggDec/Initial_Nsims${n_sims}/"
+working_dir        : &wd "${features_type}2ps_tlpEncAggDec_SepFaces/Initial_Nsims${n_sims}_iter${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep-tlpEncAggDec/"
 fig_model_name     : "${features_type} to PS"
@@ -22,6 +22,10 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 learning_rate: 5e-6
 
 n_sims: "this_should_run_with_multi"
+
+# Only these options currently
+# nn_model: TLPEncAggDec
+nn_model: TLPEncAggDec_SepFaces
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
@@ -50,7 +54,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 30000
+num_epochs         : 30
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

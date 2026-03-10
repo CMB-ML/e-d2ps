@@ -10,8 +10,8 @@ from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
-from d2ps_nn.dataset import TrainDataset
-from d2ps_nn.models import TLPEncAggDec
+# from d2ps_nn.dataset import TrainDataset
+from d2ps_nn.models import TLPEncAggDec, TLPEncAggDec_SepFaces
 from d2ps_nn.stage_executors.F_train import get_loss
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
@@ -71,6 +71,7 @@ class CheckGPULoadExecutor_TLPEncDec(BasePyTorchModelExecutor):
         self.pooling = cfg.model.pooling
         if self.pooling is None:
             raise ValueError("Please specify 'avg' or 'max'.")
+        self.nn_model = cfg.nn_model
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -87,10 +88,16 @@ class CheckGPULoadExecutor_TLPEncDec(BasePyTorchModelExecutor):
             raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         logger.info(f"Creating model")
-        model = TLPEncAggDec(
+
+        if self.nn_model == "TLPEncAggDec":
+            use_model = TLPEncAggDec
+        elif self.nn_model == "TLPEncAggDec_SepFaces":
+            use_model =TLPEncAggDec_SepFaces
+
+        model = use_model(
                              nside=self.nside,
                              n_ells=len(self.ells),
-                             n_in_channels=n_channels,  # CMB Only, not observations
+                             n_in_channels=n_channels,
                              final_activation=final_activation,
                              n_init_features=self.model_n_init_features,
                              n_levels=self.model_n_levels,
