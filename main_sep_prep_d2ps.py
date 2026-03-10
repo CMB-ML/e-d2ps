@@ -22,6 +22,7 @@ from cmbml.core import (
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 from d2ps_nn import (
     MakeLutExecutor,
+    MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
@@ -54,10 +55,11 @@ logger = logging.getLogger(__name__)
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
-        MakeLutExecutor,
-        FindDatasetStatsParallelExecutor,
-        PreprocessMapsExecutor,
-        PreprocessSpectraExecutor
+        # MakeLutExecutor,
+        MakePosEncLutExecutor,
+        # FindDatasetStatsParallelExecutor,
+        # PreprocessMapsExecutor,
+        # PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 
@@ -67,7 +69,7 @@ def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor_SimpleEncDec,
-        # CheckGPULoadExecutor_TLPEncDec,
+        CheckGPULoadExecutor_TLPEncDec,
         TrainingExecutor,
         # # PredictExecutor,
         # # PowerSpectrumAnalysisExecutor,

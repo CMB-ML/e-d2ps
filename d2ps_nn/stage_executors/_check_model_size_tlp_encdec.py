@@ -72,6 +72,7 @@ class CheckGPULoadExecutor_TLPEncDec(BasePyTorchModelExecutor):
         if self.pooling is None:
             raise ValueError("Please specify 'avg' or 'max'.")
         self.nn_model = cfg.nn_model
+        self.use_pos_enc_lut = cfg.use_pos_enc_lut
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -93,6 +94,9 @@ class CheckGPULoadExecutor_TLPEncDec(BasePyTorchModelExecutor):
             use_model = TLPEncAggDec
         elif self.nn_model == "TLPEncAggDec_SepFaces":
             use_model =TLPEncAggDec_SepFaces
+
+        if self.use_pos_enc_lut:
+            n_channels += 3
 
         model = use_model(
                              nside=self.nside,

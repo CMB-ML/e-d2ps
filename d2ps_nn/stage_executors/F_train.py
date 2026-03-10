@@ -34,8 +34,10 @@ class TrainingExecutor(BasePyTorchModelExecutor):
                                                  cfg.features_type, 
                                                  self.instrument)
         self.in_model: Asset = self.assets_in["model"]
-        in_cmb_map_handler: NumpyMap
-        in_obs_map_handler: NumpyMap
+        self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
+        in_trgt_handler: NumpyMap
+        in_feat_handler: NumpyMap
+        in_pos_enc_lut_handler: NumpyMap
         in_model_handler: PyTorchModel
 
         self.dtype         = self.dtype_mapping[cfg.model.dtype]  # TODO: Ensure this is used
@@ -79,6 +81,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         # self.freeze_bn = cfg.freeze_bn
         self.nn_model = cfg.nn_model
 
+        self.use_pos_enc_lut = cfg.use_pos_enc_lut
+
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
@@ -93,7 +97,10 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         #     raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         logger.info(f"Creating model")
+
         n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
+        if self.use_pos_enc_lut:
+            n_channels += 3
 
         if self.final_activation == "softplus":
             final_activation = torch.nn.Softplus()
@@ -289,7 +296,8 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             label_handler=self.in_trgt_asset.handler,
             feature_path_template=feat_path_template,
             # feature_path_template=feature_path_template,
-            feature_handler=self.in_feat_asset.handler
+            feature_handler=self.in_feat_asset.handler,
+            pos_enc_lut=self.in_pos_enc_lut.read() if self.use_pos_enc_lut else None
             )
         return dataset
 

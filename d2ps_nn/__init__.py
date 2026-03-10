@@ -1,4 +1,5 @@
 from .stage_executors.B_make_lut import MakeLutExecutor
+from .stage_executors.B_make_pos_enc_lut import MakePosEncLutExecutor
 from .stage_executors.C_find_dataset_stats_parallel import FindDatasetStatsParallelExecutor
 from .stage_executors.D_preprocess_maps_serial import PreprocessMapsExecutor
 from .stage_executors.E_preprocess_ps_serial import PreprocessSpectraExecutor

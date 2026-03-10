@@ -3,10 +3,12 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     cmb_ps: {working: "${prep_working_dir}"}
     cmb_map: {working: "${prep_working_dir}"}
     obs_maps: {working: "${prep_working_dir}"}
+    pos_enc_lut: {working: "${prep_working_dir}"}
 
 predict: &final_inference # G_predict.py / PredictExecutor
   assets_in:
     cmb_map: {working: "${prep_working_dir}"}
     obs_maps: {working: "${prep_working_dir}"}
+    pos_enc_lut: {working: "${prep_working_dir}"}
 
 final_infer: *final_inference  # Used so that analysis code can find a consistent name

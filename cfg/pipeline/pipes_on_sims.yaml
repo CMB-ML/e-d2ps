@@ -5,6 +5,15 @@ make_lut:  # B_make_lut.py / MakeLutExecutor
       path_template: "{root}/{dataset}/{working}{stage}/lut.npy"
   dir_name: B_LUT
 
+make_pos_enc_lut:  # B_make_pos_enc_lut.py / MakePosEncLutExecutor
+  assets_out:
+    pos_enc_lut: 
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/pos_enc_lut.npy"
+  assets_in:
+    lut: {stage: make_lut}
+  dir_name: B_LUT
+
 get_dataset_stats: # C_find_dataset_stats_parallel.py / FindDatasetStatsParallelExecutor
   assets_out:
     dataset_stats: 
@@ -72,6 +81,7 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
     model: {stage: train}
+    pos_enc_lut: {stage: make_pos_enc_lut}
   splits:
     - train
     - valid

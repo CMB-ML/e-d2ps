@@ -22,6 +22,7 @@ class TrainDataset(Dataset):
                  label_handler,
                  feature_path_template,
                  feature_handler,
+                 pos_enc_lut=None
                  ):
         self.n_sims = n_sims
         self.freqs = freqs
@@ -30,6 +31,7 @@ class TrainDataset(Dataset):
         self.feature_path_template = feature_path_template
         self.feature_handler = feature_handler
         self.n_map_fields:int = len(map_fields)
+        self.pos_enc_lut = torch.as_tensor(pos_enc_lut) if pos_enc_lut is not None else None
 
     def __len__(self):
         return self.n_sims
@@ -47,6 +49,10 @@ class TrainDataset(Dataset):
                                                 handler=self.feature_handler,
                                                 n_fields=self.n_map_fields,
                                                 sim_idx=sim_idx)
+        
+        if self.pos_enc_lut is not None:
+            features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=1)
+
         return features_tensor, label_tensor
 
 
@@ -88,6 +94,7 @@ class PreloadTrainDataset(Dataset):
         label_handler,
         feature_path_template,
         feature_handler,
+        pos_enc_lut=None
     ):
         self.n_sims = n_sims
         self.freqs = freqs
@@ -131,6 +138,7 @@ class PreloadTrainDataset(Dataset):
             ).numpy()
             all_feats[sim_idx] = this_feat
 
+        self.pos_enc_lut = torch.as_tensor(pos_enc_lut) if pos_enc_lut is not None else None
         self.all_feats = all_feats
 
     def __len__(self):
@@ -139,6 +147,8 @@ class PreloadTrainDataset(Dataset):
     def __getitem__(self, sim_idx):
         xt = torch.from_numpy(self.all_feats[sim_idx])
         yt = torch.from_numpy(self.all_labels[sim_idx])
+        if self.pos_enc_lut is not None:
+            xt = torch.cat([xt, self.pos_enc_lut], axis=1)
         return xt, yt
 
 
