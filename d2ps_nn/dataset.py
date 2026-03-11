@@ -159,25 +159,27 @@ class TestDataset(Dataset):
                  map_fields,
                  feature_path_template,
                  feature_handler,
+                 pos_enc_lut=None
                  ):
         self.n_sims = n_sims
         self.freqs = freqs
         self.feature_path_template = feature_path_template
         self.feature_handler = feature_handler
         self.n_map_fields:int = len(map_fields)
+        self.pos_enc_lut = torch.as_tensor(pos_enc_lut) if pos_enc_lut is not None else None
 
     def __len__(self):
         return self.n_sims
 
     def __getitem__(self, sim_idx):
-        features = _get_features_idx(freqs=self.freqs,
-                                     path_template=self.feature_path_template,
-                                     handler=self.feature_handler,
-                                     n_fields=self.n_map_fields,
-                                     sim_idx=sim_idx)
-
-        features_tensor = tuple([torch.as_tensor(f) for f in features])
-        features_tensor = torch.stack(features_tensor, dim=0)
+        features_tensor = _build_feature_tensor(freqs=self.freqs,
+                                                path_template=self.feature_path_template,
+                                                handler=self.feature_handler,
+                                                n_fields=self.n_map_fields,
+                                                sim_idx=sim_idx)
+        
+        if self.pos_enc_lut is not None:
+            features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=1)
 
         return features_tensor, sim_idx
 

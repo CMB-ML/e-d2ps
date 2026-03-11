@@ -100,6 +100,7 @@ predict: &final_inference # G_predict.py / PredictExecutor
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
     model: {stage: train}
+    pos_enc_lut: {stage: make_pos_enc_lut}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs}

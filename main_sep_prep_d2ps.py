@@ -69,11 +69,11 @@ def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor_SimpleEncDec,
-        CheckGPULoadExecutor_TLPEncDec,
-        TrainingExecutor,
-        # # PredictExecutor,
+        # CheckGPULoadExecutor_TLPEncDec,
+        # TrainingExecutor,
+        PredictExecutor,
         # # PowerSpectrumAnalysisExecutor,
-        # # ShowPredictionsExecutor,
+        ShowPredictionsExecutor,
         # # ShowBWPredictionsExecutor,
         LossPlotExecutor,
         # # BundleTrueExecutor,

@@ -14,19 +14,21 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_tlpEncAggDec_PosEnc_SepFaces/Initial_Nsims${n_sims}_iter${iter_num}/"
+working_dir        : &wd "${features_type}2ps_tlpEncAggDec/Initial_Nsims${n_sims}_iter${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep-tlpEncAggDec/"
 fig_model_name     : "${features_type} to PS"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
-learning_rate: 5e-6
-use_pos_enc_lut: true
 
 n_sims: "this_should_run_with_multi"
+learning_rate: 5e-6
+
+use_pos_enc_lut: false
+# use_pos_enc_lut: true
 
 # Only these options currently
-# nn_model: TLPEncAggDec
-nn_model: TLPEncAggDec_SepFaces
+nn_model: TLPEncAggDec
+# nn_model: TLPEncAggDec_SepFaces
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
@@ -37,7 +39,7 @@ splits:
     n_sims: 1000
 
 # Limit the number of simulations for which to generate figures
-n_show_cap           : 10
+n_show_cap           : 5
 n_show_treble_ell    : null
 
 # Settings below this point are used for interpolation.

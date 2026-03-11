@@ -112,7 +112,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         if self.nn_model == "TLPEncAggDec":
             use_model = TLPEncAggDec
         elif self.nn_model == "TLPEncAggDec_SepFaces":
-            use_model =TLPEncAggDec_SepFaces
+            use_model = TLPEncAggDec_SepFaces
         model = use_model(
                              nside=self.nside,
                              n_ells=len(self.ells),

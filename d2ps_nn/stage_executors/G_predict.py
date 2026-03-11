@@ -18,6 +18,7 @@ from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
+from d2ps_nn.models import TLPEncAggDec, TLPEncAggDec_SepFaces
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class PredictExecutor(BasePyTorchModelExecutor):
                                                  cfg.features_type, 
                                                  self.instrument)
         self.in_model_asset: Asset = self.assets_in["model"]
+        self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
         in_obs_map_handler: HealpyMap
         in_model_handler: PyTorchModel
 
@@ -64,6 +66,8 @@ class PredictExecutor(BasePyTorchModelExecutor):
         self.features_type = cfg.features_type
 
         self._model_epochs = cfg.use_epochs
+        self.nn_model = cfg.nn_model
+        self.use_pos_enc_lut = cfg.use_pos_enc_lut
 
     @property
     def model_epochs(self):
@@ -102,23 +106,29 @@ class PredictExecutor(BasePyTorchModelExecutor):
             raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
+        if self.use_pos_enc_lut:
+            n_channels += 3
 
         # It would likely be safer to have this within the loop, right before read()
         #    But this should work and be faster (especially with larger models)
-        self.model = SimpleEncDec(
-                                #   l_max=use_lmax,
-                                  n_ells=len(self.ells),
-                                  n_in_channels=n_channels,
-                                  final_activation=final_activation,
-                                  n_init_features=self.model_n_init_features,
-                                  n_levels=self.model_n_levels,
-                                  use_batch_norm_enc=self.use_batch_norm_enc,
-                                  use_batch_norm_dec=self.use_batch_norm_dec,
-                                  dropout_rate=self.dropout_rate,
-                                  activation=self.activation,       
-                                  pooling=self.pooling,
-                                  note=self.model_note
-                                  )
+        if self.nn_model == "TLPEncAggDec":
+            use_model = TLPEncAggDec
+        elif self.nn_model == "TLPEncAggDec_SepFaces":
+            use_model = TLPEncAggDec_SepFaces
+
+        self.model = use_model(
+                               nside=self.nside,
+                               n_ells=len(self.ells),
+                               n_in_channels=n_channels,
+                               final_activation=final_activation,
+                               n_init_features=self.model_n_init_features,
+                               n_levels=self.model_n_levels,
+                               use_batch_norm_enc=self.use_batch_norm_enc,
+                               use_batch_norm_dec=self.use_batch_norm_dec,
+                               dropout_rate=self.dropout_rate,
+                               activation=self.activation,
+                               note=self.model_note
+                               )
 
         self.model.eval().to(self.device)
 
@@ -161,6 +171,7 @@ class PredictExecutor(BasePyTorchModelExecutor):
             freqs = freqs,
             map_fields=self.map_fields,
             feature_path_template=obs_path_template,
-            feature_handler=self.in_feat_asset.handler
+            feature_handler=self.in_feat_asset.handler,
+            pos_enc_lut=self.in_pos_enc_lut.read() if self.use_pos_enc_lut else None
             )
         return dataset
