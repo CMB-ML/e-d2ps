@@ -142,7 +142,7 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                             ls=ls
                         )
                     except PeakFitError:
-                        logger.warning("Could not fit peaks!")
+                        logger.warning(f"Could not fit theory peaks for sim {i}!")
 
                 for i, ps_pred in enumerate(all_pred_ps):
                     color = mpl_colors[i % len(mpl_colors)]
@@ -168,7 +168,7 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                             ls=ls
                         )
                     except PeakFitError:
-                        logger.warning("Could not fit peaks!")
+                        logger.warning(f"Could not fit prediction peaks for sim {i}!")
 
                 # Proxies for the legend
                 theory_proxy = Line2D([0], [0], color="black", linewidth=0.5, alpha=1)
