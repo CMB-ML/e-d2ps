@@ -16,6 +16,9 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 
 
+raise NotImplementedError("Reminder: need to load model! See train and predict executors.")
+
+
 logger = logging.getLogger(__name__)
 
 
