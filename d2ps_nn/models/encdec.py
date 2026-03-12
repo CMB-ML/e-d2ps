@@ -143,6 +143,7 @@ class FCNDecoder(nn.Module):
 class SimpleEncDec(nn.Module):
     def __init__(
                  self,
+                 nside,          # Unused, for compatibility with TLP models
                  n_ells,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
@@ -156,6 +157,7 @@ class SimpleEncDec(nn.Module):
                  note='',
                  ):
         super().__init__()
+        self.in_shape = (n_in_channels, 4*nside, 3*nside)
         self.note = note
 
         self.enc = Encoder(
