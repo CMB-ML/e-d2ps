@@ -61,6 +61,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
 
         self.dtype = get_np_dtype(cfg.model.dtype)
 
+        self.lut_style = cfg.model.patches.get("lut_style", None)
         self.lut = None
         self.dataset_stats = None
 
@@ -75,7 +76,8 @@ class PreprocessMapsExecutor(BaseStageExecutor):
                 self.process_split(split)
 
     def load_lut(self) -> None:
-        self.lut = self.in_lut.read()
+        with self.name_tracker.set_context("style", self.lut_style):
+            self.lut = self.in_lut.read()
 
     def load_dataset_stats(self) -> None:
         # TODO: Use a class to better handle scaling/normalization
@@ -96,7 +98,8 @@ class PreprocessMapsExecutor(BaseStageExecutor):
             obs_map = asset.read(precision=self.dtype)
             map_stats = self.get_dataset_stats(channel)
             out = self.process_map(obs_map, map_stats)
-            self.out_feat.write(data=out)
+            with self.name_tracker.set_context("style", self.lut_style):
+                self.out_feat.write(data=out)
 
     def process_map(self,
                     map_data: np.ndarray,  # Or Astropy Quantity

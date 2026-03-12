@@ -41,6 +41,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         in_pos_enc_lut_handler: NumpyMap
         in_model_handler: PyTorchModel
 
+        self.lut_style = cfg.model.patches.get("lut_style", None)
+
         # How model is evaluated
         self.loss_key      = cfg.model.train.loss
         # When using Wishart loss, we need to skip the monopole and dipole
@@ -214,8 +216,9 @@ class TrainingExecutor(BaseD2PSExecutor):
         # TODO: Unsure if this change is needed
         # label_path_template = self.make_fn_template(split, self.in_ps_asset)
         # feature_path_template = self.make_fn_template(split, self.in_map_asset)
-        trgt_path_template = self.make_fn_template(split, self.in_trgt_asset)
-        feat_path_template = self.make_fn_template(split, self.in_feat_asset)
+        with self.name_tracker.set_context("style", self.lut_style):
+            trgt_path_template = self.make_fn_template(split, self.in_trgt_asset)
+            feat_path_template = self.make_fn_template(split, self.in_feat_asset)
 
         freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
 
@@ -232,6 +235,13 @@ class TrainingExecutor(BaseD2PSExecutor):
             # feature_path_template=feature_path_template,
             feature_handler=self.in_feat_asset.handler,
             px_arrange=self.px_arrange,
-            pos_enc_lut=self.in_pos_enc_lut.read() if self.use_pos_enc_lut else None
+            pos_enc_lut=self.get_pos_enc_lut()
             )
         return dataset
+
+    def get_pos_enc_lut(self):
+        if not self.use_pos_enc_lut:
+            return None
+        with self.name_tracker.set_context("style", self.lut_style):
+            pos_enc_lut = self.in_pos_enc_lut.read() 
+        return pos_enc_lut

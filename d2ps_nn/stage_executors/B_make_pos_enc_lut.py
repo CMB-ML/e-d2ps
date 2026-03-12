@@ -22,6 +22,7 @@ class MakePosEncLutExecutor(BaseStageExecutor):
         self.in_lut: Asset = self.assets_in["lut"]
         in_obs_map_handler: HealpyMap
 
+        self.lut_style = cfg.model.patches.get("lut_style", None)
         self.nside = cfg.scenario.nside
         self.use_pos_enc_lut = cfg.use_pos_enc_lut
 
@@ -31,11 +32,13 @@ class MakePosEncLutExecutor(BaseStageExecutor):
             logger.info("No positional encoder lut needed. Skipping.")
         ri_map = np.arange(hp.nside2npix(self.nside))
         x, y, z = hp.pix2vec(self.nside, ri_map)
-        lut = self.in_lut.read()
+        with self.name_tracker.set_context("style", self.lut_style):
+            lut = self.in_lut.read()
         pos_enc_lut = np.stack([x[lut],
                                 y[lut],
                                 z[lut]],
                                 axis=1    # Stack along first axis -> (12, 3, N, N)
                                 )
         pos_enc_lut = pos_enc_lut.astype(np.float32)
-        self.out_pos_enc_lut.write(data=pos_enc_lut)
+        with self.name_tracker.set_context("style", self.lut_style):
+            self.out_pos_enc_lut.write(data=pos_enc_lut)

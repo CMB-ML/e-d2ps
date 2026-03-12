@@ -25,11 +25,12 @@ class MakeLutExecutor(BaseStageExecutor):
         if self.nside_patch is not None and self.nside_patch != self.nside:
             raise NotImplementedError("Nside of each patch must be same as Nside")
 
+        self.lut_style = cfg.model.patches.get("lut_style", None)
         self.lut_method = {
             None: None,
             "cmbNNCS": cmbNNCS_nest2lut,
             "channel": channel_nest2lut
-        }[cfg.model.patches.get("lut_style", None)]
+        }[self.lut_style]
         if self.lut_method is None:
             raise ValueError(f"lut style is not defined in the model.patches config")
 
@@ -38,4 +39,5 @@ class MakeLutExecutor(BaseStageExecutor):
 
         lut = self.lut_method(self.nside, self.nside_patch)
 
-        self.out_lut.write(data=lut)
+        with self.name_tracker.set_context("style", self.lut_style):
+            self.out_lut.write(data=lut)

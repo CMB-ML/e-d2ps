@@ -27,9 +27,11 @@ class PredictExecutor(BaseD2PSExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="predict")
 
+        # What comes out
         self.out_cmb_asset: Asset = self.assets_out["cmb_ps"]
         out_cmb_handler: HealpyMap
 
+        # What goes in
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
                                                  cfg.features_type, 
                                                  self.instrument)
@@ -38,10 +40,14 @@ class PredictExecutor(BaseD2PSExecutor):
         in_obs_map_handler: HealpyMap
         in_model_handler: PyTorchModel
 
-        self.scale_ps_choice  = cfg.model.scale_ps
+        self.lut_style = cfg.model.patches.get("lut_style", None)
 
+        # How it runs
         self.batch_size = cfg.model.test.batch_size
         self._model_epochs = cfg.use_epochs
+
+        # How data is processed
+        self.scale_ps_choice  = cfg.model.scale_ps
 
         self.model = None  # Placeholder for model
 
@@ -93,7 +99,8 @@ class PredictExecutor(BaseD2PSExecutor):
                         self.out_cmb_asset.write(data=pred)
 
     def set_up_dataset(self, template_split: Split) -> TestDataset:
-        obs_path_template = self.make_fn_template(template_split, self.in_feat_asset)
+        with self.name_tracker.set_context("style", self.lut_style):
+            obs_path_template = self.make_fn_template(template_split, self.in_feat_asset)
         freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
 
         dataset = TestDataset(
@@ -103,6 +110,13 @@ class PredictExecutor(BaseD2PSExecutor):
             feature_path_template=obs_path_template,
             feature_handler=self.in_feat_asset.handler,
             px_arrange=self.px_arrange,
-            pos_enc_lut=self.in_pos_enc_lut.read() if self.use_pos_enc_lut else None
+            pos_enc_lut=self.get_pos_enc_lut()
             )
         return dataset
+
+    def get_pos_enc_lut(self):
+        if not self.use_pos_enc_lut:
+            return None
+        with self.name_tracker.set_context("style", self.lut_style):
+            pos_enc_lut = self.in_pos_enc_lut.read() 
+        return pos_enc_lut

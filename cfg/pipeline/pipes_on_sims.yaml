@@ -2,14 +2,14 @@ make_lut:  # B_make_lut.py / MakeLutExecutor
   assets_out:
     lut: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/lut.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/lut_{style}.npy"
   dir_name: B_LUT
 
 make_pos_enc_lut:  # B_make_pos_enc_lut.py / MakePosEncLutExecutor
   assets_out:
     pos_enc_lut: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/pos_enc_lut.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/pos_enc_lut_{style}.npy"
   assets_in:
     lut: {stage: make_lut}
   dir_name: B_LUT
@@ -30,10 +30,10 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_out:
     obs_maps:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}_{style}.npy"
     cmb_map:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_prep.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_prep_{style}.npy"
   assets_in:
     obs_maps:
       stage: make_sims
