@@ -23,14 +23,17 @@ class MakePosEncLutExecutor(BaseStageExecutor):
         in_obs_map_handler: HealpyMap
 
         self.nside = cfg.scenario.nside
+        self.use_pos_enc_lut = cfg.use_pos_enc_lut
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        if not self.use_pos_enc_lut:
+            logger.info("No positional encoder lut needed. Skipping.")
         ri_map = np.arange(hp.nside2npix(self.nside))
         x, y, z = hp.pix2vec(self.nside, ri_map)
         lut = self.in_lut.read()
-        pos_enc_lut = np.stack([x[lut], 
-                                y[lut], 
+        pos_enc_lut = np.stack([x[lut],
+                                y[lut],
                                 z[lut]],
                                 axis=1    # Stack along first axis -> (12, 3, N, N)
                                 )
