@@ -270,6 +270,25 @@ show_predictions: # _show_predictions.py / ShowPredictionsExecutor
   dir_name: Analysis_Figures
   make_stage_log: False
 
+show_predictions_peaks: # _show_predictions_peaks.py / ShowPredictionsPeaksExecutor
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_D_predictions_{split}_ep_{epoch}_peaks.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    # ps_prep: {stage: preprocess_spectra, orig_name: cmb_ps}
+    ps_thry:
+      stage: make_theory_ps
+      orig_name: cmb_ps
+      working: Simulation_Working/
+    report: {stage: ps_agg, orig_name: agg_report}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
 show_predictions_indiv: # _show_predictions_indiv.py / ShowIndivPredictionsExecutor
   assets_out:
     fig: 
