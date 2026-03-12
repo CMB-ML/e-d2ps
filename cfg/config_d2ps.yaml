@@ -16,13 +16,13 @@ defaults:
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
 working_dir        : &wd "${features_type}2ps_TEST/Initial_Nsims${n_sims}_iter${iter_num}/"
 trained_wd         : *wd
+prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 n_sims: "this_should_run_with_multi"
 learning_rate: 5e-6
 
-prep_working_dir   : "d2ps-prep/"  # For use with cmbNNCS px_arrange, currently
 px_arrange: cmbNNCS
 nn_model: SimpleEncDec
 
@@ -31,16 +31,12 @@ nn_model: SimpleEncDec
 # nn_model: TLPEncAggDec
 # nn_model: TLPEncAggDec_SepFaces
 
-use_pos_enc_lut: false
-# use_pos_enc_lut: true
+# use_pos_enc_lut: false
+use_pos_enc_lut: true
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
 fig_type: ['pdf', 'png']
-
-splits:
-  Train:
-    n_sims: 1000
 
 # Limit the number of simulations for which to generate figures
 n_show_cap           : 5
