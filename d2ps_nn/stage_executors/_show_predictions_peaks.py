@@ -9,7 +9,7 @@ import pysm3.units as u
 
 from cmbml.core import Split, Asset, AssetWithPathAlts
 from cmbml.core.executor_base import BaseStageExecutor
-from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
+from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
 from cmbml.utils.number_report import float_to_latex
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
@@ -29,7 +29,7 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
         self.in_ps_thry: AssetWithPathAlts = self.assets_in["ps_thry"]
-        self.in_report: Asset = self.assets_in["report"]
+        # self.in_report: Asset = self.assets_in["report"]
         in_ps_prep_handler: TextPowerSpectrum
         in_ps_thry_handler: CambPowerSpectrum
         in_report_handler: PandasCsvHandler
@@ -66,11 +66,11 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
     def process_split(self, split: Split) -> None:
         mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         show_max_l = self.display_lmax
-        try:
-            report_data = self.in_report.read()
-        except FileNotFoundError:
-            logger.warning(f"Report file {self.in_report.path} not found. Skipping report data.")
-            report_data = None
+        # try:
+        #     report_data = self.in_report.read()
+        # except FileNotFoundError:
+        #     logger.warning(f"Report file {self.in_report.path} not found. Skipping report data.")
+        #     report_data = None
 
         use_path_alt = True if split.ps_fidu_fixed else False
 
@@ -200,19 +200,19 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
 
                 ax.set_title(f"Predictions and Targets, {self.fig_label}")
 
-                if report_data is not None:
-                    key = ('mse', 'mean')
-                    mask = (
-                        (report_data[('split', '')] == split.name) &
-                        (report_data[('epoch', '')] == str(epoch))
-                    )
-                    subset = report_data.loc[mask]
-                    if subset.empty:
-                        raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
-                    else:
-                        mse = subset[key].mean()
-                        mse_str = float_to_latex(mse)
-                    ax.text(20, 100, f"{split.name} MSE: ${mse_str}$")
+                # if report_data is not None:
+                #     key = ('mse', 'mean')
+                #     mask = (
+                #         (report_data[('split', '')] == split.name) &
+                #         (report_data[('epoch', '')] == str(epoch))
+                #     )
+                #     subset = report_data.loc[mask]
+                #     if subset.empty:
+                #         raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
+                #     else:
+                #         mse = subset[key].mean()
+                #         mse_str = float_to_latex(mse)
+                #     ax.text(20, 100, f"{split.name} MSE: ${mse_str}$")
 
                 self.out_fig.write(fig=fig)  # Make directory only
 
