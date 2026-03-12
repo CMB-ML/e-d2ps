@@ -9,26 +9,27 @@ from omegaconf import DictConfig
 from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
-from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
+from d2ps_nn.models import BaseD2PSExecutor
+from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
-from d2ps_nn.models import TLPEncAggDec, TLPEncAggDec_SepFaces
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
-import numpy as np
 
 
 logger = logging.getLogger(__name__)
 
 
-class TrainingExecutor(BasePyTorchModelExecutor):
+class TrainingExecutor(BaseD2PSExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="train")
 
+        # What comes out
         self.out_model: Asset = self.assets_out["model"]
         self.out_loss_record: Asset = self.assets_out["loss_record"]
         out_model_handler: PyTorchModel
         out_loss_record: AppendingCsvHandler
 
+        # What goes in
         self.in_trgt_asset: Asset = self.assets_in["cmb_ps"]
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
                                                  cfg.features_type, 
@@ -40,102 +41,35 @@ class TrainingExecutor(BasePyTorchModelExecutor):
         in_pos_enc_lut_handler: NumpyMap
         in_model_handler: PyTorchModel
 
-        self.dtype         = self.dtype_mapping[cfg.model.dtype]  # TODO: Ensure this is used
-
-        self.choose_device(cfg.model.train.device)  # See parent class
-        self.batch_size    = cfg.model.train.batch_size
-        self.num_workers   = cfg.model.train.num_loader_workers
-        self.learning_rate = cfg.model.train.learning_rate
-        self.n_epochs      = cfg.model.train.n_epochs
-        self.restart_epoch = cfg.model.train.restart_epoch
-        self.checkpoint    = cfg.model.train.checkpoint_every
-        self.extra_check   = cfg.model.train.extra_check
-
-        self.features_type = cfg.features_type
-
-        self.norm          = None
-        # self.lmax          = cfg.model.lmax
-        self.ells          = parse_ells(cfg.model.use_ells)
+        # How model is evaluated
         self.loss_key      = cfg.model.train.loss
-
         # When using Wishart loss, we need to skip the monopole and dipole
         # self.skip_mono_dipole = cfg.model.train.loss == "wishart"
-        self.final_activation = cfg.model.final_activation
-        self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
-        self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
+        
+        # How model is updated
+        self.learning_rate = cfg.model.train.learning_rate
 
-        self.dropout_rate = cfg.model.dropout_rate
-        self.activation = cfg.model.activation
-        if self.activation is None:
-            raise ValueError("Activation cannot be None. Please specify 'relu' or gelu' in config.")
-        self.pooling = cfg.model.pooling
-        if self.pooling is None:
-            raise ValueError("Please specify 'avg' or 'max'.")
-        self.model_n_init_features = cfg.model.n_init_features
-        self.model_n_levels = cfg.model.n_levels
-        self.model_note = cfg.model.note
+        # How long it runs
+        self.n_epochs      = cfg.model.train.n_epochs
+        self.restart_epoch = cfg.model.train.restart_epoch
+
+        # How it handles data
+        self.batch_size    = cfg.model.train.batch_size
+        self.num_workers   = cfg.model.train.num_loader_workers
+        self.use_preload   = cfg.model.train.get("use_preload", False)
+        logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. "
+                    "This eats RAM! BE CAREFUL!")
+
+        # Checkpointing
+        self.checkpoint    = cfg.model.train.checkpoint_every
+        self.extra_check   = cfg.model.train.extra_check
         self.earliest_best = cfg.model.train.earliest_best
-        self.features_type = cfg.features_type
-        self.use_preload = cfg.model.train.get("use_preload", False)
-        logger.info(f"{'U' if self.use_preload else 'Not u'}sing dataset with preload. This eats RAM! BE CAREFUL!")
-        # self.freeze_bn = cfg.freeze_bn
-        self.nn_model = cfg.nn_model
-
-        self.use_pos_enc_lut = cfg.use_pos_enc_lut
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        # When using Wishart loss, we need to skip the monopole and dipole
-        # use_lmax = self.lmax - 2 if self.skip_mono_dipole else self.lmax
+        model = self.init_model()
 
-        # if self.final_activation == "softplus":
-        #     final_activation = torch.nn.Softplus()
-        # elif not self.final_activation:
-        #     final_activation = None
-        # else:
-        #     raise ValueError(f"Unknown final activation: {self.final_activation}")
-
-        logger.info(f"Creating model")
-
-        n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
-        if self.use_pos_enc_lut:
-            n_channels += 3
-
-        if self.final_activation == "softplus":
-            final_activation = torch.nn.Softplus()
-        elif not self.final_activation:
-            final_activation = None
-        else:
-            raise ValueError(f"Unknown final activation: {self.final_activation}")
-
-        if self.nn_model == "TLPEncAggDec":
-            use_model = TLPEncAggDec
-        elif self.nn_model == "TLPEncAggDec_SepFaces":
-            use_model = TLPEncAggDec_SepFaces
-        model = use_model(
-                             nside=self.nside,
-                             n_ells=len(self.ells),
-                             n_in_channels=n_channels,
-                             final_activation=final_activation,
-                             n_init_features=self.model_n_init_features,
-                             n_levels=self.model_n_levels,
-                             use_batch_norm_enc=self.use_batch_norm_enc,
-                             use_batch_norm_dec=self.use_batch_norm_dec,
-                             dropout_rate=self.dropout_rate,
-                             activation=self.activation,
-                             note=self.model_note
-                             )
-
-        model = model.to(self.device)
-        # logger.info(f"Model created!")
-
-        # if self.freeze_bn:
-        #     model.apply(freeze_bn)
-        #     logger.info("Batch Norm Frozen")
-
-        # Potentially confusing... the order is determined by the order of
-        #   splits for this stage in the pipeline yaml.
         train_split = self.splits.get("train")
         # valid_split = self.splits.get("valid")
 
@@ -297,44 +231,7 @@ class TrainingExecutor(BasePyTorchModelExecutor):
             feature_path_template=feat_path_template,
             # feature_path_template=feature_path_template,
             feature_handler=self.in_feat_asset.handler,
+            px_arrange=self.px_arrange,
             pos_enc_lut=self.in_pos_enc_lut.read() if self.use_pos_enc_lut else None
             )
         return dataset
-
-
-class SingleDWishartLoss(torch.nn.Module):
-    def __init__(self, ells):
-        super().__init__()
-
-        ells = torch.tensor(ells, dtype=torch.float32)
-        # ells = torch.arange(0, lmax + 1, dtype=torch.float32)
-        # ells = ells[2:]
-        ratio = (2 * ells + 1) / (2 * ells - 1)
-        self.register_buffer("ratio", ratio)
-
-    def forward(self, output, target):
-        t1 = output / target
-        t2 = torch.log(target)
-        t3 = torch.log(output)
-
-        per_ell = t1 + t2 - self.ratio * t3
-
-        return torch.sum(per_ell)
-
-def get_loss(loss_key, ells):
-    if loss_key == "l1":
-        loss_function = torch.nn.L1Loss(reduction='mean')
-    elif loss_key == "l2":
-        loss_function = torch.nn.MSELoss(reduction='mean')
-    elif loss_key == "wishart":
-        loss_function = SingleDWishartLoss(ells=ells)
-    else:
-        raise ValueError(f"Unknown loss function: {loss_key}")
-    return loss_function
-
-
-def freeze_bn(m):
-    if isinstance(m, torch.nn.modules.batchnorm._BatchNorm):
-        m.eval()
-        m.weight.requires_grad_(False)
-        m.bias.requires_grad_(False)
