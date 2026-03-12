@@ -14,7 +14,7 @@ from cmbml.utils.number_report import float_to_latex
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
-from d2ps_nn.utils.find_peaks import find_crits
+from d2ps_nn.utils.find_peaks import find_crits, PeakFitError
 
 
 logger = logging.getLogger(__name__)
@@ -127,19 +127,22 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                         color=color,
                     )
 
-                    crits = find_crits(ps_thry[2:], full_ells[2:])
-                    mark_crits(
-                        ax,
-                        # full_ells[2:],
-                        ps_thry[2:],
-                        crits,
-                        color=color,
-                        theory=True,
-                        ms=36,
-                        dash_pts=16,
-                        linewidth=1,
-                        ls=ls
-                    )
+                    try:
+                        crits = find_crits(ps_thry[2:], full_ells[2:])
+                        mark_crits(
+                            ax,
+                            # full_ells[2:],
+                            ps_thry[2:],
+                            crits,
+                            color=color,
+                            theory=True,
+                            ms=36,
+                            dash_pts=16,
+                            linewidth=1,
+                            ls=ls
+                        )
+                    except PeakFitError:
+                        logger.warning("Could not fit peaks!")
 
                 for i, ps_pred in enumerate(all_pred_ps):
                     color = mpl_colors[i % len(mpl_colors)]
@@ -151,18 +154,21 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                         color=color,
                     )
 
-                    crits = find_crits(ps_pred, part_ells)
-                    mark_crits(
-                        ax,
-                        ps_pred,
-                        crits,
-                        color=color,
-                        theory=False,
-                        ms=36,
-                        dash_pts=16,
-                        linewidth=1,
-                        ls=ls
-                    )
+                    try:
+                        crits = find_crits(ps_pred, part_ells)
+                        mark_crits(
+                            ax,
+                            ps_pred,
+                            crits,
+                            color=color,
+                            theory=False,
+                            ms=36,
+                            dash_pts=16,
+                            linewidth=1,
+                            ls=ls
+                        )
+                    except PeakFitError:
+                        logger.warning("Could not fit peaks!")
 
                 # Proxies for the legend
                 theory_proxy = Line2D([0], [0], color="black", linewidth=0.5, alpha=1)
