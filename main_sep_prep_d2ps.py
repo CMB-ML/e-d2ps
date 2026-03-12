@@ -33,6 +33,7 @@ from d2ps_nn import (
     PowerSpectrumAnalysisExecutor,
     # PerSplitAnalysis,
     # PowerSpectrumAggExecutor,
+    ShowPredictionsPeaksExecutor,
     ShowPredictionsExecutor,
     ShowBWPredictionsExecutor,
     LossPlotExecutor,
@@ -73,7 +74,7 @@ def train_runs(cfg):
         # TrainingExecutor,
         PredictExecutor,
         # # PowerSpectrumAnalysisExecutor,
-        ShowPredictionsExecutor,
+        ShowPredictionsPeaksExecutor,
         # # ShowBWPredictionsExecutor,
         LossPlotExecutor,
         # # BundleTrueExecutor,
@@ -124,7 +125,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    prep_run()
+    # prep_run()
     train_runs()
     # prep_run_planck()
     # run_planck()
