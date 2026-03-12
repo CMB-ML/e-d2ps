@@ -26,26 +26,26 @@ from d2ps_nn import (
     FindDatasetStatsParallelExecutor,
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
+
+    CheckGPULoadExecutor,
     TrainingExecutor,
     PredictExecutor,
-    CheckGPULoadExecutor_SimpleEncDec,
-    CheckGPULoadExecutor_TLPEncDec,
-    PowerSpectrumAnalysisExecutor,
-    # PerSplitAnalysis,
-    # PowerSpectrumAggExecutor,
-    ShowPredictionsPeaksExecutor,
-    ShowPredictionsExecutor,
-    ShowBWPredictionsExecutor,
     LossPlotExecutor,
-    # ShowIndivPredictionsExecutor,
-    # ErrorAnalysisExecutor,
-    # ShowPredictionsWithChiSquareExecutor,
-    # ShowRelativeError,
-    # ShowCosmicFractions,
-    # ShowChiSquare,
-    BundlePredExecutor, 
-    BundleTrueExecutor,
-    ShowTrebleEll
+    ShowPredictionsPeaksExecutor,
+    # # PowerSpectrumAnalysisExecutor,
+    # # PerSplitAnalysis,
+    # # PowerSpectrumAggExecutor,
+    # # ShowPredictionsExecutor,
+    # # ShowBWPredictionsExecutor,
+    # # ShowIndivPredictionsExecutor,
+    # # ErrorAnalysisExecutor,
+    # # ShowPredictionsWithChiSquareExecutor,
+    # # ShowRelativeError,
+    # # ShowCosmicFractions,
+    # # ShowChiSquare,
+    # # BundlePredExecutor, 
+    # # BundleTrueExecutor,
+    # # ShowTrebleEll
     )
 
 
@@ -56,11 +56,11 @@ logger = logging.getLogger(__name__)
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
-        # MakeLutExecutor,
+        MakeLutExecutor,
         MakePosEncLutExecutor,
-        # FindDatasetStatsParallelExecutor,
-        # PreprocessMapsExecutor,
-        # PreprocessSpectraExecutor
+        FindDatasetStatsParallelExecutor,
+        PreprocessMapsExecutor,
+        PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 
@@ -69,14 +69,13 @@ def prep_run(cfg):
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # CheckGPULoadExecutor_SimpleEncDec,
-        # CheckGPULoadExecutor_TLPEncDec,
-        # TrainingExecutor,
+        CheckGPULoadExecutor,
+        TrainingExecutor,
         PredictExecutor,
-        # # PowerSpectrumAnalysisExecutor,
-        ShowPredictionsPeaksExecutor,
-        # # ShowBWPredictionsExecutor,
         LossPlotExecutor,
+        ShowPredictionsPeaksExecutor,
+        # # PowerSpectrumAnalysisExecutor,
+        # # ShowBWPredictionsExecutor,
         # # BundleTrueExecutor,
         # # BundlePredExecutor,
         # # ShowTrebleEll
@@ -99,8 +98,8 @@ def run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
              PredictExecutor,
-             PowerSpectrumAnalysisExecutor,
-             ShowPredictionsExecutor,
+            #  PowerSpectrumAnalysisExecutor,
+            #  ShowPredictionsExecutor,
              ]
     run(cfg, pipes)
 
@@ -125,7 +124,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # prep_run()
-    train_runs()
+    prep_run()
+    # train_runs()
     # prep_run_planck()
     # run_planck()
