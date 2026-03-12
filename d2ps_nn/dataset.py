@@ -22,8 +22,10 @@ class TrainDataset(Dataset):
                  label_handler,
                  feature_path_template,
                  feature_handler,
+                 px_arrange=None,
                  pos_enc_lut=None
                  ):
+        self.feature_assembler = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
         self.freqs = freqs
         self.label_path_template = label_path_template
@@ -44,40 +46,16 @@ class TrainDataset(Dataset):
 
         label_tensor = torch.as_tensor(label)
 
-        features_tensor = _build_feature_tensor(freqs=self.freqs,
-                                                path_template=self.feature_path_template,
-                                                handler=self.feature_handler,
-                                                n_fields=self.n_map_fields,
-                                                sim_idx=sim_idx)
+        features_tensor = self.feature_assembler(freqs=self.freqs,
+                                                 path_template=self.feature_path_template,
+                                                 handler=self.feature_handler,
+                                                 n_fields=self.n_map_fields,
+                                                 sim_idx=sim_idx)
         
         if self.pos_enc_lut is not None:
             features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=1)
 
         return features_tensor, label_tensor
-
-
-def _build_feature_tensor(freqs, path_template, handler, n_fields, sim_idx):
-    features = _get_features_idx(
-        freqs=freqs,
-        path_template=path_template,
-        handler=handler,
-        n_fields=n_fields,
-        sim_idx=sim_idx,
-    )
-
-    features_tensor = tuple(torch.as_tensor(f) for f in features)
-    features_tensor = torch.stack(features_tensor, dim=0)
-
-    if features_tensor.ndim == 4:  # likely (C,F,H,W) or (F,C,H,W)
-        if 12 in features_tensor.shape:
-            if features_tensor.shape[0] == 12:
-                pass
-            elif features_tensor.shape[1] == 12:
-                features_tensor = features_tensor.permute(1, 0, 2, 3)
-            else:
-                raise ValueError(f"Unexpected feature shape {features_tensor.shape}")
-
-    return features_tensor
 
 
 class PreloadTrainDataset(Dataset):
@@ -94,8 +72,10 @@ class PreloadTrainDataset(Dataset):
         label_handler,
         feature_path_template,
         feature_handler,
+        px_arrange=None,
         pos_enc_lut=None
     ):
+        self.feature_assembler = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
         self.freqs = freqs
         self.label_path_template = label_path_template
@@ -117,7 +97,7 @@ class PreloadTrainDataset(Dataset):
         self.all_labels = np.stack(all_labels, axis=0)
 
         logger.info("Creating feature set (number in set is 1 more than tqdm says)")
-        first_feat = _build_feature_tensor(
+        first_feat = self.feature_assembler(
             freqs=self.freqs,
             path_template=self.feature_path_template,
             handler=self.feature_handler,
@@ -129,7 +109,7 @@ class PreloadTrainDataset(Dataset):
         all_feats[0] = first_feat
 
         for sim_idx in tqdm(range(1, self.n_sims)):
-            this_feat = _build_feature_tensor(
+            this_feat = _build_feature_tensor_channel(
                 freqs=self.freqs,
                 path_template=self.feature_path_template,
                 handler=self.feature_handler,
@@ -159,8 +139,10 @@ class TestDataset(Dataset):
                  map_fields,
                  feature_path_template,
                  feature_handler,
+                 px_arrange=None,
                  pos_enc_lut=None
                  ):
+        self.feature_assembler = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
         self.freqs = freqs
         self.feature_path_template = feature_path_template
@@ -172,11 +154,11 @@ class TestDataset(Dataset):
         return self.n_sims
 
     def __getitem__(self, sim_idx):
-        features_tensor = _build_feature_tensor(freqs=self.freqs,
-                                                path_template=self.feature_path_template,
-                                                handler=self.feature_handler,
-                                                n_fields=self.n_map_fields,
-                                                sim_idx=sim_idx)
+        features_tensor = self.feature_assembler(freqs=self.freqs,
+                                                 path_template=self.feature_path_template,
+                                                 handler=self.feature_handler,
+                                                 n_fields=self.n_map_fields,
+                                                 sim_idx=sim_idx)
         
         if self.pos_enc_lut is not None:
             features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=1)
@@ -207,3 +189,52 @@ def _get_features_idx(freqs, path_template, handler, n_fields, sim_idx):
         feature_data = feature_data[0]  # TODO: Implement multiple fields
         features.append(feature_data)
     return features
+
+
+def get_feature_assembler(px_arrange):
+    if px_arrange == "channel":
+        feature_assembler = _build_feature_tensor_channel
+    elif px_arrange == "cmbNNCS":
+        feature_assembler = _build_feature_tensor_cmbNNCS
+    else:
+        raise ValueError("Pixel arrangement must be set. 'channel' and 'cmbNNCS' are accepted")
+    return feature_assembler
+
+
+def _build_feature_tensor_channel(freqs, path_template, handler, n_fields, sim_idx):
+    features = _get_features_idx(
+        freqs=freqs,
+        path_template=path_template,
+        handler=handler,
+        n_fields=n_fields,
+        sim_idx=sim_idx,
+    )
+
+    features_tensor = tuple(torch.as_tensor(f) for f in features)
+    features_tensor = torch.stack(features_tensor, dim=0)
+
+    if features_tensor.ndim == 4:  # likely (C,F,H,W) or (F,C,H,W)
+        if 12 in features_tensor.shape:
+            if features_tensor.shape[0] == 12:
+                pass
+            elif features_tensor.shape[1] == 12:
+                features_tensor = features_tensor.permute(1, 0, 2, 3)
+            else:
+                raise ValueError(f"Unexpected feature shape {features_tensor.shape}")
+
+    return features_tensor
+
+
+def _build_feature_tensor_cmbNNCS(freqs, path_template, handler, n_fields, sim_idx):
+    features = _get_features_idx(
+        freqs=freqs,
+        path_template=path_template,
+        handler=handler,
+        n_fields=n_fields,
+        sim_idx=sim_idx,
+    )
+
+    features_tensor = tuple(torch.as_tensor(f) for f in features)
+    features_tensor = torch.stack(features_tensor, dim=0)
+
+    return features_tensor
