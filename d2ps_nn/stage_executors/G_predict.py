@@ -90,7 +90,7 @@ class PredictExecutor(BaseD2PSExecutor):
             for test_features, sim_idcs in pbar:
                 test_features = test_features.to(device=self.device, dtype=self.dtype)
                 predictions = self.model(test_features).cpu().numpy()
-                predictions = predictions / self.scale_ps
+                predictions = predictions / self.scale_ps * 4000
                 for pred, sim_idx in zip(predictions, sim_idcs):
                     sim_idx = int(sim_idx)
                     with self.name_tracker.set_context("sim_num", sim_idx):

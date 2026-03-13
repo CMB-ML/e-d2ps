@@ -118,20 +118,21 @@ class TrainingExecutor(BaseD2PSExecutor):
             with self.name_tracker.set_context("epoch", "init"):
                 self.out_model.write(model=model, epoch="init")
             start_epoch = 0
-            loss_record_headers = ['Epoch', 'Training Loss']
+            loss_record_headers = ['Epoch', 'Training Loss', 'Original Training Loss']
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
         all_batch_loss = []
         all_lr = []
-        all_valid_loss = []
+        all_scale_loss = []
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
                 model.train()
                 batch_loss = 0
+                scale_loss = 0
                 for train_features, train_label in pbar:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
@@ -154,14 +155,21 @@ class TrainingExecutor(BaseD2PSExecutor):
                     # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # exit()
 
-
                     batch_train_loss = loss_function(output, train_label)
+
+                    with torch.no_grad():
+                        batch_scale_loss = loss_function(output * 4000, train_label * 4000).item()
+
                     batch_train_loss.backward()
                     optimizer.step()
-                    pbar.set_postfix({'Loss': batch_train_loss.item()})
+                    pbar.set_postfix({'Loss': batch_scale_loss})
                     batch_loss += batch_train_loss.item()
+                    scale_loss += batch_scale_loss
+
                 batch_loss /= len(train_dataloader)
+                scale_loss /= len(train_dataloader)
                 all_batch_loss.append(batch_loss)
+                all_scale_loss.append(scale_loss)
 
             # # Validation
             # model.eval()
@@ -187,7 +195,8 @@ class TrainingExecutor(BaseD2PSExecutor):
                 # note_min_loss = " *" if valid_loss == min(all_valid_loss) else ""
                 # logger.info(f"Epoch {epoch + 1:<{n_epoch_digits}} Validation loss: {valid_loss:.02e}{note_min_loss}")
 
-            self.out_loss_record.append([epoch + 1, batch_loss])  # , train_loss])
+            # Note that scale_loss is the original Dl, while batch_loss is the transformed domain
+            self.out_loss_record.append([epoch + 1, scale_loss, batch_loss])  # , train_loss])
 
             # is_best_condition_a = valid_loss == min(all_valid_loss)
             # is_best_condition_b = epoch >= self.earliest_best

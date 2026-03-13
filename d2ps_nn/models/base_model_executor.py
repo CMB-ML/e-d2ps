@@ -45,6 +45,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         # Basic parameters
         self.dtype         = self.dtype_mapping[cfg.model.dtype]
         self.nn_model      = cfg.nn_model
+        self.norm_kind     = cfg.norm_kind
 
         # Architecture
         # self.model_n_init_features = cfg.model.n_init_features
@@ -133,6 +134,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             nside=self.nside,
             in_channels=n_channels,
             n_outputs=len(self.ells),
+            norm_kind=self.norm_kind,
             widths=(32, 64, 96, 128),
             transformer_dims=(96, 120, 144),
             patch_size=(2, 2),

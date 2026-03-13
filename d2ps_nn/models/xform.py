@@ -7,8 +7,8 @@ import torch.nn.functional as F
 # Basic building blocks
 # ----------------------------
 
-class ConvBNAct(nn.Module):
-    def __init__(self, in_ch, out_ch, kernel_size=3, stride=1, groups=1, act=True):
+class ConvNormAct(nn.Module):
+    def __init__(self, in_ch, out_ch, norm_kind, kernel_size=3, stride=1, groups=1, act=True):
         super().__init__()
         padding = kernel_size // 2
         self.conv = nn.Conv2d(
@@ -20,29 +20,40 @@ class ConvBNAct(nn.Module):
             groups=groups,
             bias=False,
         )
-        self.bn = nn.BatchNorm2d(out_ch)
+        self.bn = norm_layer(out_ch, kind=norm_kind)
         self.act = nn.SiLU(inplace=True) if act else nn.Identity()
 
     def forward(self, x):
         return self.act(self.bn(self.conv(x)))
 
 
+def norm_layer(ch, kind="bn"):
+    if kind == "bn":
+        return nn.BatchNorm2d(ch)
+    elif kind == "gn":
+        return nn.GroupNorm(num_groups=8, num_channels=ch)
+    elif kind == "none":
+        return nn.Identity()
+    else:
+        raise ValueError(f"Unknown norm type {kind}")
+
+
 class InvertedResidual(nn.Module):
     """
     MobileNetV2-style block.
     """
-    def __init__(self, in_ch, out_ch, stride=1, expand_ratio=4):
+    def __init__(self, in_ch, out_ch, norm_kind, stride=1, expand_ratio=4):
         super().__init__()
         hidden_dim = int(round(in_ch * expand_ratio))
         self.use_residual = (stride == 1 and in_ch == out_ch)
 
         layers = []
         if expand_ratio != 1:
-            layers.append(ConvBNAct(in_ch, hidden_dim, kernel_size=1, stride=1))
+            layers.append(ConvNormAct(in_ch, hidden_dim, norm_kind, kernel_size=1, stride=1))
 
         layers.extend([
-            ConvBNAct(hidden_dim, hidden_dim, kernel_size=3, stride=stride, groups=hidden_dim),
-            ConvBNAct(hidden_dim, out_ch, kernel_size=1, stride=1, act=False),
+            ConvNormAct(hidden_dim, hidden_dim, norm_kind, kernel_size=3, stride=stride, groups=hidden_dim),
+            ConvNormAct(hidden_dim, out_ch, norm_kind, kernel_size=1, stride=1, act=False),
         ])
         self.block = nn.Sequential(*layers)
 
@@ -93,6 +104,7 @@ class MobileViTBlock(nn.Module):
         self,
         in_ch,
         transformer_dim,
+        norm_kind,
         depth=2,
         patch_size=(2, 2),
         num_heads=4,
@@ -106,8 +118,8 @@ class MobileViTBlock(nn.Module):
 
         # Local representation
         self.local_rep = nn.Sequential(
-            ConvBNAct(in_ch, in_ch, kernel_size=3, stride=1),
-            ConvBNAct(in_ch, transformer_dim, kernel_size=1, stride=1),
+            ConvNormAct(in_ch, in_ch, norm_kind, kernel_size=3, stride=1),
+            ConvNormAct(in_ch, transformer_dim, norm_kind, kernel_size=1, stride=1),
         )
 
         self.transformer = nn.Sequential(*[
@@ -121,8 +133,8 @@ class MobileViTBlock(nn.Module):
         ])
 
         # Project back and fuse
-        self.project_back = ConvBNAct(transformer_dim, in_ch, kernel_size=1, stride=1)
-        self.fuse = ConvBNAct(2 * in_ch, in_ch, kernel_size=3, stride=1)
+        self.project_back = ConvNormAct(transformer_dim, in_ch, norm_kind, kernel_size=1, stride=1)
+        self.fuse = ConvNormAct(2 * in_ch, in_ch, norm_kind, kernel_size=3, stride=1)
 
     def _pad_if_needed(self, x):
         _, _, h, w = x.shape
@@ -188,6 +200,7 @@ class MobileViTCMBRegressor(nn.Module):
         nside,
         in_channels,
         n_outputs,
+        norm_kind,
         widths=(32, 64, 96, 128),
         transformer_dims=(96, 120, 144),
         patch_size=(2, 2),
@@ -209,16 +222,17 @@ class MobileViTCMBRegressor(nn.Module):
 
         # Stem
         self.stem = nn.Sequential(
-            ConvBNAct(in_channels, w1, kernel_size=3, stride=2),  # 3N x 4N -> 1.5N x 2N
-            InvertedResidual(w1, w1, stride=1, expand_ratio=2),
+            ConvNormAct(in_channels, w1, norm_kind, kernel_size=3, stride=2),  # 3N x 4N -> 1.5N x 2N
+            InvertedResidual(w1, w1, norm_kind, stride=1, expand_ratio=2),
         )
 
         # Stage 1
         self.stage1 = nn.Sequential(
-            InvertedResidual(w1, w2, stride=2, expand_ratio=4),
+            InvertedResidual(w1, w2, norm_kind, stride=2, expand_ratio=4),
             MobileViTBlock(
                 in_ch=w2,
                 transformer_dim=t1,
+                norm_kind=norm_kind,
                 depth=d1,
                 patch_size=patch_size,
                 num_heads=h1,
@@ -229,10 +243,11 @@ class MobileViTCMBRegressor(nn.Module):
 
         # Stage 2
         self.stage2 = nn.Sequential(
-            InvertedResidual(w2, w3, stride=2, expand_ratio=4),
+            InvertedResidual(w2, w3, norm_kind, stride=2, expand_ratio=4),
             MobileViTBlock(
                 in_ch=w3,
                 transformer_dim=t2,
+                norm_kind=norm_kind,
                 depth=d2,
                 patch_size=patch_size,
                 num_heads=h2,
@@ -243,10 +258,11 @@ class MobileViTCMBRegressor(nn.Module):
 
         # Stage 3
         self.stage3 = nn.Sequential(
-            InvertedResidual(w3, w4, stride=1, expand_ratio=4),  # keep one stage from downsampling
+            InvertedResidual(w3, w4, norm_kind, stride=1, expand_ratio=4),  # keep one stage from downsampling
             MobileViTBlock(
                 in_ch=w4,
                 transformer_dim=t3,
+                norm_kind=norm_kind,
                 depth=d3,
                 patch_size=patch_size,
                 num_heads=h3,
@@ -257,8 +273,8 @@ class MobileViTCMBRegressor(nn.Module):
 
         # Final projection
         self.pre_head = nn.Sequential(
-            ConvBNAct(w4, w4, kernel_size=1, stride=1),
-            ConvBNAct(w4, w4, kernel_size=3, stride=1),
+            ConvNormAct(w4, w4, norm_kind, kernel_size=1, stride=1),
+            ConvNormAct(w4, w4, norm_kind, kernel_size=3, stride=1),
         )
 
         # Regression head
