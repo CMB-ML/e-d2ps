@@ -37,8 +37,10 @@ class MakePosEncLutExecutor(BaseStageExecutor):
         pos_enc_lut = np.stack([x[lut],
                                 y[lut],
                                 z[lut]],
-                                axis=1    # Stack along first axis -> (12, 3, N, N)
+                                axis=0
                                 )
+        if lut.ndim == 3:  # The case when 12 x Nside x Nside
+            pos_enc_lut = np.moveaxis(pos_enc_lut, 0, 1)
         pos_enc_lut = pos_enc_lut.astype(np.float32)
         with self.name_tracker.set_context("style", self.lut_style):
             self.out_pos_enc_lut.write(data=pos_enc_lut)
