@@ -58,9 +58,9 @@ def prep_run(cfg):
     pipes = [
         MakeLutExecutor,
         MakePosEncLutExecutor,
-        FindDatasetStatsParallelExecutor,
-        PreprocessMapsExecutor,
-        PreprocessSpectraExecutor
+        # FindDatasetStatsParallelExecutor,
+        # PreprocessMapsExecutor,
+        # PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 
