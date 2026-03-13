@@ -30,7 +30,6 @@ nn_model: MobileViTCMBRegressor  # Hard-coded
 # nn_model: SimpleEncDec
 # use_batch_norm_enc: true
 
-# prep_working_dir   : "d2ps-prep-tlpEncAggDec/"
 # px_arrange: channel
 # nn_model: TLPEncAggDec
 # nn_model: TLPEncAggDec_SepFaces
