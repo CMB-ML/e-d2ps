@@ -14,10 +14,10 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_xform1/Initial_Nsims${n_sims}_iter${iter_num}/"
+working_dir        : &wd "${features_type}2ps_xform1/Initial_Nsims${n_sims}_iter${iter_num}_lr{learning_rate}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS"
+fig_model_name     : "${features_type} to PS, XForm I, learning rate: ${learning_rate}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 n_sims: "this_should_run_with_multi"
