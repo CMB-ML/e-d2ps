@@ -96,7 +96,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        # optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate, weight_decay=1e-4)
 
         if self.restart_epoch is not None:
             logger.info(f"Restarting training at epoch {self.restart_epoch}")

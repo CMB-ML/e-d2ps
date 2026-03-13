@@ -10,7 +10,12 @@ from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
-from d2ps_nn.models import TLPEncAggDec, TLPEncAggDec_SepFaces, SimpleEncDec
+from d2ps_nn.models import (
+    TLPEncAggDec, 
+    TLPEncAggDec_SepFaces, 
+    SimpleEncDec,
+    MobileViTCMBRegressor
+)
 from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
@@ -42,19 +47,19 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         self.nn_model      = cfg.nn_model
 
         # Architecture
-        self.model_n_init_features = cfg.model.n_init_features
-        self.model_n_levels = cfg.model.n_levels
+        # self.model_n_init_features = cfg.model.n_init_features
+        # self.model_n_levels = cfg.model.n_levels
 
-        self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
-        self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
-        self.activation = cfg.model.activation
-        self.dropout_rate = cfg.model.dropout_rate
+        # self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
+        # self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
+        # self.activation = cfg.model.activation
+        # self.dropout_rate = cfg.model.dropout_rate
 
-        self.pooling = cfg.model.pooling
-        self.final_activation = cfg.model.final_activation
+        # self.pooling = cfg.model.pooling
+        # self.final_activation = cfg.model.final_activation
 
-        if self.activation is None:
-            raise ValueError("Activation cannot be None. Please specify 'relu' or 'gelu' in config.")
+        # if self.activation is None:
+        #     raise ValueError("Activation cannot be None. Please specify 'relu' or 'gelu' in config.")
 
         # Model run location
         self.choose_device(cfg.model.train.device)  # See parent class
@@ -69,49 +74,76 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         # Other
         self.model_note = cfg.model.note
 
-    def init_model(self):
-        # Get the model class
-        if self.nn_model == "TLPEncAggDec":
-            use_model = TLPEncAggDec
-        elif self.nn_model == "TLPEncAggDec_SepFaces":
-            use_model = TLPEncAggDec_SepFaces
-        elif self.nn_model == "SimpleEncDec":
-            use_model = SimpleEncDec
-        else:
-            raise ValueError(f"{use_model} is not configured.")
+    # def init_model(self):
+    #     # Get the model class
+    #     if self.nn_model == "TLPEncAggDec":
+    #         use_model = TLPEncAggDec
+    #     elif self.nn_model == "TLPEncAggDec_SepFaces":
+    #         use_model = TLPEncAggDec_SepFaces
+    #     elif self.nn_model == "SimpleEncDec":
+    #         use_model = SimpleEncDec
+    #     else:
+    #         raise ValueError(f"{use_model} is not configured.")
 
+    #     # Set up model parameters
+    #     n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
+    #     if self.use_pos_enc_lut:
+    #         n_channels += 3
+
+    #     model_dict = dict(
+    #         nside=self.nside,
+    #         n_ells=len(self.ells),
+    #         n_in_channels=n_channels,
+    #         n_init_features=self.model_n_init_features,
+    #         n_levels=self.model_n_levels,
+    #         use_batch_norm_enc=self.use_batch_norm_enc,
+    #         use_batch_norm_dec=self.use_batch_norm_dec,
+    #         dropout_rate=self.dropout_rate,
+    #         activation=self.activation,
+    #         note=self.model_note
+    #     )
+
+    #     if self.final_activation == "softplus":
+    #         model_dict["final_activation"] = torch.nn.Softplus()
+    #     elif not self.final_activation:
+    #         model_dict["final_activation"] = None
+    #     else:
+    #         raise ValueError(f"Unknown final activation: {self.final_activation}")
+
+    #     if use_model in [SimpleEncDec]:
+    #         model_dict["pooling"] = self.pooling
+
+    #     # Make the model
+    #     model = use_model(**model_dict)
+
+    #     model = model.to(self.device)
+    #     logger.info(f"Model created!")
+
+    #     return model
+
+    def init_model(self):
         # Set up model parameters
         n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
         if self.use_pos_enc_lut:
             n_channels += 3
 
-        model_dict = dict(
+        logger.info(f"Creating model...")
+
+        model = MobileViTCMBRegressor(
             nside=self.nside,
-            n_ells=len(self.ells),
-            n_in_channels=n_channels,
-            n_init_features=self.model_n_init_features,
-            n_levels=self.model_n_levels,
-            use_batch_norm_enc=self.use_batch_norm_enc,
-            use_batch_norm_dec=self.use_batch_norm_dec,
-            dropout_rate=self.dropout_rate,
-            activation=self.activation,
-            note=self.model_note
+            in_channels=n_channels,
+            n_outputs=len(self.ells),
+            widths=(32, 64, 96, 128),
+            transformer_dims=(96, 120, 144),
+            patch_size=(2, 2),
+            transformer_depths=(2, 2, 2),
+            num_heads=(4, 4, 4),
+            mlp_ratio=2.0,
+            dropout=0.1,
+            head_hidden=512,
         )
-
-        if self.final_activation == "softplus":
-            model_dict["final_activation"] = torch.nn.Softplus()
-        elif not self.final_activation:
-            model_dict["final_activation"] = None
-        else:
-            raise ValueError(f"Unknown final activation: {self.final_activation}")
-
-        if use_model in [SimpleEncDec]:
-            model_dict["pooling"] = self.pooling
-
-        # Make the model
-        model = use_model(**model_dict)
-
         model = model.to(self.device)
+
         logger.info(f"Model created!")
 
         return model

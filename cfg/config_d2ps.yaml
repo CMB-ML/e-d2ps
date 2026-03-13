@@ -14,7 +14,7 @@ defaults:
 
 # When creating multiple datasets, using interpolation like this may be easier:
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_simpleEncDec_yBN_nBias/Initial_Nsims${n_sims}_iter${iter_num}/"
+working_dir        : &wd "${features_type}2ps_xform1/Initial_Nsims${n_sims}_iter${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS"
@@ -24,16 +24,19 @@ n_sims: "this_should_run_with_multi"
 learning_rate: 5e-6
 
 px_arrange: cmbNNCS
-nn_model: SimpleEncDec
-use_batch_norm_enc: true
+nn_model: MobileViTCMBRegressor  # Hard-coded
+
+# px_arrange: cmbNNCS
+# nn_model: SimpleEncDec
+# use_batch_norm_enc: true
 
 # prep_working_dir   : "d2ps-prep-tlpEncAggDec/"
 # px_arrange: channel
 # nn_model: TLPEncAggDec
 # nn_model: TLPEncAggDec_SepFaces
 
-use_pos_enc_lut: false
-# use_pos_enc_lut: true
+# use_pos_enc_lut: false
+use_pos_enc_lut: true
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 

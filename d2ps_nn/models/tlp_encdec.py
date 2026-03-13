@@ -226,7 +226,9 @@ class TLPEncAggDec_SepFaces(nn.Module):
                  note=''
                  ):
         super().__init__()
-        self.in_shape = (12, n_in_channels, nside, nside)
+        self.nside = nside
+        self.example_in_shape = (12, n_in_channels, nside, nside)
+
         self.note = note
 
         if nside != 2**n_levels:

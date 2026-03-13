@@ -37,7 +37,7 @@ class CheckGPULoadExecutor(BaseD2PSExecutor):
         loss_function = loss_function.to(self.device)
 
         # Make random tensor to check model size
-        input_shape = (self.batch_size, *model.in_shape)
+        input_shape = (self.batch_size, *model.example_in_shape)
         output_shape = (self.batch_size, len(self.ells))
         train_features = torch.randn(input_shape).to(self.device)
         train_label = torch.randn(output_shape).to(self.device)
