@@ -26,7 +26,7 @@ class LossPlotExecutor(BaseStageExecutor):
         self.out_fig.handler.set_fig_types(self.fig_type)
         fig, ax = make_loss_plot(some_path=self.in_loss_csv.path,
                                  fig_label=self.fig_label,
-                                 ylim=(1e-4,1e7),
+                                 ylim=(1e-10,1e1),
                                  xlim=(0,self.n_epochs),
                                  sm_sigma2=20)
         self.out_fig.write(fig=fig)

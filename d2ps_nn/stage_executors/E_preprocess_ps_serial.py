@@ -77,7 +77,7 @@ class PreprocessSpectraExecutor(BaseStageExecutor):
         cmb_ps = cmb_ps[self.ells]
         # cmb_ps = cmb_ps[:self.lmax + 1]
 
-        cmb_ps *= self.scale_ps
+        cmb_ps *= self.scale_ps / 4000
 
         # If using Wishart, we need to skip the monopole and dipole
         # if self.skip_mono_dipole:
