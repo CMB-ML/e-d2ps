@@ -39,42 +39,48 @@ def quad_vertex_in_window(ps, ells, lo, hi, min_pts=7, func=False):
     return float(ell0)
 
 
-def find_crits(dl, ells, window_frac=0.1, tol=0.05, max_iter=6):
+def iterate_peak(ps, ells, ell_lo, ell_hi, window_n, o_width, window_frac, tol, max_iter):
+    history = []
+    ell_old = 0
+
+    for iter in range(max_iter):
+        ell = quad_vertex_in_window(ps, ells, ell_lo, ell_hi)
+
+        if np.isnan(ell):
+            raise PeakFitError(window_n, "Encountered NaN")
+
+        history.append(ell)
+
+        if abs(ell_old - ell) < tol:
+            return ell
+
+        for i in range(len(history)-1):
+            if np.isclose(history[i], history[-1]):
+                cycle_vals = history[i:-1]
+                return ell if len(cycle_vals) == 0 else np.mean(cycle_vals)
+
+        ell_lo = ell - o_width * window_frac
+        ell_hi = ell + o_width * window_frac
+        ell_old = ell
+
+    raise PeakFitError(window_n, "Hit max iterations")
+
+
+def find_crits(ps, ells, window_frac=0.1, tol=0.05, max_iter=10):
     """
     Given Dl ("log-normalized" Cl or bandpower), return locations of
     peaks/troughs. Assumes standard peak locations as starting points.
     """
-    crits = []
-    bounds = get_coarse_windows()
 
-    for peak_index in range(7):
-        ell_old = None
-        ell_lo, ell_hi = bounds[peak_index:peak_index + 2]
+    crits = []
+
+    for window_n in range(7):
+        ell_lo, ell_hi = get_coarse_windows()[window_n:window_n+2]
         o_width = ell_hi - ell_lo
 
-        for iteration in range(max_iter):
-            try:
-                ell = quad_vertex_in_window(dl, ells, ell_lo, ell_hi)
-            except Exception as e:
-                raise PeakFitError(
-                    peak_index,
-                    f"quadratic fit failed in window [{ell_lo:.2f}, {ell_hi:.2f}]"
-                ) from e
-
-            if np.isnan(ell):
-                raise PeakFitError(peak_index, "encountered NaN vertex")
-
-            if ell_old is not None and abs(ell_old - ell) < tol:
-                break
-
-            ell_lo = ell - o_width * window_frac
-            ell_hi = ell + o_width * window_frac
-            ell_old = ell
-        else:
-            raise PeakFitError(
-                peak_index,
-                f"failed to converge after {max_iter} iterations"
-            )
+        ell = iterate_peak(ps, ells, ell_lo, ell_hi,
+                           window_n, o_width, window_frac, tol,
+                           max_iter)
 
         crits.append(ell)
 
