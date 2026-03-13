@@ -69,7 +69,7 @@ def prep_run(cfg):
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # CheckGPULoadExecutor,
+        CheckGPULoadExecutor,
         TrainingExecutor,
         PredictExecutor,
         LossPlotExecutor,
