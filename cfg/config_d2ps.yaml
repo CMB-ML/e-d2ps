@@ -36,7 +36,7 @@ hydra:
 batch_size: 200  # All
 iter_num: 0
 learning_rate: 0  # Placeholder
-num_sims: 100
+num_sims: 200
 # In the model yaml
 num_epochs         : 30000
 
