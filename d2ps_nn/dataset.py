@@ -25,7 +25,7 @@ class TrainDataset(Dataset):
                  px_arrange=None,
                  pos_enc_lut=None
                  ):
-        self.feature_assembler = get_feature_assembler(px_arrange)
+        self.feature_assembler, self.cat_axis = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
         self.freqs = freqs
         self.label_path_template = label_path_template
@@ -53,7 +53,7 @@ class TrainDataset(Dataset):
                                                  sim_idx=sim_idx)
         
         if self.pos_enc_lut is not None:
-            features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=1)
+            features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=self.cat_axis)
 
         return features_tensor, label_tensor
 
@@ -75,7 +75,7 @@ class PreloadTrainDataset(Dataset):
         px_arrange=None,
         pos_enc_lut=None
     ):
-        self.feature_assembler = get_feature_assembler(px_arrange)
+        self.feature_assembler, self.cat_axis = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
         self.freqs = freqs
         self.label_path_template = label_path_template
@@ -128,7 +128,7 @@ class PreloadTrainDataset(Dataset):
         xt = torch.from_numpy(self.all_feats[sim_idx])
         yt = torch.from_numpy(self.all_labels[sim_idx])
         if self.pos_enc_lut is not None:
-            xt = torch.cat([xt, self.pos_enc_lut], axis=1)
+            xt = torch.cat([xt, self.pos_enc_lut], axis=self.cat_axis)
         return xt, yt
 
 
@@ -142,7 +142,7 @@ class TestDataset(Dataset):
                  px_arrange=None,
                  pos_enc_lut=None
                  ):
-        self.feature_assembler = get_feature_assembler(px_arrange)
+        self.feature_assembler, self.cat_axis = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
         self.freqs = freqs
         self.feature_path_template = feature_path_template
@@ -161,7 +161,7 @@ class TestDataset(Dataset):
                                                  sim_idx=sim_idx)
         
         if self.pos_enc_lut is not None:
-            features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=1)
+            features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=self.cat_axis)
 
         return features_tensor, sim_idx
 
@@ -194,11 +194,13 @@ def _get_features_idx(freqs, path_template, handler, n_fields, sim_idx):
 def get_feature_assembler(px_arrange):
     if px_arrange == "channel":
         feature_assembler = _build_feature_tensor_channel
+        concat_axis = 1
     elif px_arrange == "cmbNNCS":
         feature_assembler = _build_feature_tensor_cmbNNCS
+        concat_axis = 0
     else:
         raise ValueError("Pixel arrangement must be set. 'channel' and 'cmbNNCS' are accepted")
-    return feature_assembler
+    return feature_assembler, concat_axis
 
 
 def _build_feature_tensor_channel(freqs, path_template, handler, n_fields, sim_idx):
