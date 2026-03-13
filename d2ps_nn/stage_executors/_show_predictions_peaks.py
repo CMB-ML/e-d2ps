@@ -131,17 +131,14 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                         crits = find_crits(ps_thry[2:], full_ells[2:])
                         mark_crits(
                             ax,
-                            # full_ells[2:],
-                            ps_thry[2:],
                             crits,
                             color=color,
                             theory=True,
-                            ms=36,
-                            dash_pts=16,
+                            tick_frac=0.025,
                             linewidth=1,
                             ls=ls
                         )
-                    except PeakFitError:
+                    except PeakFitError as e:
                         logger.warning(
                             f"Could not fit prediction peaks for sim {i}! "
                             f"Peak index={e.peak_index}, reason: {e}"
@@ -160,12 +157,10 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                         crits = find_crits(ps_pred, part_ells)
                         mark_crits(
                             ax,
-                            ps_pred,
                             crits,
                             color=color,
                             theory=False,
-                            ms=36,
-                            dash_pts=16,
+                            tick_frac=0.025,
                             linewidth=1,
                             ls=ls
                         )
@@ -219,14 +214,11 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
 
 def mark_crits(
     ax: plt.Axes,
-    ps,
     crit_ells,
     color,
     theory=True,
-    ms=40,
-    dash_pts=8,
+    tick_frac=0.025,
     linewidth=1.2,
-    zorder=5,
     ls=None
 ):
     """
@@ -235,34 +227,50 @@ def mark_crits(
     theory=True  -> filled circle + short line downward
     theory=False -> open circle  + short line upward
     """
-    
-    marker_fill = color if theory else 'none'
-    offset = (0, -dash_pts) if theory else (0, +dash_pts)
 
-    for ell0 in crit_ells:
-        y0 = ps[int(ell0)]
+    trans = ax.get_xaxis_transform()  # x=data, y=axes
 
-        # ax.scatter(
-        #     [ell0], [y0],
-        #     s=ms,
-        #     facecolors=marker_fill,
-        #     edgecolors=color,
-        #     linewidths=linewidth,
-        #     zorder=zorder,
-        # )
+    for ell in crit_ells:
+        y_pos = [0, tick_frac] if theory else [1-tick_frac, 1]
 
-        ax.annotate(
-            "",
-            xy=(ell0, y0),
-            xytext=offset,
-            textcoords="offset points",
-            arrowprops=dict(
-                arrowstyle='-',
-                color=color,
-                lw=linewidth,
-                ls=ls,
-                shrinkA=0,
-                shrinkB=0,
-            ),
-            zorder=zorder,
+        ax.plot(
+            [ell, ell],
+            y_pos,
+            transform=trans,
+            color=color,
+            linewidth=linewidth,
+            ls=ls,
+            solid_capstyle="butt",
+            clip_on=False,
         )
+
+    # marker_fill = color if theory else 'none'
+    # offset = (0, -dash_pts) if theory else (0, +dash_pts)
+
+    # for ell0 in crit_ells:
+    #     y0 = ps[int(ell0)]
+
+    #     ax.scatter(
+    #         [ell0], [y0],
+    #         s=ms,
+    #         facecolors=marker_fill,
+    #         edgecolors=color,
+    #         linewidths=linewidth,
+    #         zorder=zorder,
+    #     )
+
+    #     ax.annotate(
+    #         "",
+    #         xy=(ell0, y0),
+    #         xytext=offset,
+    #         textcoords="offset points",
+    #         arrowprops=dict(
+    #             arrowstyle='-',
+    #             color=color,
+    #             lw=linewidth,
+    #             ls=ls,
+    #             shrinkA=0,
+    #             shrinkB=0,
+    #         ),
+    #         zorder=zorder,
+    #     )
