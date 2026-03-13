@@ -9,11 +9,12 @@ import pysm3.units as u
 
 from cmbml.core import Split, Asset, AssetWithPathAlts
 from cmbml.core.executor_base import BaseStageExecutor
-from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
+from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
 from cmbml.utils.number_report import float_to_latex
 from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
+from d2ps_nn.utils.find_peaks import find_crits, PeakFitError
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
         self.in_ps_thry: AssetWithPathAlts = self.assets_in["ps_thry"]
-        self.in_report: Asset = self.assets_in["report"]
+        # self.in_report: Asset = self.assets_in["report"]
         in_ps_prep_handler: TextPowerSpectrum
         in_ps_thry_handler: CambPowerSpectrum
         in_report_handler: PandasCsvHandler
@@ -65,11 +66,11 @@ class ShowPredictionsExecutor(BaseStageExecutor):
     def process_split(self, split: Split) -> None:
         mpl_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         show_max_l = self.display_lmax
-        try:
-            report_data = self.in_report.read()
-        except FileNotFoundError:
-            logger.warning(f"Report file {self.in_report.path} not found. Skipping report data.")
-            report_data = None
+        # try:
+        #     report_data = self.in_report.read()
+        # except FileNotFoundError:
+        #     logger.warning(f"Report file {self.in_report.path} not found. Skipping report data.")
+        #     report_data = None
 
         use_path_alt = True if split.ps_fidu_fixed else False
 
@@ -105,35 +106,78 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
                 fig, ax = plt.subplots(1, 1, figsize=(12, 6))
 
-                max_scatter_multipoles = 20
-
                 for i, ps_thry in enumerate(all_theory_ps):
-                    # ax1.plot(full_ells, ps_thry, alpha=0.3)
                     ax.plot(full_ells[2:], ps_thry[2:], 
                              alpha=1, linewidth=0.5,
                              label=f'Theory {i}', 
                              color=mpl_colors[i % len(mpl_colors)])
                 for i, ps_pred in enumerate(all_pred_ps):
-                    if len(part_ells) < max_scatter_multipoles:
-                        ax.scatter(part_ells, ps_pred, 
-                                    alpha=0.7, zorder=10,
-                                    label=f'Prediction {i}',
-                                    color=mpl_colors[i % len(mpl_colors)])
-                    else:
-                        ax.plot(part_ells, ps_pred, 
-                                alpha=0.7, ls=(i, (5,5)), linewidth=2, 
-                                label=f'Prediction {i}', 
-                                color=mpl_colors[i % len(mpl_colors)])
+                    ax.plot(part_ells, ps_pred, 
+                            alpha=0.7, ls=(i, (5,5)), linewidth=2, 
+                            label=f'Prediction {i}', 
+                            color=mpl_colors[i % len(mpl_colors)])
 
+                for i, ps_thry in enumerate(all_theory_ps):
+                    color = mpl_colors[i % len(mpl_colors)]
+                    ls = None
+                    ax.plot(
+                        full_ells[2:], ps_thry[2:],
+                        alpha=1, linewidth=0.5,
+                        label=f'Theory {i}',
+                        color=color,
+                    )
+
+                    try:
+                        crits = find_crits(ps_thry[2:], full_ells[2:])
+                        mark_crits(
+                            ax,
+                            crits,
+                            color=color,
+                            theory=True,
+                            tick_frac=0.025,
+                            linewidth=1,
+                            ls=ls
+                        )
+                    except PeakFitError as e:
+                        logger.warning(
+                            f"Could not fit prediction peaks for sim {i}! "
+                            f"Peak index={e.peak_index}, reason: {e}"
+                        )
+                for i, ps_pred in enumerate(all_pred_ps):
+                    color = mpl_colors[i % len(mpl_colors)]
+                    ls = (i, (5,5))
+                    ax.plot(
+                        part_ells, ps_pred,
+                        alpha=0.7, ls=ls, linewidth=2,
+                        label=f'Prediction {i}',
+                        color=color,
+                    )
+
+                    try:
+                        crits = find_crits(ps_pred, part_ells)
+                        mark_crits(
+                            ax,
+                            crits,
+                            color=color,
+                            theory=False,
+                            tick_frac=0.025,
+                            linewidth=1,
+                            ls=ls
+                        )
+                    except PeakFitError as e:
+                        logger.warning(
+                            f"Could not fit prediction peaks for sim {i}! "
+                            f"Peak index={e.peak_index}, reason: {e}"
+                        )
                 # Proxies for the legend
                 theory_proxy = Line2D([0], [0], color="black", linewidth=0.5, alpha=1)
                 # Pred proxy depends on how many multipoles are included
-                if len(part_ells) < max_scatter_multipoles:
-                    pred_proxy = Line2D([0], [0], color="black", marker="o",
-                                        linestyle="none", alpha=0.7)
-                else:
-                    pred_proxy = Line2D([0], [0], color="black", linewidth=2,
-                                        ls=(0, (3, 3)), alpha=0.7)
+                # if len(part_ells) < max_scatter_multipoles:
+                #     pred_proxy = Line2D([0], [0], color="black", marker="o",
+                #                         linestyle="none", alpha=0.7)
+                # else:
+                pred_proxy = Line2D([0], [0], color="black", linewidth=2,
+                                    ls=(0, (3, 3)), alpha=0.7)
 
                 # Put the legend wherever you like; fig.legend works across axes
                 handles = [theory_proxy, pred_proxy]
@@ -151,18 +195,82 @@ class ShowPredictionsExecutor(BaseStageExecutor):
 
                 ax.set_title(f"Predictions and Targets, {self.fig_label}")
 
-                if report_data is not None:
-                    key = ('mse', 'mean')
-                    mask = (
-                        (report_data[('split', '')] == split.name) &
-                        (report_data[('epoch', '')] == str(epoch))
-                    )
-                    subset = report_data.loc[mask]
-                    if subset.empty:
-                        raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
-                    else:
-                        mse = subset[key].mean()
-                        mse_str = float_to_latex(mse)
-                    ax.text(20, 100, f"{split.name} MSE: ${mse_str}$")
+                # if report_data is not None:
+                #     key = ('mse', 'mean')
+                #     mask = (
+                #         (report_data[('split', '')] == split.name) &
+                #         (report_data[('epoch', '')] == str(epoch))
+                #     )
+                #     subset = report_data.loc[mask]
+                #     if subset.empty:
+                #         raise ValueError(f"No matching rows for split={split.name}, epoch={epoch}")
+                #     else:
+                #         mse = subset[key].mean()
+                #         mse_str = float_to_latex(mse)
+                #     ax.text(20, 100, f"{split.name} MSE: ${mse_str}$")
 
                 self.out_fig.write(fig=fig)  # Make directory only
+
+
+def mark_crits(
+    ax: plt.Axes,
+    crit_ells,
+    color,
+    theory=True,
+    tick_frac=0.025,
+    linewidth=1.2,
+    ls=None
+):
+    """
+    Mark extrema on a spectrum.
+
+    theory=True  -> filled circle + short line downward
+    theory=False -> open circle  + short line upward
+    """
+
+    trans = ax.get_xaxis_transform()  # x=data, y=axes
+
+    for ell in crit_ells:
+        y_pos = [0, tick_frac] if theory else [1-tick_frac, 1]
+
+        ax.plot(
+            [ell, ell],
+            y_pos,
+            transform=trans,
+            color=color,
+            linewidth=linewidth,
+            ls=ls,
+            solid_capstyle="butt",
+            clip_on=False,
+        )
+
+    # marker_fill = color if theory else 'none'
+    # offset = (0, -dash_pts) if theory else (0, +dash_pts)
+
+    # for ell0 in crit_ells:
+    #     y0 = ps[int(ell0)]
+
+    #     ax.scatter(
+    #         [ell0], [y0],
+    #         s=ms,
+    #         facecolors=marker_fill,
+    #         edgecolors=color,
+    #         linewidths=linewidth,
+    #         zorder=zorder,
+    #     )
+
+    #     ax.annotate(
+    #         "",
+    #         xy=(ell0, y0),
+    #         xytext=offset,
+    #         textcoords="offset points",
+    #         arrowprops=dict(
+    #             arrowstyle='-',
+    #             color=color,
+    #             lw=linewidth,
+    #             ls=ls,
+    #             shrinkA=0,
+    #             shrinkB=0,
+    #         ),
+    #         zorder=zorder,
+    #     )

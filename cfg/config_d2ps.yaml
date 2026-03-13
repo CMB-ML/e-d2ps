@@ -24,7 +24,8 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      learning_rate:  1e-7, 2.5e-7, 5e-7, 1e-6, 2.5e-6
+      # learning_rate:  1e-7, 2.5e-7, 5e-7, 1e-6, 2.5e-6
+      learning_rate:  5e-6, 1e-5, 2.5e-5, 5e-5, 1e-4  # , 2.5e-6
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -32,10 +33,10 @@ hydra:
     subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
                                                 #   This is a minor bug, not worth fixing.
 
-batch_size: 200  # All
+batch_size: 25  # All
 iter_num: 0
 learning_rate: 0  # Placeholder
-num_sims: 5
+num_sims: 25
 # In the model yaml
 num_epochs         : 30000
 

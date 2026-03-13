@@ -67,9 +67,9 @@ def train_runs(cfg):
     pipes = [
         TrainingExecutor,
         PredictExecutor,
-        PowerSpectrumAnalysisExecutor,
+        # PowerSpectrumAnalysisExecutor,
         ShowPredictionsExecutor,
-        ShowBWPredictionsExecutor,
+        # ShowBWPredictionsExecutor,
         LossPlotExecutor,
         BundleTrueExecutor,
         BundlePredExecutor,

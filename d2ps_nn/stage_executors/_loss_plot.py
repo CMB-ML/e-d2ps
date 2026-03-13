@@ -8,6 +8,7 @@ from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure 
 # from cmbml.analysis.stage_executors._16_loss_plot import make_loss_plot
 
+
 class LossPlotExecutor(BaseStageExecutor):
     def __init__(self, cfg):
         super().__init__(cfg, stage_str="loss_plot")
@@ -19,16 +20,19 @@ class LossPlotExecutor(BaseStageExecutor):
         
         self.fig_type = cfg.get("fig_type", None)
 
+        self.n_epochs = cfg.model.train.n_epochs
+
     def execute(self):
         self.out_fig.handler.set_fig_types(self.fig_type)
         fig, ax = make_loss_plot(some_path=self.in_loss_csv.path,
                                  fig_label=self.fig_label,
                                  ylim=(1e-4,1e7),
+                                 xlim=(0,self.n_epochs),
                                  sm_sigma2=20)
         self.out_fig.write(fig=fig)
 
 
-def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim=None, sm_sigma2=None):
+def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim=None, xlim=None, sm_sigma2=None):
         df = pd.read_csv(some_path)
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
@@ -108,7 +112,9 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
         if ylim is not None:
             ax.set_ylim(*ylim)
-        ax.set_xlim(0,30000)
+
+        if xlim is not None:
+            ax.set_xlim(*xlim)
 
         custom_legend = [
             Line2D([0], [0], color="tab:blue", linestyle="-", linewidth=2, label="Training Loss"),
