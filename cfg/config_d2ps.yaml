@@ -24,7 +24,7 @@ n_sims: "this_should_run_with_multi"
 learning_rate: 0
 
 px_arrange: cmbNNCS
-nn_model: MobileViTCMBRegressor  # Hard-coded
+nn_model: MobileViTCMBRegressor
 norm_kind: gn
 
 # px_arrange: cmbNNCS
