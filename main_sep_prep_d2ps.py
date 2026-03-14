@@ -56,11 +56,11 @@ logger = logging.getLogger(__name__)
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
-        MakeLutExecutor,
-        MakePosEncLutExecutor,
+        # MakeLutExecutor,
+        # MakePosEncLutExecutor,
         # FindDatasetStatsParallelExecutor,
         # PreprocessMapsExecutor,
-        # PreprocessSpectraExecutor
+        PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 

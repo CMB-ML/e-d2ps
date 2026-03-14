@@ -53,8 +53,8 @@ preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_out:
     cmb_ps:
       handler: TextPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
-      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep.txt"
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep_4000.txt"
+      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep_4000.txt"
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
   assets_in:
