@@ -14,10 +14,10 @@ from d2ps_nn.models import BaseD2PSExecutor
 from d2ps_nn.dataset import TestDataset
 from d2ps_nn.models import SimpleEncDec
 # from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
-from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
+from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class PredictExecutor(BaseD2PSExecutor):
         self._model_epochs = cfg.use_epochs
 
         # How data is processed
-        self.scale_ps_choice  = cfg.model.scale_ps
+        self.scale_ps = make_ps_processor(cfg.model.scale_ps, cfg)
 
         self.model = None  # Placeholder for model
 
@@ -66,8 +66,6 @@ class PredictExecutor(BaseD2PSExecutor):
         self.model = self.init_model()
         self.model.eval().to(self.device)
 
-        self.scale_ps = get_ps_scale(self.scale_ps_choice, self.ells)
-
         with torch.no_grad():  # We don't need gradients for prediction
             for model_epoch in self.model_epochs:
                 for split in self.splits:
@@ -77,8 +75,6 @@ class PredictExecutor(BaseD2PSExecutor):
                         self.process_split(split, model_epoch)
 
     def process_split(self, split, epoch) -> None:
-        # pad_mono_dipole = self.skip_mono_dipole
-
         dataset = self.set_up_dataset(split)
         dataloader = DataLoader(
             dataset, 
@@ -89,13 +85,11 @@ class PredictExecutor(BaseD2PSExecutor):
         with tqdm(dataloader, desc=f"Epoch {epoch:<{3}}") as pbar:
             for test_features, sim_idcs in pbar:
                 test_features = test_features.to(device=self.device, dtype=self.dtype)
-                predictions = self.model(test_features).cpu().numpy()
-                predictions = predictions / self.scale_ps * 4000
-                for pred, sim_idx in zip(predictions, sim_idcs):
+                pred = self.model(test_features).cpu().numpy()
+                pred = self.scale_ps.postprocess(pred)
+                for pred, sim_idx in zip(pred, sim_idcs):
                     sim_idx = int(sim_idx)
                     with self.name_tracker.set_context("sim_num", sim_idx):
-                        # if pad_mono_dipole:
-                        #     pred = np.concatenate(([0,0], pred))
                         self.out_cmb_asset.write(data=pred)
 
     def set_up_dataset(self, template_split: Split) -> TestDataset:

@@ -14,6 +14,7 @@ from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         in_model_handler: PyTorchModel
 
         self.lut_style = cfg.model.patches.get("lut_style", None)
+        self.scale_ps = make_ps_processor(cfg.model.scale_ps, cfg)
 
         # How model is evaluated
         self.loss_key      = cfg.model.train.loss
@@ -133,9 +135,9 @@ class TrainingExecutor(BaseD2PSExecutor):
                 model.train()
                 batch_loss = 0
                 scale_loss = 0
-                for train_features, train_label in pbar:
+                for train_features, lbl in pbar:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    train_label = train_label.to(device=self.device, dtype=self.dtype)
+                    lbl = lbl.to(device=self.device, dtype=self.dtype)
                     # with torch.no_grad():
                     #     model.eval()
                     #     out0 = model(train_features)
@@ -146,7 +148,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
                     optimizer.zero_grad()
                     
-                    output = model(train_features)
+                    out = model(train_features)
 
                     # print(output[:,:5])
                     # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
@@ -155,16 +157,18 @@ class TrainingExecutor(BaseD2PSExecutor):
                     # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # exit()
 
-                    batch_train_loss = loss_function(output, train_label)
+                    loss = loss_function(out, lbl)
 
                     with torch.no_grad():
-                        batch_scale_loss = loss_function(output * 4000, train_label * 4000).item()
+                        out_sc = self.scale_ps.postprocess(out)
+                        lbl_sc = self.scale_ps.postprocess(lbl)
+                        loss_sc = loss_function(out_sc, lbl_sc).item()
 
-                    batch_train_loss.backward()
+                    loss.backward()
                     optimizer.step()
-                    pbar.set_postfix({'Loss': batch_scale_loss})
-                    batch_loss += batch_train_loss.item()
-                    scale_loss += batch_scale_loss
+                    pbar.set_postfix({'Loss': loss_sc})
+                    batch_loss += loss.item()
+                    scale_loss += loss_sc
 
                 batch_loss /= len(train_dataloader)
                 scale_loss /= len(train_dataloader)
