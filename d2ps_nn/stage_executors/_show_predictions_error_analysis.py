@@ -9,7 +9,6 @@ from omegaconf import DictConfig
 from cmbml.core import Split, Asset
 from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
-from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 
 

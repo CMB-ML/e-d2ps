@@ -8,7 +8,6 @@ from omegaconf import DictConfig
 from cmbml.core import Split, Asset
 from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum
-from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 
 
@@ -28,7 +27,7 @@ class ShowChosenEllsExecutor(BaseStageExecutor):
         in_ps_thry_handler: CambPowerSpectrum
 
         self.ells = parse_ells(cfg.model.use_ells)
-        self.scale_ps_choice = cfg.model.scale_ps
+        # self.scale_ps_choice = cfg.model.scale_ps
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -45,9 +44,6 @@ class ShowChosenEllsExecutor(BaseStageExecutor):
 
         full_ells = np.arange(len(ps_thry))
         part_ells = self.ells
-
-        scale_prep_ps = get_ps_scale(self.scale_ps_choice, self.ells)
-        ps_prep = ps_prep / scale_prep_ps
 
         fig, ax = plt.subplots()
         ax.plot(full_ells, ps_thry, label="Full spectrum")
