@@ -55,6 +55,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             torch.cuda.set_device(int(self.device.split(":")[1]))
         elif isinstance(self.device, int):
             torch.cuda.set_device(self.device)
+        logger.info(f"Model running on {self.device}")
 
         # Architecture
         if self.nn_model == "MobileViTCMBRegressor":
@@ -93,6 +94,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             use_model = SimpleEncDec
         else:
             raise ValueError(f"{use_model} is not configured.")
+        logger.info(f"Model: {self.nn_model}")
 
         # Set up model parameters
         n_channels = len(self.instrument.dets.keys()) if self.features_type == "obs" else 1
@@ -123,6 +125,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             model_dict["pooling"] = self.pooling
 
         # Make the model
+        logger.info(f"Model params: {model_dict}")
         model = use_model(**model_dict)
 
         model = model.to(self.device)
@@ -137,8 +140,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             n_channels += 3
 
         logger.info(f"Creating model...")
-
-        model = MobileViTCMBRegressor(
+        model_dict = dict(
             nside=self.nside,
             in_channels=n_channels,
             n_outputs=len(self.ells),
@@ -152,6 +154,8 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             dropout=0.1,
             head_hidden=512,
         )
+        logger.info(f"Model params: {model_dict}")
+        model = MobileViTCMBRegressor(**model_dict)
         model = model.to(self.device)
 
         logger.info(f"Model created!")
