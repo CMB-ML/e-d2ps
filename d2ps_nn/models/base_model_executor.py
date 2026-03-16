@@ -12,7 +12,7 @@ from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.models import (
     TLPEncAggDec, 
-    TLPEncAggDec_SepFaces, 
+    TLPEnc2AggDec, 
     SimpleEncDec,
     MobileViTCMBRegressor
 )
@@ -89,7 +89,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         if self.nn_model == "TLPEncAggDec":
             use_model = TLPEncAggDec
         elif self.nn_model == "TLPEnc2AggDec":
-            use_model = TLPEncAggDec_SepFaces
+            use_model = TLPEnc2AggDec
         elif self.nn_model == "SimpleEncDec":
             use_model = SimpleEncDec
         else:
