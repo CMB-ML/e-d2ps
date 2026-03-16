@@ -20,6 +20,7 @@ fig_model_name     : "${features_type} to PS, learning rate: ${learning_rate}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 scale_ps: 4000
+optimizer: Adam
 
 # px_arrange: cmbNNCS
 # nn_model: MobileViTCMBRegressor

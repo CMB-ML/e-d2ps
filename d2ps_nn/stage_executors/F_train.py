@@ -47,9 +47,10 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         # How model is evaluated
         self.loss_key      = cfg.model.train.loss
-        
+
         # How model is updated
         self.learning_rate = cfg.model.train.learning_rate
+        self.optimizer     = cfg.model.train.optimizer
 
         # How long it runs
         self.n_epochs      = cfg.model.train.n_epochs
@@ -98,9 +99,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         loss_function = loss_function.to(self.device)
         logger.info(f"Loss: {self.loss_key}")
 
-        optim_dict = dict(lr=self.learning_rate)
-        optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
-        logger.info(f"Optimizer: {optimizer.__class__} with {optim_dict}")
+        optimizer = self.get_optimizer(model)
 
         if self.restart_epoch is not None:
             logger.info(f"Restarting training at epoch {self.restart_epoch}")
@@ -263,11 +262,22 @@ class TrainingExecutor(BaseD2PSExecutor):
             pos_enc_lut = self.in_pos_enc_lut.read() 
         return pos_enc_lut
 
+    def get_optimizer(self, model):
+        if self.optimizer == "Adam":
+            optim_dict = dict(lr=self.learning_rate)
+            optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
+        elif self.optimizer == "AdamW":
+            optim_dict = dict(lr=self.learning_rate, weight_decay=1e-4)
+            optimizer = torch.optim.AdamW(model.parameters(), **optim_dict)
+        logger.info(f"Optimizer: {optimizer.__class__} with {optim_dict}")
+        return optimizer
+
 
 class OverfitTrainingExecutor(TrainingExecutor):
     def __init__(self, cfg, stage_str="train"):
         super().__init__(cfg, stage_str=stage_str)
         self.use_preload   = cfg.model.train.get("use_preload", False)
+        self.batch_size    = cfg.splits.Train.n_sims
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -291,13 +301,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
         loss_function = loss_function.to(self.device)
         logger.info(f"Loss: {self.loss_key}")
 
-        optim_dict = dict(lr=self.learning_rate)
-        optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
-        logger.info(f"Optimizer: {optimizer.__class__} with {optim_dict}")
-
-        optim_dict = dict(lr=self.learning_rate, weight_decay=1e-4)
-        optimizer = torch.optim.AdamW(model.parameters(), **optim_dict)
-        logger.info(f"Optimizer: {optimizer.__class__} with {optim_dict}")
+        optimizer = self.get_optimizer(model)
 
         logger.info(f"Starting new model.")
         with self.name_tracker.set_context("epoch", "init"):

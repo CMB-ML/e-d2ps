@@ -101,6 +101,28 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
   dir_name: F_Model
   make_stage_log: True
 
+# train_overfit: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor
+#   assets_out:
+#     model: 
+#       handler: PyTorchModel
+#       path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+#     loss_record:
+#       handler: AppendingCsvHandler
+#       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+#   assets_in:
+#     cmb_ps: {stage: preprocess_spectra}
+#     cmb_map: {stage: preprocess_maps}
+#     obs_maps: {stage: preprocess_maps}
+#     model: {stage: train}
+#     pos_enc_lut: {stage: make_pos_enc_lut}
+#     mean_ps: {stage: get_spectra_stats}
+#     stdv_ps: {stage: get_spectra_stats}
+#   splits:
+#     - train
+#     - valid
+#   dir_name: F_Model_Overfit
+#   make_stage_log: True
+
 # predict:
 predict: &final_inference # G_predict.py / PredictExecutor
   assets_out:

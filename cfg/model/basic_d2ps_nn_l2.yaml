@@ -46,6 +46,7 @@ train:
   num_loader_workers: 0
   # Training parameters
   learning_rate     : ${learning_rate}
+  optimizer         : ${optimizer}
 
   # Epochs
   n_epochs          : ${num_epochs}
