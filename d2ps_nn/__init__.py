@@ -4,7 +4,7 @@ from .stage_executors.C_find_dataset_stats_parallel import FindDatasetStatsParal
 from .stage_executors.C2_find_ps_stats_serial import FindSpectraStatsExecutor
 from .stage_executors.D_preprocess_maps_serial import PreprocessMapsExecutor
 from .stage_executors.E_preprocess_ps_serial import PreprocessSpectraExecutor
-from .stage_executors.F_train import TrainingExecutor
+from .stage_executors.F_train import TrainingExecutor, OverfitTrainingExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor
 from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
