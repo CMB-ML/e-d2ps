@@ -62,7 +62,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             self.init_model = self.init_mobileViT
             self.norm_kind     = cfg.norm_kind
         
-        elif self.nn_model in ["SimpleEncDec", "TLPEncAggDec_SepFaces", "TLPEncAggDec"]:
+        elif self.nn_model in ["SimpleEncDec", "TLPEnc2AggDec", "TLPEncAggDec"]:
             self.init_model = self.init_simple
             self.model_n_init_features = cfg.model.n_init_features
             self.model_n_levels = cfg.model.n_levels
@@ -88,7 +88,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         # Get the model class
         if self.nn_model == "TLPEncAggDec":
             use_model = TLPEncAggDec
-        elif self.nn_model == "TLPEncAggDec_SepFaces":
+        elif self.nn_model == "TLPEnc2AggDec":
             use_model = TLPEncAggDec_SepFaces
         elif self.nn_model == "SimpleEncDec":
             use_model = SimpleEncDec
