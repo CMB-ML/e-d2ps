@@ -25,6 +25,10 @@ class SpectrumProcessor(ABC):
     `preprocess` is applied before the model.
     `postprocess` undoes that transform afterward.
     """
+    selection_space = "pre"
+    report_space = "post"
+    pre_name = "processed"
+    post_name = "raw"
 
     @abstractmethod
     def preprocess(self, x: Array) -> Array:
@@ -44,6 +48,10 @@ class SpectrumProcessor(ABC):
 @dataclass(frozen=True)
 class IdentityProcessor(SpectrumProcessor):
     """No preprocessing."""
+    selection_space = "pre"
+    report_space = "pre"
+    pre_name = "Dl"
+    post_name = "Dl"
 
     def preprocess(self, x: Array) -> Array:
         return x
@@ -62,6 +70,10 @@ class ScalarProcessor(SpectrumProcessor):
         preprocess(x)  -> x / 4000
         postprocess(x) -> x * 4000
     """
+    selection_space = "pre"
+    report_space = "post"
+    pre_name = "Dl_scaled"
+    post_name = "Dl"
 
     factor: float
 
@@ -89,6 +101,10 @@ class ClProcessor(SpectrumProcessor):
     For ell < ell_min_safe, factor 1 is used to avoid division by zero /
     undefined low-ell behavior. Adjust if you want something stricter.
     """
+    selection_space = "pre"
+    report_space = "pre"
+    pre_name = "Cl"
+    post_name = "Dl"
 
     ells: Array
     ell_min_safe: int = 2
@@ -139,6 +155,10 @@ class MeanStdvProcessor(SpectrumProcessor):
 
     Mean/st.dev are loaded from files on first use, then cached.
     """
+    selection_space = "pre"
+    report_space = "pre"
+    pre_name = "standardized_Dl"
+    post_name = "Dl"
 
     mean_path: str | Path
     stdv_path: str | Path
