@@ -1,10 +1,11 @@
 import logging
+from collections import OrderedDict
 
 from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
-from torch.nn.utils import clip_grad_norm_
+# from torch.nn.utils import clip_grad_norm_
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
@@ -273,16 +274,43 @@ class TrainingExecutor(BaseD2PSExecutor):
         return optimizer
 
 
+def print_module_tree(module, indent=0):
+    prefix = "  " * indent
+    print(f"{prefix}{module.__class__.__name__}")
+    for name, child in module.named_children():
+        print(f"{prefix}  ({name})", end=" ")
+        print_module_tree(child, indent + 2)
+
+
 class OverfitTrainingExecutor(TrainingExecutor):
     def __init__(self, cfg, stage_str="train"):
         super().__init__(cfg, stage_str=stage_str)
         self.use_preload   = cfg.model.train.get("use_preload", False)
         self.batch_size    = cfg.splits.Train.n_sims
+        self.out_block_record: Asset = self.assets_out["block_record"]
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
+
+        block_paths = [
+            "enc.in_c",
+            "enc.dns.0",
+            "enc.dns.1",
+            "enc.dns.2",
+            "enc.dns.3",
+            "enc.dns.4",
+            "enc.dns.5",
+            "enc.dns.6",
+            "dec.fc",
+        ]
+        param_groups = _get_trainable_param_groups_from_paths(model, block_paths)
+        logger.info(f"Per-block diagnostics on groups: {list(param_groups.keys())}")
+
+        for block_name, params in param_groups.items():
+            n_params = sum(p.numel() for p in params)
+            logger.info(f"{block_name}: {n_params} trainable params")
 
         train_split = self.splits.get("train")
 
@@ -302,7 +330,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
         logger.info(f"Loss: {self.loss_key}")
 
         optimizer = self.get_optimizer(model)
-
+        
         logger.info(f"Starting new model.")
         with self.name_tracker.set_context("epoch", "init"):
             self.out_model.write(model=model, epoch="init")
@@ -319,6 +347,16 @@ class OverfitTrainingExecutor(TrainingExecutor):
             'Relative Update',
         ]
         self.out_loss_record.write(data=loss_record_headers)
+
+        block_record_headers = [
+            "Epoch",
+            "Block",
+            "Grad Norm",
+            "Param Norm",
+            "Update Norm",
+            "Relative Update",
+        ]
+        self.out_block_record.write(data=block_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
@@ -343,6 +381,16 @@ class OverfitTrainingExecutor(TrainingExecutor):
                 epoch_update_norm = 0.0
                 epoch_relative_update = 0.0
 
+                epoch_block_metrics = {
+                    block_name: {
+                        "grad_norm": 0.0,
+                        "param_norm": 0.0,
+                        "update_norm": 0.0,
+                        "relative_update": 0.0,
+                    }
+                    for block_name in param_groups
+                }
+                
                 for train_features, lbl in pbar:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     lbl = lbl.to(device=self.device, dtype=self.dtype)
@@ -361,16 +409,37 @@ class OverfitTrainingExecutor(TrainingExecutor):
 
                     # Save params before backward/step so we can measure update size
                     old_params = _clone_trainable_params(model)
+                    old_group_params = _clone_params_from_groups(param_groups)
 
                     # Backward
                     loss.backward()
 
-                    # Diagnostics before step
-                    grad_norm = clip_grad_norm_(model.parameters(), max_norm=float("inf")).item()
+                    grad_norm = _get_global_grad_norm(model)
                     param_norm = _get_param_norm(model)
+
+                    block_grad_norms = {
+                        block_name: _grad_norm_from_params(params)
+                        for block_name, params in param_groups.items()
+                    }
+                    block_param_norms = {
+                        block_name: _param_norm_from_params(params)
+                        for block_name, params in param_groups.items()
+                    }
 
                     # Optimizer step
                     optimizer.step()
+                    
+                    block_update_norms = {
+                        block_name: _update_norm_from_params(
+                            param_groups[block_name],
+                            old_group_params[block_name]
+                        )
+                        for block_name in param_groups
+                    }
+                    block_relative_updates = {
+                        block_name: block_update_norms[block_name] / (block_param_norms[block_name] + 1e-12)
+                        for block_name in param_groups
+                    }
 
                     # Forward after step on the exact same batch
                     with torch.no_grad():
@@ -392,6 +461,12 @@ class OverfitTrainingExecutor(TrainingExecutor):
                     epoch_param_norm += param_norm
                     epoch_update_norm += update_norm
                     epoch_relative_update += relative_update
+                    for block_name in param_groups:
+                        epoch_block_metrics[block_name]["grad_norm"] += block_grad_norms[block_name]
+                        epoch_block_metrics[block_name]["param_norm"] += block_param_norms[block_name]
+                        epoch_block_metrics[block_name]["update_norm"] += block_update_norms[block_name]
+                        epoch_block_metrics[block_name]["relative_update"] += block_relative_updates[block_name]
+
 
                 n_batches = len(train_dataloader)
 
@@ -407,6 +482,20 @@ class OverfitTrainingExecutor(TrainingExecutor):
 
                 all_batch_loss.append(batch_loss)
                 all_scale_loss.append(scale_loss)
+                for block_name in param_groups:
+                    epoch_block_metrics[block_name]["grad_norm"] /= n_batches
+                    epoch_block_metrics[block_name]["param_norm"] /= n_batches
+                    epoch_block_metrics[block_name]["update_norm"] /= n_batches
+                    epoch_block_metrics[block_name]["relative_update"] /= n_batches
+
+                    self.out_block_record.append([
+                        epoch + 1,
+                        block_name,
+                        epoch_block_metrics[block_name]["grad_norm"],
+                        epoch_block_metrics[block_name]["param_norm"],
+                        epoch_block_metrics[block_name]["update_norm"],
+                        epoch_block_metrics[block_name]["relative_update"],
+                    ])
 
             self.out_loss_record.append([
                 epoch + 1,
@@ -422,6 +511,17 @@ class OverfitTrainingExecutor(TrainingExecutor):
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
+
+
+def _get_global_grad_norm(model, norm_type=2.0):
+    vals = [
+        p.grad.detach().norm(norm_type)
+        for p in model.parameters()
+        if p.requires_grad and p.grad is not None
+    ]
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
 
 
 def _get_param_norm(model, norm_type=2.0):
@@ -449,6 +549,68 @@ def _get_update_norm(model, old_params, norm_type=2.0):
         if p.requires_grad:
             vals.append((p.detach() - old_params[old_idx]).norm(norm_type))
             old_idx += 1
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
+
+
+def _get_module_by_path(root, path):
+    obj = root
+    for part in path.split("."):
+        if part.isdigit():
+            obj = obj[int(part)]
+        else:
+            obj = getattr(obj, part)
+    return obj
+
+
+def _get_trainable_param_groups_from_paths(model, paths):
+    groups = OrderedDict()
+    for path in paths:
+        module = _get_module_by_path(model, path)
+        params = [p for p in module.parameters() if p.requires_grad]
+        if params:
+            groups[path] = params
+    return groups
+
+
+def _param_norm_from_params(params, norm_type=2.0):
+    vals = [p.detach().norm(norm_type) for p in params]
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
+
+
+def _grad_norm_from_params(params, norm_type=2.0):
+    vals = [p.grad.detach().norm(norm_type) for p in params if p.grad is not None]
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
+
+
+def _clone_params_from_groups(param_groups):
+    return {
+        group_name: [p.detach().clone() for p in params]
+        for group_name, params in param_groups.items()
+    }
+
+
+def _update_norm_from_params(params, old_params, norm_type=2.0):
+    vals = [
+        (p.detach() - old_p).norm(norm_type)
+        for p, old_p in zip(params, old_params)
+    ]
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
+
+
+def _get_global_grad_norm(model, norm_type=2.0):
+    vals = [
+        p.grad.detach().norm(norm_type)
+        for p in model.parameters()
+        if p.requires_grad and p.grad is not None
+    ]
     if not vals:
         return 0.0
     return torch.norm(torch.stack(vals), norm_type).item()

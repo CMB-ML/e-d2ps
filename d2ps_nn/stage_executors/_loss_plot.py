@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter1d
 
 from cmbml.core.executor_base import BaseStageExecutor
-from cmbml.core.asset_handlers import Figure 
+from cmbml.core.asset_handlers import Figure, PandasCsvHandler
 # from cmbml.analysis.stage_executors._16_loss_plot import make_loss_plot
 
 
@@ -14,6 +14,7 @@ class LossPlotExecutor(BaseStageExecutor):
         super().__init__(cfg, stage_str="loss_plot")
         self.out_fig: Figure = self.assets_out["fig"]
         self.in_loss_csv = self.assets_in["loss_record"]
+        in_loss_csv_handler: PandasCsvHandler  # Not actually used, but works for reference!
         # self.skip_n_values = 10
 
         self.fig_label = cfg.fig_model_name

@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_scale-${model.scale_ps}_${nn_model}/Nsims${n_sims}_lr${learning_rate}/"
+working_dir        : &wd "${features_type}2ps_scale-${model.scale_ps}_${nn_model}_big_log/Nsims${n_sims}_lr${learning_rate}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, learning rate: ${learning_rate}"
@@ -26,14 +26,14 @@ optimizer: Adam
 # nn_model: MobileViTCMBRegressor
 # norm_kind: gn
 
-# px_arrange: cmbNNCS
-# nn_model: SimpleEncDec
+px_arrange: cmbNNCS
+nn_model: SimpleEncDec
 # use_batch_norm_enc: true
 use_batch_norm_enc: false
 
-px_arrange: channel
-nn_model: TLPEncAggDec
-nn_model: TLPEnc2AggDec
+# px_arrange: channel
+# nn_model: TLPEncAggDec
+# nn_model: TLPEnc2AggDec
 
 use_pos_enc_lut: false
 # use_pos_enc_lut: true

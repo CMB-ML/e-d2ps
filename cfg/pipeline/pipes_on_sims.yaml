@@ -87,6 +87,9 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     loss_record:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+    block_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/block_record.csv"
   assets_in:
     cmb_ps: {stage: preprocess_spectra}
     cmb_map: {stage: preprocess_maps}
