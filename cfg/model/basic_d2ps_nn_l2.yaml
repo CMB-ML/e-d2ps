@@ -7,12 +7,14 @@ lmax      : ${lmax}  # lmax for prediction of power spectra
 #   Remember that the max is not included in the range!
 use_ells  : "[2:${lmax}+1:1]"
 # use_ells  : "[2:31],[40:${lmax}:10]"
+
 # Scaling the power spectra
-#   Accepts: a float (a multiplier for the Dl)
-#            "Cl" (convert Dl back to Cl, not recommended unless using matching loss)
+#   Accepts: a float/int (a divisor for the Dl)
+#            cl (convert Dl back to Cl, not recommended unless using matching loss)
+#            meanstdv (for use with FindSpectraStatsExecutor)
 #            null (no scaling)
-# For non-Wishart loss function
-scale_ps  : null
+scale_ps  : ${scale_ps}
+
 final_activation: null
 use_batch_norm_enc: ${use_batch_norm_enc}
 use_batch_norm_dec: false
