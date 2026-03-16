@@ -12,7 +12,7 @@ hydra:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
     subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
                                                 #   This is a minor bug, not worth fixing.
-  verbose          : false
+  verbose      : false
   sweeper:
     params:
       n_sims   :  5

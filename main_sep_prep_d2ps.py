@@ -24,11 +24,13 @@ from d2ps_nn import (
     MakeLutExecutor,
     MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
+    FindSpectraStatsExecutor,
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
 
     CheckGPULoadExecutor,
-    TrainingExecutor,
+    # TrainingExecutor,
+    OverfitTrainingExecutor,
     PredictExecutor,
     LossPlotExecutor,
     ShowPredictionsPeaksExecutor,
@@ -56,10 +58,11 @@ logger = logging.getLogger(__name__)
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
-        # MakeLutExecutor,
-        # MakePosEncLutExecutor,
-        # FindDatasetStatsParallelExecutor,
-        # PreprocessMapsExecutor,
+        MakeLutExecutor,
+        MakePosEncLutExecutor,
+        FindDatasetStatsParallelExecutor,
+        # FindSpectraStatsExecutor,  # Only when standardizing spectra
+        PreprocessMapsExecutor,
         PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
@@ -70,7 +73,8 @@ def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         CheckGPULoadExecutor,
-        TrainingExecutor,
+        OverfitTrainingExecutor,
+        # TrainingExecutor,
         PredictExecutor,
         LossPlotExecutor,
         ShowPredictionsPeaksExecutor,
@@ -124,7 +128,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # prep_run()
+    prep_run()
     train_runs()
     # prep_run_planck()
     # run_planck()
