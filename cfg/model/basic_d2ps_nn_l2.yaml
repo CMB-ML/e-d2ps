@@ -24,7 +24,7 @@ use_batch_norm_dec: false
 
 # Ablation params
 dropout_rate: 0.0
-activation: relu
+activation: ${activation}
 pooling: max
 
 # Other model parameters
