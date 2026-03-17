@@ -59,6 +59,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         # How it handles data
         self.batch_size    = cfg.model.train.batch_size
         self.num_workers   = cfg.model.train.num_loader_workers
+        self.use_preload   = False  # Only for Overfit... I think 1000 sims will fill RAM of computer.?
 
         # Checkpointing
         self.checkpoint    = cfg.model.train.checkpoint_every
@@ -75,23 +76,21 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader_params = dict(
-            train_dataset, 
             batch_size=self.batch_size, 
             shuffle=True,
             num_workers=self.num_workers
         )
         logger.info(f"Train dataloader: {train_dataloader_params}")
-        train_dataloader = DataLoader(train_dataloader_params)
+        train_dataloader = DataLoader(train_dataset, **train_dataloader_params)
 
         valid_dataset = self.set_up_dataset(valid_split)
         valid_dataloader_params = dict(
-            valid_dataset, 
             batch_size=self.batch_size, 
             shuffle=False,
             num_workers=self.num_workers
         )
         logger.info(f"Valid dataloader: {valid_dataloader_params}")        
-        valid_dataloader = DataLoader(valid_dataloader_params)
+        valid_dataloader = DataLoader(valid_dataset, **valid_dataloader_params)
 
         logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} batches, batch size {self.batch_size}.")
 
