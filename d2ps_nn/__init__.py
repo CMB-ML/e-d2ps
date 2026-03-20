@@ -1,8 +1,10 @@
 from .stage_executors.B_make_lut import MakeLutExecutor
+from .stage_executors.B_make_pos_enc_lut import MakePosEncLutExecutor
 from .stage_executors.C_find_dataset_stats_parallel import FindDatasetStatsParallelExecutor
+from .stage_executors.C2_find_ps_stats_serial import FindSpectraStatsExecutor
 from .stage_executors.D_preprocess_maps_serial import PreprocessMapsExecutor
 from .stage_executors.E_preprocess_ps_serial import PreprocessSpectraExecutor
-from .stage_executors.F_train import TrainingExecutor
+from .stage_executors.F_train import TrainingExecutor, OverfitTrainingExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor
 from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
@@ -11,9 +13,10 @@ from .stage_executors.K_per_split_analysis import PerSplitAnalysis
 
 from .stage_executors._check_model_size import CheckGPULoadExecutor
 from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
-from .stage_executors._show_predictions import ShowPredictionsExecutor
 from .stage_executors._loss_summary import LossSummaryExecutor
 from .stage_executors._loss_plot import LossPlotExecutor
+from .stage_executors._show_predictions import ShowPredictionsExecutor
+from .stage_executors._show_predictions_peaks import ShowPredictionsPeaksExecutor
 from .stage_executors._show_predictions_bw import ShowBWPredictionsExecutor
 from .stage_executors._show_predictions_indiv import ShowIndivPredictionsExecutor
 from .stage_executors._show_predictions_error_analysis import ShowPredictionsWithChiSquareExecutor

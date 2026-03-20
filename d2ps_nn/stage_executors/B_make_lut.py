@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from cmbml.core import Split, Asset
 from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers.healpy_map_handler import HealpyMap
-from cmbml.utils.patch_healpix import make_pixel_index_lut
+from d2ps_nn.utils.lut_arrange import cmbNNCS_nest2lut, channel_nest2lut
 
 
 logger = logging.getLogger(__name__)
@@ -20,26 +20,24 @@ class MakeLutExecutor(BaseStageExecutor):
         self.out_lut: Asset = self.assets_out["lut"]
         out_lut_handler: HealpyMap
         self.nside = cfg.scenario.nside
-        self.nside_patch = cfg.model.patches.nside_patch
+        self.nside_patch = cfg.model.patches.get("nside_patch", None)
+
+        if self.nside_patch is not None and self.nside_patch != self.nside:
+            raise NotImplementedError("Nside of each patch must be same as Nside")
+
+        self.lut_style = cfg.model.patches.get("lut_style", None)
+        self.lut_method = {
+            None: None,
+            "cmbNNCS": cmbNNCS_nest2lut,
+            "channel": channel_nest2lut
+        }[self.lut_style]
+        if self.lut_method is None:
+            raise ValueError(f"lut style is not defined in the model.patches config")
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        raw_lut = make_pixel_index_lut(nside_obs=self.nside, nside_patches=self.nside_patch)
+        lut = self.lut_method(self.nside, self.nside_patch)
 
-        nside = self.nside
-        regions = [
-            [0, 4, 11],
-            [1, 5,  8],
-            [2, 6,  9],
-            [3, 7, 10],
-        ]
-
-        lut = np.zeros((4*nside, 3*nside)).astype(np.int64)
-        for j, tlps in enumerate(regions):
-            for i, tlp in enumerate(tlps):
-                r_ids = raw_lut[tlp]
-                patch = np.rot90(r_ids, 2)
-                lut[j*nside:(j+1)*nside, (i)*nside:(i+1)*nside] = patch
-
-        self.out_lut.write(data=lut)
+        with self.name_tracker.set_context("style", self.lut_style):
+            self.out_lut.write(data=lut)

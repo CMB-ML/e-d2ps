@@ -16,8 +16,10 @@ from cmbml.core.asset_handlers import Config
 from cmbml.core.asset_handlers import CambPowerSpectrum
 from cmbml.core.asset_handlers import HealpyMap
 from cmbml.utils.map_fields_helper import map_field_str2int
+
 from d2ps_nn.utils.minmax_scale import minmax_scale
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.numpy_dtype import get_np_dtype
 
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,7 @@ class PreprocessMapsExecutor(BaseStageExecutor):
             msg = f"Unsupported features type: {cfg.features_type}. Supported types are 'cmb' and 'obs'."
             raise ValueError(msg)
 
+        # Handles either observations or ground-truth CMB maps
         self.in_features = FeatureAsset.select(self.assets_in, 
                                                cfg.features_type, 
                                                self.instrument)
@@ -56,6 +59,9 @@ class PreprocessMapsExecutor(BaseStageExecutor):
             msg = f"Only minmax scaling is supported, not {self.scaling}."
             raise NotImplementedError(msg)
 
+        self.dtype = get_np_dtype(cfg.model.dtype)
+
+        self.lut_style = cfg.model.patches.get("lut_style", None)
         self.lut = None
         self.dataset_stats = None
 
@@ -70,7 +76,8 @@ class PreprocessMapsExecutor(BaseStageExecutor):
                 self.process_split(split)
 
     def load_lut(self) -> None:
-        self.lut = self.in_lut.read()
+        with self.name_tracker.set_context("style", self.lut_style):
+            self.lut = self.in_lut.read()
 
     def load_dataset_stats(self) -> None:
         # TODO: Use a class to better handle scaling/normalization
@@ -88,10 +95,11 @@ class PreprocessMapsExecutor(BaseStageExecutor):
     def process_sim(self, split) -> None:
         # Process observations
         for channel, asset in self.in_features.feature_iter():
-            obs_map = asset.read()
+            obs_map = asset.read(precision=self.dtype)
             map_stats = self.get_dataset_stats(channel)
             out = self.process_map(obs_map, map_stats)
-            self.out_feat.write(data=out)
+            with self.name_tracker.set_context("style", self.lut_style):
+                self.out_feat.write(data=out)
 
     def process_map(self,
                     map_data: np.ndarray,  # Or Astropy Quantity
@@ -103,12 +111,12 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         out = []
         for field_str in self.map_fields:
             field_int = map_field_str2int(field_str)
-            m = map_data[field_int][self.lut]
+            m = map_data[field_int]
             if self.scaling == "minmax":
                 m = minmax_scale(m, 
                                  dataset_stats[field_str]["vmin"], 
                                  dataset_stats[field_str]["vmax"])
-            out.append(m)
+            out.append(m[self.lut])
         out = np.array(out)
         return out
 

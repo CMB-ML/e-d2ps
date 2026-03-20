@@ -1,5 +1,5 @@
-d# Consistent properties for all stages:
-dtype     : float
+# Consistent properties for all stages:
+dtype     : float   # "float" is 32-bit; "double" is 64-bit. Conversions used in preprocess map, train, predict
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
 # Use ells follows numpy format [ell_min:ell_max:step] with multiple
@@ -7,14 +7,16 @@ lmax      : ${lmax}  # lmax for prediction of power spectra
 #   Remember that the max is not included in the range!
 use_ells  : "[2:${lmax}+1:1]"
 # use_ells  : "[2:31],[40:${lmax}:10]"
+
 # Scaling the power spectra
-#   Accepts: a float (a multiplier for the Dl)
-#            "Cl" (convert Dl back to Cl, not recommended unless using matching loss)
+#   Accepts: a float/int (a divisor for the Dl)
+#            cl (convert Dl back to Cl, not recommended unless using matching loss)
+#            meanstdv (for use with FindSpectraStatsExecutor)
 #            null (no scaling)
-# For non-Wishart loss function
-scale_ps  : null
+scale_ps  : ${scale_ps}
+
 final_activation: null
-use_batch_norm_enc: true
+use_batch_norm_enc: ${use_batch_norm_enc}
 use_batch_norm_dec: false
 # For Wishart loss function
 # scale_ps  : Cl
@@ -39,10 +41,12 @@ train:
   device            : null
 
   # Data loading
+  use_preload       : true
   batch_size        : 5
   num_loader_workers: 0
   # Training parameters
-  learning_rate     : 0.0002
+  learning_rate     : ${learning_rate}
+  optimizer         : ${optimizer}
 
   # Epochs
   n_epochs          : ${num_epochs}
@@ -52,7 +56,7 @@ train:
   earliest_best     : 0  # Earliest epoch to save the best model
                          #   when debugging with small datasets and low total epochs, 
                          #   set to 0 to allow finding a best model at the very start
-  checkpoint_every  : 10     # checkpoint every this number of epochs
+  checkpoint_every  : 30000000     # checkpoint every this number of epochs
   extra_check       : []  # Extra checkpoints to save
   # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 

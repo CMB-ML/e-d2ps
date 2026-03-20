@@ -230,7 +230,7 @@ def get_split_analysis(ells, thry_ps, pred_ps, bin_edges):
         return {'vectors': res_v, 'scalars': res_s}
 
 def bin_predictions(pred_ps, ells, bin_edges):
-    """
+    r"""
     Bin predictions into bandpowers with mode-count weighting.
 
     Parameters

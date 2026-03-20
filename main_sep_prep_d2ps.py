@@ -22,27 +22,30 @@ from cmbml.core import (
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 from d2ps_nn import (
     MakeLutExecutor,
+    MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
+
+    CheckGPULoadExecutor,
     TrainingExecutor,
     PredictExecutor,
-    CheckGPULoadExecutor,
-    PowerSpectrumAnalysisExecutor,
-    # PerSplitAnalysis,
-    # PowerSpectrumAggExecutor,
-    ShowPredictionsExecutor,
-    ShowBWPredictionsExecutor,
     LossPlotExecutor,
-    # ShowIndivPredictionsExecutor,
-    # ErrorAnalysisExecutor,
-    # ShowPredictionsWithChiSquareExecutor,
-    # ShowRelativeError,
-    # ShowCosmicFractions,
-    # ShowChiSquare,
-    BundlePredExecutor, 
-    BundleTrueExecutor,
-    ShowTrebleEll
+    ShowPredictionsPeaksExecutor,
+    # # PowerSpectrumAnalysisExecutor,
+    # # PerSplitAnalysis,
+    # # PowerSpectrumAggExecutor,
+    # # ShowPredictionsExecutor,
+    # # ShowBWPredictionsExecutor,
+    # # ShowIndivPredictionsExecutor,
+    # # ErrorAnalysisExecutor,
+    # # ShowPredictionsWithChiSquareExecutor,
+    # # ShowRelativeError,
+    # # ShowCosmicFractions,
+    # # ShowChiSquare,
+    # # BundlePredExecutor, 
+    # # BundleTrueExecutor,
+    # # ShowTrebleEll
     )
 
 
@@ -54,6 +57,7 @@ def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
         MakeLutExecutor,
+        MakePosEncLutExecutor,
         FindDatasetStatsParallelExecutor,
         PreprocessMapsExecutor,
         PreprocessSpectraExecutor
@@ -65,15 +69,16 @@ def prep_run(cfg):
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
+        CheckGPULoadExecutor,
         TrainingExecutor,
         PredictExecutor,
-        PowerSpectrumAnalysisExecutor,
-        ShowPredictionsExecutor,
-        ShowBWPredictionsExecutor,
         LossPlotExecutor,
-        BundleTrueExecutor,
-        BundlePredExecutor,
-        ShowTrebleEll
+        ShowPredictionsPeaksExecutor,
+        # # PowerSpectrumAnalysisExecutor,
+        # # ShowBWPredictionsExecutor,
+        # # BundleTrueExecutor,
+        # # BundlePredExecutor,
+        # # ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -93,8 +98,8 @@ def run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
              PredictExecutor,
-             PowerSpectrumAnalysisExecutor,
-             ShowPredictionsExecutor,
+            #  PowerSpectrumAnalysisExecutor,
+            #  ShowPredictionsExecutor,
              ]
     run(cfg, pipes)
 
@@ -120,6 +125,6 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     prep_run()
-    train_runs()
-    prep_run_planck()
-    run_planck()
+    # train_runs()
+    # prep_run_planck()
+    # run_planck()

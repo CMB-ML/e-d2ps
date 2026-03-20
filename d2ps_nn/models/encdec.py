@@ -74,6 +74,39 @@ class Down(nn.Module):
         return x
 
 
+class Encoder(nn.Module):
+    def __init__(self,
+                 n_in_channels,
+                 n_init_features,
+                 use_batch_norm_enc,
+                 dropout_rate,
+                 activation,
+                 n_levels):
+        super().__init__()
+        self.in_c = DoubleConv(in_features=n_in_channels,
+                               out_channels=n_init_features,
+                               use_batch_norm=use_batch_norm_enc,
+                               dropout_rate=dropout_rate,
+                               activation=activation)
+
+        downs = []
+        curr_features = n_init_features
+        for _ in range(n_levels):
+            downs.append(Down(curr_features, 
+                              use_batch_norm=use_batch_norm_enc,
+                              dropout_rate=dropout_rate,
+                              activation=activation))
+            curr_features *= 2
+        self.dns = nn.ModuleList(downs)
+        self.bottleneck_features = curr_features
+
+    def forward(self, x):
+        x = self.in_c(x)
+        for down in self.dns:
+            x = down(x)
+        return x
+
+
 class FCNDecoder(nn.Module):
     def __init__(self, in_channels, 
                  mid_channels, 
@@ -110,6 +143,7 @@ class FCNDecoder(nn.Module):
 class SimpleEncDec(nn.Module):
     def __init__(
                  self,
+                 nside,          # Unused, for compatibility with TLP models
                  n_ells,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
@@ -123,27 +157,21 @@ class SimpleEncDec(nn.Module):
                  note='',
                  ):
         super().__init__()
+        self.in_shape = (n_in_channels, 4*nside, 3*nside)
         self.note = note
 
-        self.in_c = DoubleConv(in_features=n_in_channels,
-                               out_channels=n_init_features,
-                               use_batch_norm=use_batch_norm_enc,
-                               dropout_rate=dropout_rate,
-                               activation=activation)
+        self.enc = Encoder(
+            n_in_channels = n_in_channels,
+            n_init_features=n_init_features,
+            use_batch_norm_enc=use_batch_norm_enc,
+            dropout_rate=dropout_rate,
+            activation=activation,
+            n_levels=n_levels
+        )
 
-        downs = []
-        curr_features = n_init_features
-        for _ in range(n_levels):
-            downs.append(Down(curr_features, 
-                              use_batch_norm=use_batch_norm_enc,
-                              dropout_rate=dropout_rate,
-                              activation=activation))
-            curr_features *= 2
-        self.dns = nn.ModuleList(downs)
-
-        self.out = FCNDecoder(
-            in_channels=curr_features,
-            mid_channels=curr_features // 2,
+        self.dec = FCNDecoder(
+            in_channels=self.enc.bottleneck_features,
+            mid_channels=self.enc.bottleneck_features // 2,
             out_channels=n_ells,
             use_batch_norm=use_batch_norm_dec,
             dropout_rate=dropout_rate,
@@ -153,8 +181,6 @@ class SimpleEncDec(nn.Module):
         )
 
     def forward(self, x):
-        x = self.in_c(x)
-        for down in self.dns:
-            x = down(x)
-        x = self.out(x)
+        x = self.enc(x)
+        x = self.dec(x)
         return x

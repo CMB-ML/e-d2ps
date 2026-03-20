@@ -12,38 +12,38 @@ defaults:
   - override hydra/job_logging: custom_log
   - _self_
 
-# When creating multiple datasets, using interpolation like this may be easier:
-# dataset_name       : I_128_1750_d1_0rg
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "D2PS_Multiple_Repeats/${features_type}2ps_${iter_num}/"
+working_dir        : &wd "${features_type}2ps_scale-${model.scale_ps}_${nn_model}/Nsims${n_sims}_lr${learning_rate}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Iteration ${iter_num}"
-pl_fig_model_name  : "${features_type} to PS, Iteration ${iter_num}, On Planck"
-hydra:
-  mode: MULTIRUN
-  run:
-    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
-  sweep:
-    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
-    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
-                                                #   This is a minor bug, not worth fixing.
-  verbose          : false
-  sweeper:
-    params:
-      iter_num    :  1 #, 2, 3, 4, 5, 6, 7, 8, 9, 10
-iter_num: 0
+fig_model_name     : "${features_type} to PS, learning rate: ${learning_rate}"
+pl_fig_model_name  : "${features_type} to PS, On Planck"
+
+scale_ps: 4000
+optimizer: Adam
+
+# px_arrange: cmbNNCS
+# nn_model: MobileViTCMBRegressor
+# norm_kind: gn
+
+# px_arrange: cmbNNCS
+# nn_model: SimpleEncDec
+# use_batch_norm_enc: true
+use_batch_norm_enc: false
+
+px_arrange: channel
+nn_model: TLPEncAggDec
+nn_model: TLPEnc2AggDec
+
+use_pos_enc_lut: false
+# use_pos_enc_lut: true
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
 fig_type: ['pdf', 'png']
 
-# splits:
-#   Train:
-#     n_sims: 20000
-
 # Limit the number of simulations for which to generate figures
-n_show_cap           : 10
+n_show_cap           : 5
 n_show_treble_ell    : null
 
 # Settings below this point are used for interpolation.
@@ -55,17 +55,17 @@ lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
-# features_type      : cmb
-features_type      : obs
+features_type      : cmb
+# features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 30000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : ["best"]
+use_epochs           : ["final"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
@@ -76,4 +76,4 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)

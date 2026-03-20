@@ -18,6 +18,7 @@ from cmbml.core import (
 from cmbml.utils.planck_instrument import make_instrument, Instrument
 from cmbml.core.asset_handlers import Config # Import for typing hint
 from cmbml.core.asset_handlers.healpy_map_handler import HealpyMap # Import for typing hint
+from d2ps_nn.utils.numpy_dtype import get_np_dtype
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class TaskTarget(NamedTuple):
     obs_asset: FrozenAsset
     split_name: str
     sim_num: str
+    np_dtype: np.dtype
 
 
 class FindDatasetStatsParallelExecutor(BaseStageExecutor):
@@ -63,6 +65,8 @@ class FindDatasetStatsParallelExecutor(BaseStageExecutor):
         self.scale_scan_method = None
         self.scale_sift_method = None
         self.set_scale_find_methods()
+
+        self.dtype = get_np_dtype(cfg.model.dtype)
 
         self.n_workers = cfg.model.preprocess.n_workers
 
@@ -133,7 +137,8 @@ class FindDatasetStatsParallelExecutor(BaseStageExecutor):
                     tasks.append(TaskTarget(cmb_asset=cmb,
                                             obs_asset=obs,
                                             split_name=split.name, 
-                                            sim_num=sim))
+                                            sim_num=sim,
+                                            np_dtype=self.dtype))
         return tasks
 
     def try_a_task(self, process, task: TaskTarget):
@@ -156,7 +161,7 @@ def find_min_max(task_target: TaskTarget, freqs, map_fields):
         for each detector and field.
     """
     cmb = task_target.cmb_asset
-    cmb_data = cmb.handler.read(cmb.path)
+    cmb_data = cmb.handler.read(cmb.path, precision=task_target.np_dtype)
     obs = task_target.obs_asset
 
     res = {'cmb': {}}

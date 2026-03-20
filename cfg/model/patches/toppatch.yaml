@@ -2,3 +2,6 @@ name           : toppatch
 seed_template  : "{split}_patch"
 nside_patch    : ${nside}  # Use same a Nside; grab full top-level pixels
 mask_threshold : 1.0  # 100% of pixels in the patch must be unmasked to be valid
+# lut_style      : cmbNNCS  # Produces unwrapped 2D maps with discontinuity
+lut_style      : ${px_arrange}  # Produces unwrapped "3D" maps without discontinuity (0 axis is TLP)
+pos_encoding   : null
