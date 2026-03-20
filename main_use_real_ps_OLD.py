@@ -25,7 +25,7 @@ from cmbml.analysis import (
     CommonRealPostExecutor,
     MakeRealPowerSpectrumExecutor
 )
-from d2ps_nn import (
+from d2ps_nn.ex import (
     PowerSpectrumAnalysisExecutor,
     PerSplitAnalysis,
     ShowRelativeError,
