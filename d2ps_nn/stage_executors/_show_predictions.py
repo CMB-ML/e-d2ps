@@ -11,7 +11,6 @@ from cmbml.core import Split, Asset, AssetWithPathAlts
 from cmbml.core.executor_base import BaseStageExecutor
 from cmbml.core.asset_handlers import Figure, TextPowerSpectrum, NumpyPowerSpectrum, CambPowerSpectrum, PandasCsvHandler
 from cmbml.utils.number_report import float_to_latex
-from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
 
