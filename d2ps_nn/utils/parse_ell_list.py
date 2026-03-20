@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def safe_eval_plus(expr):
     """Safely evaluate a simple addition expression like '11+1' or '20'."""
     parts = expr.split('+')
@@ -14,8 +15,14 @@ def parse_slice(slice_str):
     ells = np.arange(*parts) if len(parts) > 1 else np.array([parts[0]])
     return ells
 
-def parse_ells(ell_list_str):
+def parse_ells(ell_list_str: str, lmax=None):
     """Parses a list of slices from a string and returns a concatenated numpy array."""
+    if lmax is not None:
+        try:
+            ell_list_str = ell_list_str.format(lmax=lmax)
+        except:
+            print("A!!!!!!!")
+            exit()
     segments = ell_list_str.split(',')
     ells = []
     for seg in segments:

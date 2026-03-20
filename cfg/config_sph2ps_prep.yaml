@@ -1,0 +1,10 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - config_sph2ps_sim
+  - _self_
+
+working_dir: ${prep_working_dir}
+lmax_in    : 1280
+lmax_out   :  320
+model:
+  use_ells   : "[2:{lmax}+1:1]"

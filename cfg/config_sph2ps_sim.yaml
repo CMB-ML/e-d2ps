@@ -1,0 +1,34 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - local_system   : generic_lab
+  - file_system    : common_fs
+  - pipeline       : assembly_sph2ps
+  - scenario       : scenario
+  - model/sim      : sim_flex_fgs
+  - splits         : all_big
+  # - model/analysis/metrics    : metrics
+  - override hydra/job_logging: custom_log
+  - _self_
+
+# When creating multiple datasets, using interpolation like this may be easier:
+# dataset_name       : I_128_1750_d1_0rg
+dataset_name       : "${map_fields}_${scenario.nside}_20850_sph2ps"
+working_dir        : &wd "Simulation_Working_sph2ps/"
+trained_wd         : *wd
+prep_working_dir   : "sph2ps-prep/"
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose      : false
+
+fig_type: ['pdf', 'png']
+
+# Limit the number of simulations for which to generate figures
+n_show_cap         : 10
+nside              : 512
+lmax               : 1280
+map_fields         : "I"

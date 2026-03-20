@@ -1,0 +1,41 @@
+defaults:
+  - _self_
+  - assembly_sim
+  - pipes_on_sims
+
+make_cheap_real_ps:
+  assets_out:
+    cmb_ps:
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_cheap_real.txt"
+  assets_in:
+    cmb_ps: {stage: make_theory_ps}
+  dir_name: Simulation_K_Cheap_Realization_PS
+  splits: &all_splits
+    - train
+    - test
+    - valid
+
+# Bundling
+bundle_thry: # D_gather_ps.py / BundleThryExecutor
+  assets_out:
+    ps_bundle:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}thry_ps_{ellmax}_{split}.npy"
+  assets_in:
+    ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working_sph2ps/}
+  splits: *all_splits
+  dir_name: &bundle_path Bundle
+  make_stage_log: False
+
+bundle_real: # D_gather_ps.py / BundleRealExecutor
+  assets_out:
+    ps_bundle:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}real_ps_{ellmax}_{split}.npy"
+  assets_in:
+    ps: {stage: make_cheap_real_ps, orig_name: cmb_ps, working: Simulation_Working_sph2ps/}
+  splits: *all_splits
+  epochs: ${use_epochs_ps_stats}
+  dir_name: *bundle_path
+  make_stage_log: False
