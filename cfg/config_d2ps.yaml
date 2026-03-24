@@ -31,7 +31,7 @@ optimizer: Adam
 # norm_kind: gn
 
 px_arrange: cmbNNCS
-# nn_model: SimpleEncDec
+nn_model: SimpleEncDec
 # use_batch_norm_enc: true
 use_batch_norm_enc: false
 enc_norm: null
