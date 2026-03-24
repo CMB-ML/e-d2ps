@@ -14,8 +14,14 @@ from cmbml.sims import (
     ParamConfigExecutor,
     TheoryPSExecutor
     )
-from sph2ps_nn.stage_executors.B_make_cheap_ps import CheapRealizationPSExecutor
-from sph2ps_nn.stage_executors.D_gather_ps import BundleThryExecutor, BundleRealExecutor
+from sph2ps_nn.ex import (
+    CheapRealizationPSExecutor,
+    GatherSpectraExecutor,
+    GatherParamsExecutor,
+    PrepSpectraExecutor,
+    PrepParamsExecutor
+) 
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +44,10 @@ def run_sim(cfg):
 def run_prep(cfg):
     logger.debug(f"Running on simulations in {__file__}")
     pipes = [
-        BundleRealExecutor,
-        BundleThryExecutor
+        GatherSpectraExecutor,
+        GatherParamsExecutor,
+        PrepSpectraExecutor,
+        PrepParamsExecutor
         ]
     run(cfg, pipes)
 

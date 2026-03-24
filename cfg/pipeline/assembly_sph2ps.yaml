@@ -17,25 +17,47 @@ make_cheap_real_ps:
     - valid
 
 # Bundling
-bundle_thry: # D_gather_ps.py / BundleThryExecutor
+ps_bundle: # D_gather_ps.py / BundleExecutor
   assets_out:
     ps_bundle:
       handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}thry_ps_{ellmax}_{split}.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/{src}_ps_{ellmax}_{split}.npy"
   assets_in:
-    ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working_sph2ps/}
+    thry_ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working_sph2ps/}
+    real_ps: {stage: make_cheap_real_ps, orig_name: cmb_ps, working: Simulation_Working_sph2ps/}
   splits: *all_splits
-  dir_name: &bundle_path Bundle
+  dir_name: &bundle_path A_Bundle
   make_stage_log: False
 
-bundle_real: # D_gather_ps.py / BundleRealExecutor
+prep_spectra:
   assets_out:
-    ps_bundle:
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}real_ps_{ellmax}_{split}.npy"
+    spectra_stats:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/spectra_stats_{split}.yaml"
   assets_in:
-    ps: {stage: make_cheap_real_ps, orig_name: cmb_ps, working: Simulation_Working_sph2ps/}
+    ps_bundle: {stage: ps_bundle}
   splits: *all_splits
-  epochs: ${use_epochs_ps_stats}
+  dir_name: B_Prep
+  make_stage_log: False
+
+params_bundle:
+  assets_out:
+    params_bundle:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/params_{split}.npy"
+  assets_in:
+    cosmo_config: {stage: make_cosmo_configs, working: Simulation_Working_sph2ps/}
+  splits: *all_splits
   dir_name: *bundle_path
+  make_stage_log: False
+
+prep_params:
+  assets_out:
+    param_stats:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/param_stats_{split}.yaml"
+  assets_in:
+    params_bundle: {stage: params_bundle}
+  splits: *all_splits
+  dir_name: B_Prep
   make_stage_log: False

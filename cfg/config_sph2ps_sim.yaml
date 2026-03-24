@@ -5,14 +5,14 @@ defaults:
   - pipeline       : assembly_sph2ps
   - scenario       : scenario
   - model/sim      : sim_flex_fgs
-  - splits         : all_big
-  # - model/analysis/metrics    : metrics
+  # - splits         : all_big
   - override hydra/job_logging: custom_log
   - _self_
 
 # When creating multiple datasets, using interpolation like this may be easier:
 # dataset_name       : I_128_1750_d1_0rg
-dataset_name       : "${map_fields}_${scenario.nside}_20850_sph2ps"
+dataset_name       : "TEST_JUNK"
+# dataset_name       : "${map_fields}_${scenario.nside}_20850_sph2ps"
 working_dir        : &wd "Simulation_Working_sph2ps/"
 trained_wd         : *wd
 prep_working_dir   : "sph2ps-prep/"
@@ -26,6 +26,22 @@ hydra:
   verbose      : false
 
 fig_type: ['pdf', 'png']
+
+# For using param2ps
+log_As: false
+param_prep: minmax  # Options: none, minmax, meanstdv
+
+splits:
+  name: "adsf"
+  Test1:
+    n_sims: 2
+    n_sims_cap: ${n_infer_cap}
+    ps_fidu_fixed: true
+  Test2:
+    n_sims: 2
+    n_sims_cap: ${n_infer_cap}
+  Train:
+    n_sims: 20
 
 # Limit the number of simulations for which to generate figures
 n_show_cap         : 10

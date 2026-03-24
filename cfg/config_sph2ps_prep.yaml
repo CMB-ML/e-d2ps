@@ -8,3 +8,8 @@ lmax_in    : 1280
 lmax_out   :  320
 model:
   use_ells   : "[2:{lmax}+1:1]"
+
+src:
+  input: params
+  output: real
+force_new: false
