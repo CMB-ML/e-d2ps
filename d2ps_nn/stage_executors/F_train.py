@@ -364,7 +364,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
                     loss.backward()
 
                     # Diagnostics before step
-                    grad_norm = _get_global_grad_norm(model.parameters(), max_norm=float("inf")).item()
+                    grad_norm = _get_global_grad_norm(model.parameters())
                     param_norm = _get_param_norm(model)
 
                     # Optimizer step
