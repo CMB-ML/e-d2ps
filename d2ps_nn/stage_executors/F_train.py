@@ -4,7 +4,6 @@ from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
-from torch.nn.utils import clip_grad_norm_
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
@@ -365,7 +364,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
                     loss.backward()
 
                     # Diagnostics before step
-                    grad_norm = clip_grad_norm_(model.parameters(), max_norm=float("inf")).item()
+                    grad_norm = _get_global_grad_norm(model.parameters(), max_norm=float("inf")).item()
                     param_norm = _get_param_norm(model)
 
                     # Optimizer step
@@ -448,6 +447,17 @@ def _get_update_norm(model, old_params, norm_type=2.0):
         if p.requires_grad:
             vals.append((p.detach() - old_params[old_idx]).norm(norm_type))
             old_idx += 1
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
+
+
+def _get_global_grad_norm(model, norm_type=2.0):
+    vals = [
+        p.grad.detach().norm(norm_type)
+        for p in model.parameters()
+        if p.requires_grad and p.grad is not None
+    ]
     if not vals:
         return 0.0
     return torch.norm(torch.stack(vals), norm_type).item()
