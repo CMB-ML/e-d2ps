@@ -13,14 +13,17 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}/Nsims-${n_sims}_lr-${learning_rate}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_${optimizer}_en-${enc_norm}_${activation}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_${optimizer}_en-${enc_norm}_${activation}_${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, learning rate: ${learning_rate} scale-${model.scale_ps} pe-${use_pos_enc_lut} ${optimizer} en-${enc_norm} ${activation}"
+fig_model_name     : "${features_type} to PS, lr: ${learning_rate} scale-${model.scale_ps} pe-${use_pos_enc_lut} ${optimizer} en-${enc_norm} ${activation} iter ${iter_num}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 scale_ps: 4000
 scale_ps: null
+use_pos_enc_lut: false
+use_pos_enc_lut: true
+
 optimizer: Adam
 
 # px_arrange: cmbNNCS
@@ -32,14 +35,10 @@ px_arrange: cmbNNCS
 # use_batch_norm_enc: true
 use_batch_norm_enc: false
 enc_norm: null
-activation: relu
 
 # px_arrange: channel
 # nn_model: TLPEncAggDec
 # nn_model: TLPEnc2AggDec
-
-# use_pos_enc_lut: false
-use_pos_enc_lut: true
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
