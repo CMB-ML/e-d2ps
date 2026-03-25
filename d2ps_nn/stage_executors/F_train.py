@@ -4,7 +4,6 @@ from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
-from torch.nn.utils import clip_grad_norm_
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
@@ -51,6 +50,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         # How model is updated
         self.learning_rate = cfg.model.train.learning_rate
         self.optimizer     = cfg.model.train.optimizer
+        self.adamw_wd      = cfg.model.train.get("adamw_wd", None)
 
         # How long it runs
         self.n_epochs      = cfg.model.train.n_epochs
@@ -265,12 +265,43 @@ class TrainingExecutor(BaseD2PSExecutor):
         if self.optimizer == "Adam":
             optim_dict = dict(lr=self.learning_rate)
             optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
-        elif self.optimizer == "AdamW":
-            optim_dict = dict(lr=self.learning_rate, weight_decay=1e-4)
-            optimizer = torch.optim.AdamW(model.parameters(), **optim_dict)
-        logger.info(f"Optimizer: {optimizer.__class__} with {optim_dict}")
-        return optimizer
 
+        elif self.optimizer == "AdamW":
+            if self.adamw_wd is None:
+                raise ValueError(
+                    "Must set a value for AdamW weight decay in config, "
+                    "even if forcing it to 0.0"
+                )
+
+            decay, no_decay = [], []
+            for name, p in model.named_parameters():
+                if not p.requires_grad:
+                    continue
+                if p.ndim == 1 or name.endswith(".bias"):
+                    no_decay.append(p)
+                else:
+                    decay.append(p)
+
+            optim_dict = dict(
+                lr=self.learning_rate,
+                weight_decay=self.adamw_wd,
+                n_decay_params=len(decay),
+                n_no_decay_params=len(no_decay),
+            )
+
+            optimizer = torch.optim.AdamW(
+                [
+                    {"params": decay, "weight_decay": self.adamw_wd},
+                    {"params": no_decay, "weight_decay": 0.0},
+                ],
+                lr=self.learning_rate,
+            )
+
+        else:
+            raise ValueError(f"Unknown optimizer {self.optimizer}")
+
+        logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
+        return optimizer
 
 class OverfitTrainingExecutor(TrainingExecutor):
     def __init__(self, cfg, stage_str="train"):
@@ -365,7 +396,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
                     loss.backward()
 
                     # Diagnostics before step
-                    grad_norm = clip_grad_norm_(model.parameters(), max_norm=float("inf")).item()
+                    grad_norm = _get_global_grad_norm(model)
                     param_norm = _get_param_norm(model)
 
                     # Optimizer step
@@ -448,6 +479,17 @@ def _get_update_norm(model, old_params, norm_type=2.0):
         if p.requires_grad:
             vals.append((p.detach() - old_params[old_idx]).norm(norm_type))
             old_idx += 1
+    if not vals:
+        return 0.0
+    return torch.norm(torch.stack(vals), norm_type).item()
+
+
+def _get_global_grad_norm(model, norm_type=2.0):
+    vals = [
+        p.grad.detach().norm(norm_type)
+        for p in model.parameters()
+        if p.requires_grad and p.grad is not None
+    ]
     if not vals:
         return 0.0
     return torch.norm(torch.stack(vals), norm_type).item()
