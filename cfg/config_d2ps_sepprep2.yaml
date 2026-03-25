@@ -16,12 +16,14 @@ hydra:
   sweeper:
     params:
       learning_rate: 5e-6, 1e-5, 2e-5
-      iter_num: 1, 2, 3
-      activation: relu, gelu
+      adamw_wd: 0.0, 1e-6, 1e-5, 1e-4, 1e-3
+      iter_num: ${iter_num_sweep}
+      # activation: relu, gelu
 n_sims: 5
 iter_num: 0
 learning_rate: 0
-activation: null
+activation: relu
+adamw_wd: 0
 
 splits:
   Train:

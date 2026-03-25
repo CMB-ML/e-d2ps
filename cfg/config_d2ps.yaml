@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_${optimizer}_en-${enc_norm}_${activation}_${iter_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR_AdamW/Nsims-${n_sims}_lr-${learning_rate}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_${optimizer}_en-${enc_norm}_${activation}_${iter_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, lr: ${learning_rate} scale-${model.scale_ps} pe-${use_pos_enc_lut} ${optimizer} en-${enc_norm} ${activation} iter ${iter_num}"
@@ -21,8 +21,11 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 scale_ps: 4000
 scale_ps: null
+iter_num_sweep: 1,2
+iter_num_sweep: 3,4
+
 use_pos_enc_lut: false
-use_pos_enc_lut: true
+# use_pos_enc_lut: true
 
 optimizer: Adam
 

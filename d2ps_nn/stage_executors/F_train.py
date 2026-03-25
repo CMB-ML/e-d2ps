@@ -50,6 +50,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         # How model is updated
         self.learning_rate = cfg.model.train.learning_rate
         self.optimizer     = cfg.model.train.optimizer
+        self.adamw_wd      = cfg.model.train.get("adamw_wd", None)
 
         # How long it runs
         self.n_epochs      = cfg.model.train.n_epochs
@@ -264,12 +265,43 @@ class TrainingExecutor(BaseD2PSExecutor):
         if self.optimizer == "Adam":
             optim_dict = dict(lr=self.learning_rate)
             optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
-        elif self.optimizer == "AdamW":
-            optim_dict = dict(lr=self.learning_rate, weight_decay=1e-4)
-            optimizer = torch.optim.AdamW(model.parameters(), **optim_dict)
-        logger.info(f"Optimizer: {optimizer.__class__} with {optim_dict}")
-        return optimizer
 
+        elif self.optimizer == "AdamW":
+            if self.adamw_wd is None:
+                raise ValueError(
+                    "Must set a value for AdamW weight decay in config, "
+                    "even if forcing it to 0.0"
+                )
+
+            decay, no_decay = [], []
+            for name, p in model.named_parameters():
+                if not p.requires_grad:
+                    continue
+                if p.ndim == 1 or name.endswith(".bias"):
+                    no_decay.append(p)
+                else:
+                    decay.append(p)
+
+            optim_dict = dict(
+                lr=self.learning_rate,
+                weight_decay=self.adamw_wd,
+                n_decay_params=len(decay),
+                n_no_decay_params=len(no_decay),
+            )
+
+            optimizer = torch.optim.AdamW(
+                [
+                    {"params": decay, "weight_decay": self.adamw_wd},
+                    {"params": no_decay, "weight_decay": 0.0},
+                ],
+                lr=self.learning_rate,
+            )
+
+        else:
+            raise ValueError(f"Unknown optimizer {self.optimizer}")
+
+        logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
+        return optimizer
 
 class OverfitTrainingExecutor(TrainingExecutor):
     def __init__(self, cfg, stage_str="train"):
