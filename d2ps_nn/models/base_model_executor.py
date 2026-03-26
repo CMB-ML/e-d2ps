@@ -145,15 +145,21 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             in_channels=n_channels,
             n_outputs=len(self.ells),
             norm_kind=self.norm_kind,
-            widths=(32, 64, 96, 128),
-            transformer_dims=(96, 120, 144),
+            # widths=(32, 64, 96, 128),
+            widths=(24, 48, 64, 96),
+            # transformer_dims=(96, 120, 144),
+            transformer_dims=(64, 80, 96),
             patch_size=(2, 2),
-            transformer_depths=(2, 2, 2),
+            # transformer_depths=(2, 2, 2),
+            transformer_depths=(1, 1, 1),
             num_heads=(4, 4, 4),
             mlp_ratio=2.0,
             dropout=0.1,
-            head_hidden=512,
+            # head_hidden=512,
+            head_hidden=256
         )
+
+
         logger.info(f"Model params: {model_dict}")
         model = MobileViTCMBRegressor(**model_dict)
         model = model.to(self.device)
