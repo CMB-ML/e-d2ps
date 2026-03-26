@@ -4,8 +4,7 @@ from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
-from torch.cuda.amp import autocast, GradScaler
-
+from torch.amp import GradScaler, autocast
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
@@ -138,6 +137,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         all_train_pst_loss = []
         all_valid_pst_loss = []
 
+        scaler = torch.amp.grad_scaler.GradScaler()
+
         for epoch in range(start_epoch, self.n_epochs):
             # Training
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
@@ -149,16 +150,18 @@ class TrainingExecutor(BaseD2PSExecutor):
 
                     optimizer.zero_grad()
                     
-                    output = model(train_features)
+                    with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+                        output = model(train_features)
                     # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # loss = loss_function(output, train_label)
                     # loss.backward()
                     # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # exit()
 
-                    batch_train_loss = loss_function(output, train_label)
-                    batch_train_loss.backward()
-                    optimizer.step()
+                        batch_train_loss = loss_function(output, train_label)
+                    scaler.scale(batch_train_loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     batch_loss += batch_train_loss.item()
                 batch_loss /= len(train_dataloader)
