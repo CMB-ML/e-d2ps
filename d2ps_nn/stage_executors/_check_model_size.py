@@ -62,6 +62,7 @@ class CheckGPULoadExecutor(BaseD2PSExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
+        self.device = torch.device(self.device)
         if self.device.type != "cuda":
             raise RuntimeError("GPU VRAM checker requires a CUDA device.")
 
