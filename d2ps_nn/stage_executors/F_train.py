@@ -182,9 +182,8 @@ class TrainingExecutor(BaseD2PSExecutor):
                 all_train_pst_loss.append(train_pst_loss)
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"tra_{self.scale_ps.pre_name}: {train_pre_loss:.02e} | "
-                    f"tra_{self.scale_ps.post_name}: {train_pst_loss:.02e}"
-                    f"{note_min_loss}"
+                    f"train_{self.scale_ps.pre_name}: {train_pre_loss:.02e} | "
+                    f"train_{self.scale_ps.post_name}: {train_pst_loss:.02e}"
                 )
 
                 for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
@@ -200,8 +199,8 @@ class TrainingExecutor(BaseD2PSExecutor):
                 note_min_loss = " *" if valid_pre_loss == min(all_valid_pre_loss) else ""
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"val_{self.scale_ps.pre_name}: {valid_pre_loss:.02e} | "
-                    f"val_{self.scale_ps.post_name}: {valid_pst_loss:.02e}"
+                    f"valid_{self.scale_ps.pre_name}: {valid_pre_loss:.02e} | "
+                    f"valid_{self.scale_ps.post_name}: {valid_pst_loss:.02e}"
                     f"{note_min_loss}"
                 )
             self.out_loss_record.append([epoch + 1, batch_loss, valid_pre_loss, train_pre_loss, train_pst_loss, valid_pst_loss])
