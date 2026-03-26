@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import logging
 
 from tqdm import tqdm
@@ -18,6 +19,12 @@ from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class LossPair:
+    pre: float
+    pst: float
 
 
 class TrainingExecutor(BaseD2PSExecutor):
@@ -66,6 +73,9 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.extra_check   = cfg.model.train.extra_check
         self.earliest_best = cfg.model.train.earliest_best
 
+        self.dtype_amp      = torch.float16
+        self.limit_n_train_infer = 100
+
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
@@ -82,6 +92,17 @@ class TrainingExecutor(BaseD2PSExecutor):
         )
         logger.info(f"Train dataloader: {train_dataloader_params}")
         train_dataloader = DataLoader(train_dataset, **train_dataloader_params)
+
+        train_infer_dataset = self.set_up_dataset(train_split, 
+                                                  override_nsims=self.limit_n_train_infer)
+        train_infer_dataloader_params = dict(
+            batch_size=self.batch_size, 
+            shuffle=True,
+            num_workers=self.num_workers
+        )
+        logger.info(f"Train dataloader: {train_infer_dataloader_params}")
+        train_infer_dataloader = DataLoader(train_infer_dataset, 
+                                            **train_infer_dataloader_params)
 
         valid_dataset = self.set_up_dataset(valid_split)
         valid_dataloader_params = dict(
@@ -150,14 +171,8 @@ class TrainingExecutor(BaseD2PSExecutor):
 
                     optimizer.zero_grad()
                     
-                    with autocast(device_type="cuda", dtype=torch.float16):
+                    with autocast(device_type="cuda", dtype=self.dtype_amp):
                         output = model(train_features)
-                    # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
-                    # loss = loss_function(output, train_label)
-                    # loss.backward()
-                    # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
-                    # exit()
-
                         batch_train_loss = loss_function(output, train_label)
                     scaler.scale(batch_train_loss).backward()
                     scaler.step(optimizer)
@@ -168,48 +183,34 @@ class TrainingExecutor(BaseD2PSExecutor):
                 all_batch_loss.append(batch_loss)
 
             # Validation
-            model.eval()
-            train_pre_loss = 0
-            valid_pre_loss = 0
-            train_pst_loss = 0
-            valid_pst_loss = 0
-            with torch.no_grad():
-                for train_features, train_label in tqdm(train_dataloader, leave=False):
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    train_label = train_label.to(device=self.device, dtype=self.dtype)
-                    output = model(train_features)
-                    train_pre_loss += loss_function(output, train_label).item()
-                    train_pst_loss += loss_function(post(output), post(train_label)).item()
-                train_pre_loss /= len(train_dataloader)
-                train_pst_loss /= len(train_dataloader)
-                all_train_pre_loss.append(train_pre_loss)
-                all_train_pst_loss.append(train_pst_loss)
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"train_{self.scale_ps.pre_name}: {train_pre_loss:.02e} | "
-                    f"train_{self.scale_ps.post_name}: {train_pst_loss:.02e}"
-                )
+            train_loss: LossPair = self.evaluate_loader(
+                train_infer_dataloader, model, loss_function, post)
+            all_train_pre_loss.append(train_loss.pre)
+            all_train_pst_loss.append(train_loss.pst)
+            logger.info(
+                f"Epoch {epoch + 1:<{n_epoch_digits}} "
+                f"train_{self.scale_ps.pre_name}: {train_loss.pre:.02e} | "
+                f"train_{self.scale_ps.post_name}: {train_loss.pst:.02e}"
+            )
 
-                for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
-                    valid_features = valid_features.to(device=self.device, dtype=self.dtype)
-                    valid_label = valid_label.to(device=self.device, dtype=self.dtype)
-                    output = model(valid_features)
-                    valid_pre_loss += loss_function(output, valid_label).item()
-                    valid_pst_loss += loss_function(post(output), post(valid_label)).item()
-                valid_pre_loss /= len(valid_dataloader)
-                valid_pst_loss /= len(valid_dataloader)
-                all_valid_pre_loss.append(valid_pre_loss)
-                all_valid_pst_loss.append(valid_pst_loss)
-                note_min_loss = " *" if valid_pre_loss == min(all_valid_pre_loss) else ""
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"valid_{self.scale_ps.pre_name}: {valid_pre_loss:.02e} | "
-                    f"valid_{self.scale_ps.post_name}: {valid_pst_loss:.02e}"
-                    f"{note_min_loss}"
-                )
-            self.out_loss_record.append([epoch + 1, batch_loss, valid_pre_loss, train_pre_loss, train_pst_loss, valid_pst_loss])
+            valid_loss: LossPair = self.evaluate_loader(
+                valid_dataloader, model, loss_function, post)
+            all_valid_pre_loss.append(valid_loss.pre)
+            all_valid_pst_loss.append(valid_loss.pst)
+            note_min_loss = " *" if valid_loss.pre == min(all_valid_pre_loss) else ""
+            logger.info(
+                f"Epoch {epoch + 1:<{n_epoch_digits}} "
+                f"valid_{self.scale_ps.pre_name}: {valid_loss.pre:.02e} | "
+                f"valid_{self.scale_ps.post_name}: {valid_loss.pst:.02e}"
+                f"{note_min_loss}"
+            )
+            self.out_loss_record.append([epoch + 1, batch_loss, 
+                                         valid_loss.pre, 
+                                         train_loss.pre, 
+                                         valid_loss.pst, 
+                                         train_loss.pst])
 
-            is_best_condition_a = valid_pre_loss == min(all_valid_pre_loss)
+            is_best_condition_a = valid_loss.pre == min(all_valid_pre_loss)
             is_best_condition_b = epoch >= self.earliest_best
             if is_best_condition_a and is_best_condition_b:
                 with self.name_tracker.set_context("epoch", "best"):
@@ -229,7 +230,30 @@ class TrainingExecutor(BaseD2PSExecutor):
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
 
-    def set_up_dataset(self, split: Split) -> None:
+    def evaluate_loader(self, loader, model, loss_func, post) -> LossPair:
+        model.eval()
+        pre_loss = 0.0
+        pst_loss = 0.0
+
+        with torch.no_grad():
+            for features, labels in loader:
+                features = features.to(device=self.device, dtype=self.dtype)
+                labels = labels.to(device=self.device, dtype=self.dtype)
+
+                with autocast(device_type="cuda", dtype=self.dtype_amp):
+                    output = model(features)
+                    pre = loss_func(output, labels)
+                    pst = loss_func(post(output), post(labels))
+
+                pre_loss += pre.item()
+                pst_loss += pst.item()
+
+        pre_loss /= len(loader)
+        pst_loss /= len(loader)
+
+        return LossPair(pre_loss, pst_loss)
+
+    def set_up_dataset(self, split: Split, override_nsims: int = None) -> None:
         with self.name_tracker.set_context("style", self.lut_style):
             trgt_path_template = self.make_fn_template(split, self.in_trgt_asset)
             feat_path_template = self.make_fn_template(split, self.in_feat_asset)
@@ -241,8 +265,10 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         dataset_class = PreloadTrainDataset if self.use_preload else TrainDataset
 
+        use_nsims = split.n_sims if override_nsims is None else override_nsims
+
         dataset_params = dict(
-            n_sims = split.n_sims,
+            n_sims = use_nsims,
             freqs = freqs,
             map_fields=self.map_fields,
             label_path_template=trgt_path_template,
