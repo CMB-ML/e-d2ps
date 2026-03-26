@@ -76,23 +76,21 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader_params = dict(
-            train_dataset, 
             batch_size=self.batch_size, 
             shuffle=True,
             num_workers=self.num_workers
         )
         logger.info(f"Train dataloader: {train_dataloader_params}")
-        train_dataloader = DataLoader(train_dataloader_params)
+        train_dataloader = DataLoader(train_dataset, **train_dataloader_params)
 
         valid_dataset = self.set_up_dataset(valid_split)
         valid_dataloader_params = dict(
-            valid_dataset, 
             batch_size=self.batch_size, 
             shuffle=False,
             num_workers=self.num_workers
         )
         logger.info(f"Valid dataloader: {valid_dataloader_params}")        
-        valid_dataloader = DataLoader(valid_dataloader_params)
+        valid_dataloader = DataLoader(valid_dataset, **valid_dataloader_params)
 
         logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} batches, batch size {self.batch_size}.")
 
@@ -251,9 +249,10 @@ class TrainingExecutor(BaseD2PSExecutor):
             px_arrange=self.px_arrange,
             pos_enc_lut=self.get_pos_enc_lut()
         )
-        logger.info(f"Dataset: {dataset_params}")
-
         dataset = dataset_class(**dataset_params)
+
+        dataset_params["pos_enc_lut"] = dataset_params["pos_enc_lut"].shape
+        logger.info(f"Dataset: {dataset_params}")
         return dataset
 
     def get_pos_enc_lut(self):
