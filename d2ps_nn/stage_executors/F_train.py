@@ -73,7 +73,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.extra_check   = cfg.model.train.extra_check
         self.earliest_best = cfg.model.train.earliest_best
 
-        self.dtype_amp      = torch.float16
+        self.dtype_amp      = torch.bfloat16
         self.limit_n_train_infer = 100
 
     def execute(self) -> None:
@@ -97,7 +97,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                                                   override_nsims=self.limit_n_train_infer)
         train_infer_dataloader_params = dict(
             batch_size=self.batch_size, 
-            shuffle=True,
+            shuffle=False,
             num_workers=self.num_workers
         )
         logger.info(f"Train dataloader: {train_infer_dataloader_params}")
@@ -158,6 +158,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         all_train_pst_loss = []
         all_valid_pst_loss = []
 
+        use_scaler = self.dtype_amp == torch.float16
         scaler = torch.amp.grad_scaler.GradScaler()
 
         for epoch in range(start_epoch, self.n_epochs):
@@ -174,9 +175,13 @@ class TrainingExecutor(BaseD2PSExecutor):
                     with autocast(device_type="cuda", dtype=self.dtype_amp):
                         output = model(train_features)
                         batch_train_loss = loss_function(output, train_label)
-                    scaler.scale(batch_train_loss).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
+                    if use_scaler:
+                        scaler.scale(batch_train_loss).backward()
+                        scaler.step(optimizer)
+                        scaler.update()
+                    else:
+                        batch_train_loss.backward()
+                        optimizer.step()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     batch_loss += batch_train_loss.item()
                 batch_loss /= len(train_dataloader)
@@ -236,7 +241,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         pst_loss = 0.0
 
         with torch.no_grad():
-            for features, labels in loader:
+            for features, labels in tqdm(loader, leave=False):
                 features = features.to(device=self.device, dtype=self.dtype)
                 labels = labels.to(device=self.device, dtype=self.dtype)
 
