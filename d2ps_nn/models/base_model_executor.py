@@ -155,8 +155,8 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             num_heads=(4, 4, 4),
             mlp_ratio=2.0,
             dropout=0.1,
-            # head_hidden=512,
-            head_hidden=256
+            head_hidden=512,
+            # head_hidden=256
         )
 
 
