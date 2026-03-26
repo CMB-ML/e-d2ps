@@ -59,6 +59,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         # How it handles data
         self.batch_size    = cfg.model.train.batch_size
         self.num_workers   = cfg.model.train.num_loader_workers
+        self.use_preload   = False  # Not appropriate for true training
 
         # Checkpointing
         self.checkpoint    = cfg.model.train.checkpoint_every

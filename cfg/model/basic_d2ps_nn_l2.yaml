@@ -15,22 +15,22 @@ use_ells  : "[2:${lmax}+1:1]"
 #            null (no scaling)
 scale_ps  : ${scale_ps}
 
-final_activation: null
-use_batch_norm_enc: ${use_batch_norm_enc}
-use_batch_norm_dec: false
-# For Wishart loss function
-# scale_ps  : Cl
-# final_activation: softplus
+# final_activation: null
+# use_batch_norm_enc: ${use_batch_norm_enc}
+# use_batch_norm_dec: false
+# # For Wishart loss function
+# # scale_ps  : Cl
+# # final_activation: softplus
 
-# Ablation params
-dropout_rate: 0.0
-activation: relu
-pooling: max
+# # Ablation params
+# dropout_rate: 0.0
+# activation: relu
+# pooling: max
 
-# Other model parameters
-n_init_features: 16
-n_levels: 7  # For 128
-# n_levels: 9  # For 512
+# # Other model parameters
+# n_init_features: 16
+# n_levels: 7  # For 128
+# # n_levels: 9  # For 512
 note: null
 
 preprocess:
@@ -42,7 +42,7 @@ train:
 
   # Data loading
   use_preload       : true
-  batch_size        : 5
+  batch_size        : 1
   num_loader_workers: 0
   # Training parameters
   learning_rate     : ${learning_rate}
