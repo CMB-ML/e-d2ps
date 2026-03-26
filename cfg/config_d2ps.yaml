@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all_big
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/patches  : toppatch
   - model/analysis : simple_apo
@@ -19,24 +19,29 @@ prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, learning rate: ${learning_rate}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
-scale_ps: 4000
-optimizer: Adam
+splits:
+  name: 2850
+  Train:
+    n_sims: 2000
 
-# px_arrange: cmbNNCS
-# nn_model: MobileViTCMBRegressor
-# norm_kind: gn
+scale_ps: 4000
+optimizer: AdamW
+
+px_arrange: cmbNNCS
+nn_model: MobileViTCMBRegressor
+norm_kind: gn
 
 # px_arrange: cmbNNCS
 # nn_model: SimpleEncDec
 # use_batch_norm_enc: true
-use_batch_norm_enc: false
+# use_batch_norm_enc: false
 
-px_arrange: channel
+# px_arrange: channel
 # nn_model: TLPEncAggDec
-nn_model: TLPEnc2AggDec
+# nn_model: TLPEnc2AggDec
 
-use_pos_enc_lut: false
-# use_pos_enc_lut: true
+# use_pos_enc_lut: false
+use_pos_enc_lut: true
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
@@ -50,13 +55,13 @@ n_show_treble_ell    : null
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 128
+nside              : 512
 lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
-features_type      : cmb
-# features_type      : obs
+# features_type      : cmb
+features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
