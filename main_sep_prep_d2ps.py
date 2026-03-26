@@ -20,7 +20,7 @@ from cmbml.core import (
                       LogMaker
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
-from d2ps_nn import (
+from d2ps_nn.ex import (
     MakeLutExecutor,
     MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
