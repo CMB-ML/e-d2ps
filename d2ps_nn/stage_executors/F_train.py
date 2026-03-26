@@ -150,7 +150,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
                     optimizer.zero_grad()
                     
-                    with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+                    with autocast(device_type="cuda", dtype=torch.float16):
                         output = model(train_features)
                     # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
                     # loss = loss_function(output, train_label)
