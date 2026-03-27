@@ -1,3 +1,4 @@
+from typing import Optional
 import torch.nn as nn
 
 
@@ -48,7 +49,7 @@ def get_bottleneck_pooling(kind: str) -> nn.Module:
         raise ValueError(f"Unknown pooling '{kind}'. Choose from: 'avg', 'max'.")
 
 
-def get_norm(kind: str | None, num_channels: int) -> nn.Module:
+def get_norm(kind: Optional[str], num_channels: int) -> nn.Module:
     """Return a normalization layer or Identity if disabled."""
     if kind is None:
         kind = "none"
@@ -65,7 +66,7 @@ def get_norm(kind: str | None, num_channels: int) -> nn.Module:
         raise ValueError(f"Unknown norm kind '{kind}'. Choose from: 'bn', 'gn', 'none'.")
 
 
-def get_dropout(p: float | None) -> nn.Module:
+def get_dropout(p: Optional[float]) -> nn.Module:
     """Return Dropout2d or Identity if disabled."""
     if p is None or p == 0:
         return nn.Identity()
