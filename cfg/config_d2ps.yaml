@@ -13,14 +13,16 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${enc_norm}_${activation}_${iter_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_${model_num}/"
+# working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_${model_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd:${adamw_wd}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${enc_norm}, ${activation}, Iter ${iter_num}"
+fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, Model Init ${model_num}"
+# fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd:${adamw_wd}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, Model Init ${model_num}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 ###############################################################
-# Leave this section on in dev- branches; turn of in run-
+#   Leave this section on in dev- branches; turn off in run-
 ###############################################################
 
 scale_ps: 4000
@@ -33,29 +35,39 @@ adamw_wd : 1e-5
 use_pos_enc_lut: false
 use_pos_enc_lut: true
 
-# Models: Either 
-nn_model: MobileViTCMBRegressor
-px_arrange: cmbNNCS
-norm_kind: gn
+### Models: Either 
+# nn_model: MobileViTCMBRegressor
+# px_arrange: cmbNNCS
+# norm_kind: gn
 
-# Or
+### Or
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
-use_batch_norm_enc: true
-use_batch_norm_enc: false
+norm_kind: none
+norm_kind: bn
+norm_kind: gn
+pooling: max
+pooling: avg
+activation: relu
+activation: gelu
 
-# Or
-nn_model: TLPEncAggDec
-nn_model: TLPEnc2AggDec
-px_arrange: channel
-use_batch_norm_enc: true
-use_batch_norm_enc: false
+### Or
+# nn_model: TLPEncAggDec
+# nn_model: TLPEnc2AggDec
+# px_arrange: channel
+# norm_kind: none
+# norm_kind: bn
+# norm_kind: gn
+# pooling: max
+# pooling: avg
+# activation: relu
+# activation: gelu
 
 ###############################################################
-# Lesser-used set-up
+#   Lesser-used set-up
 ###############################################################
 
-iter_num: 0
+model_num: 0
 n_sims: 5
 learning_rate: 1e-5
 

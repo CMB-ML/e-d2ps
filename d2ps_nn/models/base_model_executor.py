@@ -67,12 +67,12 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             self.model_n_init_features = cfg.model.n_init_features
             self.model_n_levels = cfg.model.n_levels
 
-            self.use_batch_norm_enc = cfg.model.use_batch_norm_enc
-            self.use_batch_norm_dec = cfg.model.use_batch_norm_dec
+            self.norm_kind = cfg.model.norm_kind
             self.activation = cfg.model.activation
             self.dropout_rate = cfg.model.dropout_rate
 
-            self.pooling = cfg.model.pooling
+            self.downsample_pooling = cfg.model.downsample_pooling
+            self.bottleneck_pooling = cfg.model.bottleneck_pooling
             self.final_activation = cfg.model.final_activation
 
             if self.activation is None:
@@ -107,8 +107,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             n_in_channels=n_channels,
             n_init_features=self.model_n_init_features,
             n_levels=self.model_n_levels,
-            use_batch_norm_enc=self.use_batch_norm_enc,
-            use_batch_norm_dec=self.use_batch_norm_dec,
+            norm_kind=self.norm_kind,
             dropout_rate=self.dropout_rate,
             activation=self.activation,
             note=self.model_note
@@ -122,7 +121,8 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         if use_model in [SimpleEncDec]:
-            model_dict["pooling"] = self.pooling
+            model_dict["downsample_pooling"] = self.downsample_pooling
+            model_dict["bottleneck_pooling"] = self.bottleneck_pooling
 
         # Make the model
         logger.info(f"Model params: {model_dict}")

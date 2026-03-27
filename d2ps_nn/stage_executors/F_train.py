@@ -34,7 +34,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
                                                  cfg.features_type, 
                                                  self.instrument)
-        self.in_model: Asset = self.assets_in["model"]
+        self.in_resume_model: Asset = self.assets_in["resume_model"]
+        self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
         in_trgt_handler: NumpyMap
         in_feat_handler: NumpyMap
@@ -62,9 +63,11 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.use_preload   = False  # Only for Overfit... I think 1000 sims will fill RAM of computer.?
 
         # Checkpointing
+        self.model_num     = cfg.get("model_num", None)
         self.checkpoint    = cfg.model.train.checkpoint_every
         self.extra_check   = cfg.model.train.extra_check
         self.earliest_best = cfg.model.train.earliest_best
+        self.random_init   = cfg.model.get("random_init", False)
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -100,25 +103,47 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         optimizer = self.get_optimizer(model)
 
+        # Initialize for training
+        all_batch_loss = []
+        all_train_pre_loss = []
+        all_valid_pre_loss = []
+
+        post = self.scale_ps.postprocess
+        all_train_pst_loss = []
+        all_valid_pst_loss = []
+
+        do_loss_record = "new"
+        start_epoch = 0
         if self.restart_epoch is not None:
             logger.info(f"Restarting training at epoch {self.restart_epoch}")
             # The following returns the epoch number stored in the checkpoint
             #     as well as loading the model and optimizer with checkpoint information
             with self.name_tracker.set_context("epoch", self.restart_epoch):
-                start_epoch = self.in_model.read(model=model, 
-                                                 epoch=self.restart_epoch, 
-                                                 optimizer=optimizer, 
-                                                #  scheduler=scheduler
-                                                 )
-            if start_epoch == "init":
-                start_epoch = 0
+                model_record = self.in_resume_model.read(model=model, 
+                                                         epoch=self.restart_epoch, 
+                                                         optimizer=optimizer, 
+                                                         #  scheduler=scheduler
+                                                         )
+            start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch']) + 1
+            if model_record['best_loss'] is not None:
+                all_valid_pre_loss.append(model_record['best_loss'])
+            do_loss_record = "continue"
+            logger.warning("Restarting training without finding previous best loss!")
+        elif self.random_init:
+            logger.info(f"Starting new, randomly initialized model.")
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model)
+        else:
+            logger.info(f"Loading transfer-initialization model.")
+            with self.name_tracker.set_context("model_num", self.model_num):
+                self.in_initial_model.read(model=model, strict=False)
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model)
+
+        if do_loss_record == "continue":
             self.out_loss_record.start()  # New lines will be added, naively
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
-            logger.info(f"Starting new model.")
-            with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model, epoch="init")
-            start_epoch = 0
             loss_record_headers = ['Epoch', 
                                    'Batch Loss', 
                                    'Validation Pre Loss', 
@@ -128,14 +153,6 @@ class TrainingExecutor(BaseD2PSExecutor):
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
-
-        all_batch_loss = []
-        all_train_pre_loss = []
-        all_valid_pre_loss = []
-
-        post = self.scale_ps.postprocess
-        all_train_pst_loss = []
-        all_valid_pst_loss = []
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
@@ -203,7 +220,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                     f"valid_{self.scale_ps.post_name}: {valid_pst_loss:.02e}"
                     f"{note_min_loss}"
                 )
-            self.out_loss_record.append([epoch + 1, batch_loss, valid_pre_loss, train_pre_loss, train_pst_loss, valid_pst_loss])
+            self.out_loss_record.append([epoch + 1, batch_loss, valid_pre_loss, train_pre_loss, valid_pst_loss, train_pst_loss])
 
             is_best_condition_a = valid_pre_loss == min(all_valid_pre_loss)
             is_best_condition_b = epoch >= self.earliest_best
@@ -220,6 +237,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                 with self.name_tracker.set_context("epoch", epoch + 1):
                     self.out_model.write(model=model,
                                          optimizer=optimizer,
+                                         best_loss=min(all_valid_pre_loss),
                                          epoch=epoch + 1)
 
         with self.name_tracker.set_context("epoch", "final"):

@@ -79,6 +79,13 @@ preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
     - train
     - valid
 
+model_init:
+  assets_out:
+    model:
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_init_{model_num}.pth"
+  dir_name: F_Model_Init
+
 train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor
   assets_out:
     model: 
@@ -91,7 +98,8 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     cmb_ps: {stage: preprocess_spectra}
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
-    model: {stage: train}
+    resume_model: {stage: train, orig_name: model}
+    initial_model: {stage: model_init, orig_name: model}
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}

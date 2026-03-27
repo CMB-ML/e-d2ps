@@ -1,4 +1,5 @@
 # Consistent properties for all stages:
+model_seed: "model_seed_{iter}"
 dtype     : float   # "float" is 32-bit; "double" is 64-bit. Conversions used in preprocess map, train, predict
 scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
@@ -16,16 +17,17 @@ use_ells  : "[2:${lmax}+1:1]"
 scale_ps  : ${scale_ps}
 
 final_activation: null
-use_batch_norm_enc: ${use_batch_norm_enc}
-use_batch_norm_dec: false
+norm_kind: ${norm_kind}
+
 # For Wishart loss function
 # scale_ps  : Cl
 # final_activation: softplus
 
 # Ablation params
 dropout_rate: 0.0
-activation: relu
-pooling: max
+activation: ${activation}
+downsample_pooling: ${pooling}
+bottleneck_pooling: ${pooling}
 
 # Other model parameters
 n_init_features: 16

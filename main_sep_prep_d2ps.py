@@ -29,6 +29,7 @@ from d2ps_nn.ex import (
     PreprocessSpectraExecutor,
 
     CheckGPULoadExecutor,
+    ModelInitExecutor,
     # TrainingExecutor,
     OverfitTrainingExecutor,
     PredictExecutor,
@@ -73,8 +74,9 @@ def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         CheckGPULoadExecutor,
+        ModelInitExecutor,
         OverfitTrainingExecutor,
-        # TrainingExecutor,
+        # # TrainingExecutor,
         PredictExecutor,
         LossPlotExecutor,
         ShowPredictionsPeaksExecutor,
