@@ -65,7 +65,6 @@ def prep_run(cfg):
         # # FindSpectraStatsExecutor,  # Only when standardizing spectra
         # PreprocessMapsExecutor,
         # PreprocessSpectraExecutor
-        ModelInitExecutor,
     ]
     run(cfg, pipes)
 
