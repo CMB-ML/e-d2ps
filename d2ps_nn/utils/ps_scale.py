@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Union, Optional
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -160,12 +161,12 @@ class MeanStdvProcessor(SpectrumProcessor):
     pre_name = "standardized_Dl"
     post_name = "Dl"
 
-    mean_path: str | Path
-    stdv_path: str | Path
+    mean_path: Union[str, Path]
+    stdv_path: Union[str, Path]
     eps: float = 1e-12
 
-    _mean: Array | None = field(default=None, init=False, repr=False)
-    _stdv: Array | None = field(default=None, init=False, repr=False)
+    _mean: Optional[Array] = field(default=None, init=False, repr=False)
+    _stdv: Optional[Array] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mean_path", Path(self.mean_path))
@@ -229,8 +230,8 @@ class MeanStdvProcessor(SpectrumProcessor):
 
 
 def make_ps_processor(
-    mode: DictConfig | None,
-    cfg: DictConfig | None = None,
+    mode: Optional[DictConfig],
+    cfg: Optional[DictConfig] = None,
 ) -> SpectrumProcessor:
     """
     Helper for selecting PS pre/post-processing.
