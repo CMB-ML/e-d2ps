@@ -54,6 +54,7 @@ px_arrange: cmbNNCS
 norm_kind: none
 # norm_kind: bn
 # norm_kind: gn
+pooling: ???
 # pooling: max
 # pooling: avg
 activation: ???
