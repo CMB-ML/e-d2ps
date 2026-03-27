@@ -18,7 +18,7 @@ hydra:
       # model_num: 1, 2, 3
       learning_rate: 5e-6, 1e-5, 2e-5
       scale_ps: 4000, null
-      use_pos_enc_lut: false  #, true
+      use_pos_enc_lut: false, true
       activation: relu, gelu
       pooling: max, avg
       # learning_rate: 1e-7, 1e-6, 1e-5, 1e-4

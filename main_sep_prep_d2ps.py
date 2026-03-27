@@ -59,12 +59,13 @@ logger = logging.getLogger(__name__)
 def prep_run(cfg):
     logger.info(f"Running prep_run in {__file__}")
     pipes = [
-        MakeLutExecutor,
-        MakePosEncLutExecutor,
-        FindDatasetStatsParallelExecutor,
-        # FindSpectraStatsExecutor,  # Only when standardizing spectra
-        PreprocessMapsExecutor,
-        PreprocessSpectraExecutor
+        # MakeLutExecutor,
+        # MakePosEncLutExecutor,
+        # FindDatasetStatsParallelExecutor,
+        # # FindSpectraStatsExecutor,  # Only when standardizing spectra
+        # PreprocessMapsExecutor,
+        # PreprocessSpectraExecutor
+        ModelInitExecutor,
     ]
     run(cfg, pipes)
 
@@ -74,7 +75,6 @@ def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         CheckGPULoadExecutor,
-        ModelInitExecutor,
         OverfitTrainingExecutor,
         # # TrainingExecutor,
         PredictExecutor,
@@ -111,6 +111,9 @@ def run_planck(cfg):
 
 
 def run(cfg, pipes):
+    if cfg.optimizer == "AdamW":
+        raise ValueError("CHANGE THE FILENAME AND FIGURE LABELS to include adamw_wd!!!")
+
     log_maker = LogMaker(cfg)
     log_maker.log_procedure_to_hydra(source_script=__file__)
 
@@ -130,7 +133,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # prep_run()
+    prep_run()
     train_runs()
     # prep_run_planck()
     # run_planck()

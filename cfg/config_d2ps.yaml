@@ -13,17 +13,15 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_${model_num}/"
-# working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, Model Init ${model_num}"
-# fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd:${adamw_wd}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, Model Init ${model_num}"
+fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
-###############################################################
-#   Leave this section on in dev- branches; turn off in run-
-###############################################################
+################################################################
+#   Leave this section on in dev- branches; turn off in run-   #
+################################################################
 # model_num: ???
 model_num: 1
 model_num: 2
@@ -73,9 +71,9 @@ activation: ???
 # activation: relu
 # activation: gelu
 
-###############################################################
+################################################################
 #   Lesser-used set-up
-###############################################################
+################################################################
 n_sims: 5
 
 splits:
