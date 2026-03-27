@@ -24,7 +24,14 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 ###############################################################
 #   Leave this section on in dev- branches; turn off in run-
 ###############################################################
+# model_num: ???
+model_num: 1
+model_num: 2
+model_num: 3
 
+learning_rate: ???
+
+scale_ps: ???
 scale_ps: 4000
 scale_ps: null
 
@@ -32,6 +39,7 @@ optimizer: Adam
 optimizer: AdamW
 adamw_wd : 1e-5
 
+use_pos_enc_lut: ???
 use_pos_enc_lut: false
 use_pos_enc_lut: true
 
@@ -48,6 +56,7 @@ norm_kind: bn
 norm_kind: gn
 pooling: max
 pooling: avg
+activation: ???
 activation: relu
 activation: gelu
 
