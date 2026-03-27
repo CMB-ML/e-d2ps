@@ -332,6 +332,10 @@ class OverfitTrainingExecutor(TrainingExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
+        context = dict(model_num=self.model_num,
+                    pos_enc=self.use_pos_enc_lut)
+        with self.name_tracker.set_contexts(context):
+            self.in_initial_model.read(model=model, strict=False)
 
         train_split = self.splits.get("train")
 
