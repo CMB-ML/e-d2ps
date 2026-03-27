@@ -32,16 +32,16 @@ model_num: 3
 learning_rate: ???
 
 scale_ps: ???
-scale_ps: 4000
-scale_ps: null
+# scale_ps: 4000
+# scale_ps: null
 
 optimizer: Adam
-optimizer: AdamW
-adamw_wd : 1e-5
+# optimizer: AdamW
+# adamw_wd : 1e-5
 
 use_pos_enc_lut: ???
-use_pos_enc_lut: false
-use_pos_enc_lut: true
+# use_pos_enc_lut: false
+# use_pos_enc_lut: true
 
 ### Models: Either 
 # nn_model: MobileViTCMBRegressor
@@ -52,13 +52,13 @@ use_pos_enc_lut: true
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
 norm_kind: none
-norm_kind: bn
-norm_kind: gn
-pooling: max
-pooling: avg
+# norm_kind: bn
+# norm_kind: gn
+# pooling: max
+# pooling: avg
 activation: ???
-activation: relu
-activation: gelu
+# activation: relu
+# activation: gelu
 
 ### Or
 # nn_model: TLPEncAggDec
