@@ -70,6 +70,15 @@ def prep_run(cfg):
     run(cfg, pipes)
 
 
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep_model")
+def prep_run(cfg):
+    logger.info(f"Running prep_run in {__file__}")
+    pipes = [
+        ModelInitExecutor
+    ]
+    run(cfg, pipes)
+
+
 @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_sepprep2")
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
