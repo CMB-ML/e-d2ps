@@ -30,7 +30,7 @@ from d2ps_nn.ex import (
 
     CheckGPULoadExecutor,
     ModelInitExecutor,
-    # TrainingExecutor,
+    TrainingExecutor,
     OverfitTrainingExecutor,
     PredictExecutor,
     LossPlotExecutor,
@@ -48,7 +48,7 @@ from d2ps_nn.ex import (
     # # ShowChiSquare,
     # # BundlePredExecutor, 
     # # BundleTrueExecutor,
-    # # ShowTrebleEll
+    ShowTrebleEll
     )
 
 
@@ -82,9 +82,9 @@ def prep_model_run(cfg):
 def train_runs(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        CheckGPULoadExecutor,
-        OverfitTrainingExecutor,
-        # # TrainingExecutor,
+        # CheckGPULoadExecutor,
+        # OverfitTrainingExecutor,
+        TrainingExecutor,
         PredictExecutor,
         LossPlotExecutor,
         ShowPredictionsPeaksExecutor,
@@ -92,7 +92,7 @@ def train_runs(cfg):
         # # ShowBWPredictionsExecutor,
         # # BundleTrueExecutor,
         # # BundlePredExecutor,
-        # # ShowTrebleEll
+        ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -142,7 +142,7 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     # prep_run()
-    prep_model_run()
+    # prep_model_run()
     train_runs()
     # prep_run_planck()
     # run_planck()

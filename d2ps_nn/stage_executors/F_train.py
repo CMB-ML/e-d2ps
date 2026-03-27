@@ -132,7 +132,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         elif self.random_init:
             logger.info(f"Starting new, randomly initialized model.")
             with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model)
+                self.out_model.write(model=model, epoch="init")
         else:
             logger.info(f"Loading transfer-initialization model.")
             context = dict(model_num=self.model_num,
@@ -140,7 +140,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             with self.name_tracker.set_contexts(context):
                 self.in_initial_model.read(model=model, strict=False)
             with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model)
+                self.out_model.write(model=model, epoch="init")
 
         if do_loss_record == "continue":
             self.out_loss_record.start()  # New lines will be added, naively
