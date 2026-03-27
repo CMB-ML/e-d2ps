@@ -32,7 +32,9 @@ class ModelInitExecutor(BaseD2PSExecutor):
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
-        with self.name_tracker.set_context("model_num", self.model_iter):
+        context = dict(model_num=self.model_iter,
+                       pos_enc=self.use_pos_enc_lut)
+        with self.name_tracker.set_contexts(context):
             if self.out_model.path.exists():
                 logger.warning("Model already created. Skipping!")
                 return
