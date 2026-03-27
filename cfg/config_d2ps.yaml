@@ -79,7 +79,7 @@ activation: ???
 ################################################################
 #   Lesser-used set-up
 ###############################################################
-n_sims: 5
+n_sims: 2000
 
 splits:
   Train:
@@ -108,7 +108,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 30000
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
