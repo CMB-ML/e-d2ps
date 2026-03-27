@@ -104,7 +104,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         train_infer_dataloader = DataLoader(train_infer_dataset, 
                                             **train_infer_dataloader_params)
 
-        valid_dataset = self.set_up_dataset(valid_split)
+        valid_dataset = self.set_up_dataset(valid_split,
+                                            override_nsims=self.limit_n_train_infer)
         valid_dataloader_params = dict(
             batch_size=self.batch_size, 
             shuffle=False,
