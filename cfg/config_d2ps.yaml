@@ -30,8 +30,10 @@ model_num: 2
 model_num: 3
 
 learning_rate: ???
+learning_rate_sweep: 5e-6, 1e-5, 2e-5
 
 scale_ps: ???
+scale_ps_sweep: 4000, null
 scale_ps: 4000
 scale_ps: null
 
@@ -40,6 +42,7 @@ optimizer: AdamW
 adamw_wd : 1e-5
 
 use_pos_enc_lut: ???
+use_pos_enc_lut_sweep: false, true
 use_pos_enc_lut: false
 use_pos_enc_lut: true
 
@@ -54,9 +57,12 @@ px_arrange: cmbNNCS
 norm_kind: none
 norm_kind: bn
 norm_kind: gn
+pooling: ???
+pooling_sweep: max, avg
 pooling: max
 pooling: avg
 activation: ???
+activation_sweep: relu, gelu
 activation: relu
 activation: gelu
 

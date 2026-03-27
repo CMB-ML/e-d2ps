@@ -49,5 +49,7 @@ class ModelInitExecutor(BaseD2PSExecutor):
 
         model = self.init_model()
 
-        with self.name_tracker.set_context("model_num", self.model_iter):
+        context = dict(model_num=self.model_iter,
+                       pos_enc=self.use_pos_enc_lut)
+        with self.name_tracker.set_contexts(context):
             self.out_model.write(model=model, epoch="init")
