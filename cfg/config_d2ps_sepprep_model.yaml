@@ -16,3 +16,6 @@ hydra:
   sweeper:
     params:
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
+
+activation: relu
+pooling: max
