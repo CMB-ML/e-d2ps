@@ -388,6 +388,8 @@ class OverfitTrainingExecutor(TrainingExecutor):
 
         header_printed = False
 
+        loss_record_lines = []
+
         for epoch in range(start_epoch, self.n_epochs):
             t0 = time.time()
             # with tqdm(
@@ -456,7 +458,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
                 f"{it_per_sec:8.2f}"
             )
 
-            self.out_loss_record.append([
+            loss_record_lines.append([
                 epoch + 1,
                 loss_sc,
                 batch_loss,
@@ -470,6 +472,9 @@ class OverfitTrainingExecutor(TrainingExecutor):
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
+
+        for l in loss_record_lines:
+            self.out_loss_record.append(l)
 
 
 def _get_param_norm(model, norm_type=2.0):
