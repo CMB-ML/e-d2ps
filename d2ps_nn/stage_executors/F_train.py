@@ -59,11 +59,13 @@ class TrainingExecutor(BaseD2PSExecutor):
         # How it handles data
         self.batch_size    = cfg.model.train.batch_size
         self.num_workers   = cfg.model.train.num_loader_workers
+        self.use_preload   = False
 
         # Checkpointing
         self.checkpoint    = cfg.model.train.checkpoint_every
         self.extra_check   = cfg.model.train.extra_check
         self.earliest_best = cfg.model.train.earliest_best
+
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -75,23 +77,21 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader_params = dict(
-            train_dataset, 
             batch_size=self.batch_size, 
             shuffle=True,
             num_workers=self.num_workers
         )
         logger.info(f"Train dataloader: {train_dataloader_params}")
-        train_dataloader = DataLoader(train_dataloader_params)
+        train_dataloader = DataLoader(train_dataset, **train_dataloader_params)
 
         valid_dataset = self.set_up_dataset(valid_split)
         valid_dataloader_params = dict(
-            valid_dataset, 
             batch_size=self.batch_size, 
             shuffle=False,
             num_workers=self.num_workers
         )
         logger.info(f"Valid dataloader: {valid_dataloader_params}")        
-        valid_dataloader = DataLoader(valid_dataloader_params)
+        valid_dataloader = DataLoader(valid_dataset, **valid_dataloader_params)
 
         logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} batches, batch size {self.batch_size}.")
 
@@ -185,7 +185,6 @@ class TrainingExecutor(BaseD2PSExecutor):
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
                     f"tra_{self.scale_ps.pre_name}: {train_pre_loss:.02e} | "
                     f"tra_{self.scale_ps.post_name}: {train_pst_loss:.02e}"
-                    f"{note_min_loss}"
                 )
 
                 for valid_features, valid_label in tqdm(valid_dataloader, leave=False):

@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}/Nsims${n_sims}_lr${learning_rate}_scale-${model.scale_ps}_pe${use_pos_enc_lut}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_5000/Nsims${n_sims}_lr${learning_rate}_scale-${model.scale_ps}_pe${use_pos_enc_lut}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, learning rate: ${learning_rate}"
@@ -61,7 +61,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 3000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
