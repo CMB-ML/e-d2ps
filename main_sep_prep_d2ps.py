@@ -84,15 +84,15 @@ def train_runs(cfg):
     pipes = [
         CheckGPULoadExecutor,
         OverfitTrainingExecutor,
-        TrainingExecutor,
-        PredictExecutor,
+        # TrainingExecutor,
+        # PredictExecutor,
         LossPlotExecutor,
-        ShowPredictionsPeaksExecutor,
+        # ShowPredictionsPeaksExecutor,
         # # PowerSpectrumAnalysisExecutor,
         # # ShowBWPredictionsExecutor,
-        BundleTrueExecutor,
-        BundlePredExecutor,
-        ShowTrebleEll
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 
