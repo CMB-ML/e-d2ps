@@ -2,7 +2,7 @@ from typing import Optional
 import torch.nn as nn
 
 
-def get_activation(kind: str) -> nn.Module:
+def get_activation(kind: Optional[str]) -> nn.Module:
     """Return an activation module from a string spec."""
     if kind is None:
         kind = "none"
@@ -13,10 +13,12 @@ def get_activation(kind: str) -> nn.Module:
         return nn.ReLU(inplace=True)
     elif kind == "gelu":
         return nn.GELU()
+    elif kind == "softplus":  # For final activation.
+        return nn.Softplus()
     elif kind == "none":
         return nn.Identity()    
     else:
-        raise ValueError(f"Unknown activation '{kind}'. Choose from: 'relu', 'gelu'.")
+        raise ValueError(f"Unknown activation '{kind}'. Choose from: 'relu', 'gelu', 'softplus' and None.")
 
 
 def get_downsample_pooling(kind: str) -> nn.Module:
