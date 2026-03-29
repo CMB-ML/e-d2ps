@@ -30,7 +30,7 @@ from d2ps_nn.ex import (
 
     CheckGPULoadExecutor,
     ModelInitExecutor,
-    # TrainingExecutor,
+    TrainingExecutor,
     OverfitTrainingExecutor,
     PredictExecutor,
     LossPlotExecutor,
@@ -46,9 +46,9 @@ from d2ps_nn.ex import (
     # # ShowRelativeError,
     # # ShowCosmicFractions,
     # # ShowChiSquare,
-    # # BundlePredExecutor, 
-    # # BundleTrueExecutor,
-    # # ShowTrebleEll
+    BundlePredExecutor, 
+    BundleTrueExecutor,
+    ShowTrebleEll
     )
 
 
@@ -84,15 +84,15 @@ def train_runs(cfg):
     pipes = [
         CheckGPULoadExecutor,
         OverfitTrainingExecutor,
-        # # TrainingExecutor,
+        TrainingExecutor,
         PredictExecutor,
         LossPlotExecutor,
         ShowPredictionsPeaksExecutor,
         # # PowerSpectrumAnalysisExecutor,
         # # ShowBWPredictionsExecutor,
-        # # BundleTrueExecutor,
-        # # BundlePredExecutor,
-        # # ShowTrebleEll
+        BundleTrueExecutor,
+        BundlePredExecutor,
+        ShowTrebleEll
     ]
     run(cfg, pipes)
 
