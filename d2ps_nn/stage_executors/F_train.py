@@ -280,44 +280,55 @@ class TrainingExecutor(BaseD2PSExecutor):
             pos_enc_lut = self.in_pos_enc_lut.read() 
         return pos_enc_lut
 
-    def get_optimizer(self, model):
-        if self.optimizer == "Adam":
-            optim_dict = dict(lr=self.learning_rate)
-            optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
+    def get_optimizer(self, model, adamwtf):
+        decay, no_decay = [], []
+        for name, p in model.named_parameters():
+            if not p.requires_grad:
+                continue
+            if p.ndim == 1 or name.endswith(".bias"):
+                no_decay.append(p)
+            else:
+                decay.append(p)
 
-        elif self.optimizer == "AdamW":
-            if self.adamw_wd is None:
-                raise ValueError(
-                    "Must set a value for AdamW weight decay in config, "
-                    "even if forcing it to 0.0"
-                )
-
-            decay, no_decay = [], []
-            for name, p in model.named_parameters():
-                if not p.requires_grad:
-                    continue
-                if p.ndim == 1 or name.endswith(".bias"):
-                    no_decay.append(p)
-                else:
-                    decay.append(p)
-
-            optim_dict = dict(
-                lr=self.learning_rate,
-                weight_decay=self.adamw_wd,
-                n_decay_params=len(decay),
-                n_no_decay_params=len(no_decay),
-            )
-
-            optimizer = torch.optim.AdamW(
-                [
-                    {"params": decay, "weight_decay": self.adamw_wd},
-                    {"params": no_decay, "weight_decay": 0.0},
+        groups = [
+                    {"params": decay, "weight_decay": 0.0},
+                    {"params": no_decay, "weight_decay": 0.0}
                 ],
-                lr=self.learning_rate,
-            )
+        constant = dict(
+            lr = self.learning_rate,
+            foreach=False,
+            fused=False,
+            weight_decay=0.0
+        )
 
-        else:
-            raise ValueError(f"Unknown optimizer {self.optimizer}")
+        if adamwtf == 0:
+            optimizer = torch.optim.Adam(
+                groups,
+                decoupled_weight_decay=False,
+                **constant
+            )
+            optim_dict = {"params": "groups", "decoupled_weight_decay": False, **constant}
+        elif adamwtf == 1:
+            optimizer = torch.optim.Adam(
+                groups,
+                decoupled_weight_decay=True,
+                **constant
+            )
+            optim_dict = {"params": "groups", "decoupled_weight_decay": True, **constant}
+        elif adamwtf == 2:
+            optimizer = torch.optim.Adam(
+                model.parameters(),
+                decoupled_weight_decay=False,
+                **constant
+            )
+            optim_dict = {"params": "model.parameters()", "decoupled_weight_decay": False, **constant}
+        elif adamwtf == 3:
+            optimizer = torch.optim.Adam(
+                model.parameters(),
+                decoupled_weight_decay=True,
+                **constant
+            )
+            optim_dict = {"params": "model.parameters()", "decoupled_weight_decay": True, **constant}
 
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
@@ -327,6 +338,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
         super().__init__(cfg, stage_str=stage_str)
         self.use_preload   = cfg.model.train.get("use_preload", False)
         self.batch_size    = cfg.splits.Train.n_sims
+        self.adamwtf       = cfg.adamwtf
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -354,7 +366,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
         loss_function = loss_function.to(self.device)
         logger.info(f"Loss: {self.loss_key}")
 
-        optimizer = self.get_optimizer(model)
+        optimizer = self.get_optimizer(model, self.adamwtf)
 
         logger.info(f"Starting new model.")
         with self.name_tracker.set_context("epoch", "init"):
