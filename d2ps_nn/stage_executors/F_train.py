@@ -1,4 +1,5 @@
 import logging
+import time
 
 from tqdm import tqdm
 
@@ -293,7 +294,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         groups = [
                     {"params": decay, "weight_decay": 0.0},
                     {"params": no_decay, "weight_decay": 0.0}
-                ],
+                ]
         constant = dict(
             lr = self.learning_rate,
             foreach=False,
@@ -381,104 +382,91 @@ class OverfitTrainingExecutor(TrainingExecutor):
         ]
         self.out_loss_record.write(data=loss_record_headers)
 
-        n_epoch_digits = len(str(self.n_epochs))
+        train_features, lbl = next(iter(train_dataloader))
+        train_features = train_features.to(device=self.device, dtype=self.dtype)
+        lbl = lbl.to(device=self.device, dtype=self.dtype)
 
-        all_batch_loss = []
-        all_scale_loss = []
+        header_printed = False
 
         for epoch in range(start_epoch, self.n_epochs):
-            with tqdm(
-                train_dataloader,
-                desc=f"Ep {epoch + 1:<{n_epoch_digits}}",
-                postfix={'Loss': 0}
-            ) as pbar:
-                model.train()
+            t0 = time.time()
+            # with tqdm(
+            #     train_dataloader,
+            #     desc=f"Ep {epoch + 1:<{n_epoch_digits}}",
+            #     postfix={'Loss': 0}
+            # ) as pbar:
+            # model.train()
 
-                batch_loss = 0.0
-                scale_loss = 0.0
+            # batch_loss = 0.0
+            # scale_loss = 0.0
 
-                epoch_loss_before_step = 0.0
-                epoch_loss_after_step = 0.0
-                epoch_grad_norm = 0.0
-                epoch_param_norm = 0.0
-                epoch_update_norm = 0.0
-                epoch_relative_update = 0.0
+            # epoch_loss_before_step = 0.0
+            # epoch_loss_after_step = 0.0
+            # epoch_grad_norm = 0.0
+            # epoch_param_norm = 0.0
+            # epoch_update_norm = 0.0
+            # epoch_relative_update = 0.0
 
-                for train_features, lbl in pbar:
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    lbl = lbl.to(device=self.device, dtype=self.dtype)
+            optimizer.zero_grad()
 
-                    optimizer.zero_grad()
+            # Forward before step
+            out = model(train_features)
+            loss = loss_function(out, lbl)
+            loss_before = loss.item()
 
-                    # Forward before step
-                    out = model(train_features)
-                    loss = loss_function(out, lbl)
-                    loss_before_step = loss.item()
+            with torch.no_grad():
+                out_sc = self.scale_ps.postprocess(out)
+                lbl_sc = self.scale_ps.postprocess(lbl)
+                loss_sc = loss_function(out_sc, lbl_sc).item()
 
-                    with torch.no_grad():
-                        out_sc = self.scale_ps.postprocess(out)
-                        lbl_sc = self.scale_ps.postprocess(lbl)
-                        loss_sc = loss_function(out_sc, lbl_sc).item()
+            # Save params before backward/step so we can measure update size
+            old_params = _clone_trainable_params(model)
 
-                    # Save params before backward/step so we can measure update size
-                    old_params = _clone_trainable_params(model)
+            # Backward
+            loss.backward()
 
-                    # Backward
-                    loss.backward()
+            # Diagnostics before step
+            grad_norm = _get_global_grad_norm(model)
+            param_norm = _get_param_norm(model)
 
-                    # Diagnostics before step
-                    grad_norm = _get_global_grad_norm(model)
-                    param_norm = _get_param_norm(model)
+            # Optimizer step
+            optimizer.step()
 
-                    # Optimizer step
-                    optimizer.step()
+            # Forward after step on the exact same batch
+            with torch.no_grad():
+                out_after = model(train_features)
+                loss_after = loss_function(out_after, lbl).item()
 
-                    # Forward after step on the exact same batch
-                    with torch.no_grad():
-                        out_after = model(train_features)
-                        loss_after = loss_function(out_after, lbl).item()
+            update_norm = _get_update_norm(model, old_params)
+            relative_update = update_norm / (param_norm + 1e-12)
 
-                    update_norm = _get_update_norm(model, old_params)
-                    relative_update = update_norm / (param_norm + 1e-12)
+            batch_loss = loss.item()
+            rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
+            dt = time.time() - t0
+            it_per_sec = 1.0 / dt if dt > 0 else float('inf')
 
-                    rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
-                    pbar.set_postfix({'Loss': rep_loss})
+            if not header_printed:
+                print(f"{'Ep':>4} | {'Loss':>10} | {'ΔLoss':>10} | {'rate (1/s)':>10}")
+                print("-" * 44)
+                header_printed = True
 
-                    batch_loss += loss.item()
-                    scale_loss += loss_sc
-
-                    epoch_loss_before_step += loss_before_step
-                    epoch_loss_after_step += loss_after
-                    epoch_grad_norm += grad_norm
-                    epoch_param_norm += param_norm
-                    epoch_update_norm += update_norm
-                    epoch_relative_update += relative_update
-
-                n_batches = len(train_dataloader)
-
-                batch_loss /= n_batches
-                scale_loss /= n_batches
-
-                epoch_loss_before_step /= n_batches
-                epoch_loss_after_step /= n_batches
-                epoch_grad_norm /= n_batches
-                epoch_param_norm /= n_batches
-                epoch_update_norm /= n_batches
-                epoch_relative_update /= n_batches
-
-                all_batch_loss.append(batch_loss)
-                all_scale_loss.append(scale_loss)
+            print(
+                f"{epoch+1:4d} | "
+                f"{loss_after:10.3e} | "
+                f"{(loss_before - loss_after):10.3e} | "
+                f"{it_per_sec:8.2f}"
+            )
 
             self.out_loss_record.append([
                 epoch + 1,
-                scale_loss,
+                loss_sc,
                 batch_loss,
-                epoch_loss_before_step,
-                epoch_loss_after_step,
-                epoch_grad_norm,
-                epoch_param_norm,
-                epoch_update_norm,
-                epoch_relative_update,
+                loss_before,
+                loss_after,
+                grad_norm,
+                param_norm,
+                update_norm,
+                relative_update,
             ])
 
         with self.name_tracker.set_context("epoch", "final"):
