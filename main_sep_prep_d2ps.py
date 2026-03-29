@@ -46,8 +46,8 @@ from d2ps_nn.ex import (
     # # ShowRelativeError,
     # # ShowCosmicFractions,
     # # ShowChiSquare,
-    # # BundlePredExecutor, 
-    # # BundleTrueExecutor,
+    BundlePredExecutor, 
+    BundleTrueExecutor,
     ShowTrebleEll
     )
 
@@ -90,8 +90,8 @@ def train_runs(cfg):
         ShowPredictionsPeaksExecutor,
         # # PowerSpectrumAnalysisExecutor,
         # # ShowBWPredictionsExecutor,
-        # # BundleTrueExecutor,
-        # # BundlePredExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
         ShowTrebleEll
     ]
     run(cfg, pipes)

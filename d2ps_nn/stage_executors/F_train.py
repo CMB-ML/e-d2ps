@@ -136,7 +136,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         else:
             logger.info(f"Loading transfer-initialization model.")
             context = dict(model_num=self.model_num,
-                        pos_enc=self.use_pos_enc_lut)
+                           pos_enc=self.use_pos_enc_lut)
             with self.name_tracker.set_contexts(context):
                 self.in_initial_model.read(model=model, strict=False)
             with self.name_tracker.set_context("epoch", "init"):

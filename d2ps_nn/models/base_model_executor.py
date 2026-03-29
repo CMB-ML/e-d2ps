@@ -110,15 +110,9 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             norm_kind=self.norm_kind,
             dropout_rate=self.dropout_rate,
             activation=self.activation,
+            final_activation=self.final_activation,
             note=self.model_note
         )
-
-        if self.final_activation == "softplus":
-            model_dict["final_activation"] = torch.nn.Softplus()
-        elif not self.final_activation:
-            model_dict["final_activation"] = None
-        else:
-            raise ValueError(f"Unknown final activation: {self.final_activation}")
 
         if use_model in [SimpleEncDec]:
             model_dict["downsample_pooling"] = self.downsample_pooling
@@ -127,6 +121,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         # Make the model
         logger.info(f"Model params: {model_dict}")
         model = use_model(**model_dict)
+        model.model_dict = model_dict
 
         model = model.to(self.device)
         logger.info(f"Model created!")
@@ -156,6 +151,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         )
         logger.info(f"Model params: {model_dict}")
         model = MobileViTCMBRegressor(**model_dict)
+        model.model_dict = model_dict
         model = model.to(self.device)
 
         logger.info(f"Model created!")

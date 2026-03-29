@@ -53,8 +53,8 @@ use_pos_enc_lut: ???
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
 norm_kind: none
-# norm_kind: bn
-# norm_kind: gn
+norm_kind: bn
+norm_kind: gn
 pooling: ???
 # pooling_sweep: max, avg
 # pooling: max
@@ -123,4 +123,5 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : test   # Either "test" ("train" should work, but is not recommended)
+# run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)
