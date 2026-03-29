@@ -304,31 +304,27 @@ class TrainingExecutor(BaseD2PSExecutor):
         if adamwtf == 0:
             optimizer = torch.optim.Adam(
                 groups,
-                decoupled_weight_decay=False,
                 **constant
             )
-            optim_dict = {"params": "groups", "decoupled_weight_decay": False, **constant}
+            optim_dict = {"params": "groups", "which opt": "Adam", **constant}
         elif adamwtf == 1:
-            optimizer = torch.optim.Adam(
+            optimizer = torch.optim.AdamW(
                 groups,
-                decoupled_weight_decay=True,
                 **constant
             )
-            optim_dict = {"params": "groups", "decoupled_weight_decay": True, **constant}
+            optim_dict = {"params": "groups", "which opt": "AdamW", **constant}
         elif adamwtf == 2:
             optimizer = torch.optim.Adam(
                 model.parameters(),
-                decoupled_weight_decay=False,
                 **constant
             )
-            optim_dict = {"params": "model.parameters()", "decoupled_weight_decay": False, **constant}
+            optim_dict = {"params": "model.parameters()", "which opt": "Adam", **constant}
         elif adamwtf == 3:
-            optimizer = torch.optim.Adam(
+            optimizer = torch.optim.AdamW(
                 model.parameters(),
-                decoupled_weight_decay=True,
                 **constant
             )
-            optim_dict = {"params": "model.parameters()", "decoupled_weight_decay": True, **constant}
+            optim_dict = {"params": "model.parameters()", "which opt": "AdamW", **constant}
 
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
