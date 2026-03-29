@@ -110,6 +110,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
+num_epochs         : 300
 num_epochs         : 30000
 
 # In the pipeline yamls
@@ -125,4 +126,5 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
+run_inference_on      : test   # Either "test" ("train" should work, but is not recommended)
 run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)
