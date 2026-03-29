@@ -15,10 +15,10 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # model_num: 1, 2, 3
+      model_num: ${model_num_sweep}
       learning_rate: ${learning_rate_sweep}
-      scale_ps: ${scale_ps_sweep}
-      use_pos_enc_lut: ${use_pos_enc_lut_sweep}
+      # scale_ps: ${scale_ps_sweep}
+      # use_pos_enc_lut: ${use_pos_enc_lut_sweep}
       activation: ${activation_sweep}
       pooling: ${pooling_sweep}
       # learning_rate: 1e-7, 1e-6, 1e-5, 1e-4

@@ -13,35 +13,40 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
+fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 ################################################################
 #   Leave this section on in dev- branches; turn off in run-   #
 ################################################################
-# model_num: ???
-model_num: 1
-model_num: 2
-model_num: 3
+model_num: ???
+model_num_sweep: 1, 2, 3
+# model_num: 1
+# model_num: 2
+# model_num: 3
 
 learning_rate: ???
 learning_rate_sweep: 5e-6, 1e-5, 2e-5
 
-scale_ps: ???
-scale_ps_sweep: 4000, null
-# scale_ps: 4000
+# scale_ps: ???
+# scale_ps_sweep: 4000, null
+scale_ps: 4000
 # scale_ps: null
 
-optimizer: Adam
-# optimizer: AdamW
-# adamw_wd : 1e-5
+# optimizer: Adam
+optimizer: AdamW
+# adamw_wd : ???
+adamw_wd : 0.0
+adamw_wd : 1e-3
+adamw_wd : 1e-4
+adamw_wd : 1e-5
 
-use_pos_enc_lut: ???
-use_pos_enc_lut_sweep: false, true
-# use_pos_enc_lut: false
+# use_pos_enc_lut: ???
+# use_pos_enc_lut_sweep: false, true
+use_pos_enc_lut: false
 # use_pos_enc_lut: true
 
 ### Models: Either 
