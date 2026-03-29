@@ -446,14 +446,13 @@ class OverfitTrainingExecutor(TrainingExecutor):
             it_per_sec = 1.0 / dt if dt > 0 else float('inf')
 
             if not header_printed:
-                print(f"{'Ep':>4} | {'Loss':>10} | {'ΔLoss':>10} | {'rate (1/s)':>10}")
+                print(f"{'Ep':>4} | {'Loss':>10} | {'rate (1/s)':>10}")
                 print("-" * 44)
                 header_printed = True
 
             print(
                 f"{epoch+1:4d} | "
-                f"{loss_after:10.3e} | "
-                f"{(loss_before - loss_after):10.3e} | "
+                f"{rep_loss:10.3e} | "
                 f"{it_per_sec:8.2f}"
             )
 
