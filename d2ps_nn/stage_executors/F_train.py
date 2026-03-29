@@ -17,7 +17,42 @@ from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
+from pynvml import (
+    nvmlInit,
+    nvmlShutdown,
+    nvmlDeviceGetHandleByIndex,
+    nvmlDeviceGetUtilizationRates,
+    nvmlDeviceGetTemperature,
+    nvmlDeviceGetPowerUsage,
+    nvmlDeviceGetClockInfo,
+    NVML_TEMPERATURE_GPU,
+    NVML_CLOCK_SM,
+    NVML_CLOCK_MEM,
+)
+
+nvmlInit()
+handle = nvmlDeviceGetHandleByIndex(0)  # match your CUDA device index
+
+
+def get_gpu_stats(handle):
+    util = nvmlDeviceGetUtilizationRates(handle)
+    temp = nvmlDeviceGetTemperature(handle, NVML_TEMPERATURE_GPU)
+    power_w = nvmlDeviceGetPowerUsage(handle) / 1000.0
+    sm_clock = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_SM)
+    mem_clock = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_MEM)
+
+    return {
+        "gpu_util": util.gpu,       # percent
+        "mem_util": util.memory,    # percent
+        "temp_C": temp,
+        "power_W": power_w,
+        "sm_clock_MHz": sm_clock,
+        "mem_clock_MHz": mem_clock,
+    }
+
+
 logger = logging.getLogger(__name__)
+
 
 
 class TrainingExecutor(BaseD2PSExecutor):
@@ -445,17 +480,24 @@ class OverfitTrainingExecutor(TrainingExecutor):
             batch_loss = loss.item()
             rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
             dt = time.time() - t0
-            it_per_sec = 1.0 / dt if dt > 0 else float('inf')
 
             if not header_printed:
                 print(f"{'Ep':>4} | {'Loss':>10} | {'rate (1/s)':>10}")
                 print("-" * 44)
                 header_printed = True
 
+            dt = time.time() - t0
+            ep_per_sec = 1.0 / dt if dt > 0 else float("inf")
+            gpu = get_gpu_stats(handle)
+
             print(
                 f"{epoch+1:4d} | "
                 f"{rep_loss:10.3e} | "
-                f"{it_per_sec:8.2f}"
+                f"{ep_per_sec:7.2f} ep/s | "
+                f"{gpu['gpu_util']:3d}% util | "
+                f"{gpu['temp_C']:2d} C | "
+                f"{gpu['power_W']:6.1f} W | "
+                f"{gpu['sm_clock_MHz']:4d} MHz"
             )
 
             loss_record_lines.append([
