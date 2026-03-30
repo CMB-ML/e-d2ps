@@ -17,6 +17,7 @@ from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
+# Use `pip install nvidia-ml-py3` for this library
 from pynvml import (
     nvmlInit,
     nvmlShutdown,
