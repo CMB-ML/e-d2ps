@@ -1,4 +1,5 @@
 import logging
+import time
 
 from tqdm import tqdm
 
@@ -16,7 +17,43 @@ from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
+# Use `pip install nvidia-ml-py3` for this library
+from pynvml import (
+    nvmlInit,
+    nvmlShutdown,
+    nvmlDeviceGetHandleByIndex,
+    nvmlDeviceGetUtilizationRates,
+    nvmlDeviceGetTemperature,
+    nvmlDeviceGetPowerUsage,
+    nvmlDeviceGetClockInfo,
+    NVML_TEMPERATURE_GPU,
+    NVML_CLOCK_SM,
+    NVML_CLOCK_MEM,
+)
+
+nvmlInit()
+handle = nvmlDeviceGetHandleByIndex(0)  # match your CUDA device index
+
+
+def get_gpu_stats(handle):
+    util = nvmlDeviceGetUtilizationRates(handle)
+    temp = nvmlDeviceGetTemperature(handle, NVML_TEMPERATURE_GPU)
+    power_w = nvmlDeviceGetPowerUsage(handle) / 1000.0
+    sm_clock = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_SM)
+    mem_clock = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_MEM)
+
+    return {
+        "gpu_util": util.gpu,       # percent
+        "mem_util": util.memory,    # percent
+        "temp_C": temp,
+        "power_W": power_w,
+        "sm_clock_MHz": sm_clock,
+        "mem_clock_MHz": mem_clock,
+    }
+
+
 logger = logging.getLogger(__name__)
+
 
 
 class TrainingExecutor(BaseD2PSExecutor):
@@ -373,108 +410,90 @@ class OverfitTrainingExecutor(TrainingExecutor):
         ]
         self.out_loss_record.write(data=loss_record_headers)
 
-        n_epoch_digits = len(str(self.n_epochs))
+        train_features, lbl = next(iter(train_dataloader))
+        train_features = train_features.to(device=self.device, dtype=self.dtype)
+        lbl = lbl.to(device=self.device, dtype=self.dtype)
 
-        all_batch_loss = []
-        all_scale_loss = []
+        header_printed = False
+
+        loss_record_lines = []
 
         for epoch in range(start_epoch, self.n_epochs):
-            with tqdm(
-                train_dataloader,
-                desc=f"Ep {epoch + 1:<{n_epoch_digits}}",
-                postfix={'Loss': 0}
-            ) as pbar:
-                model.train()
+            t0 = time.time()
 
-                batch_loss = 0.0
-                scale_loss = 0.0
+            optimizer.zero_grad()
 
-                epoch_loss_before_step = 0.0
-                epoch_loss_after_step = 0.0
-                epoch_grad_norm = 0.0
-                epoch_param_norm = 0.0
-                epoch_update_norm = 0.0
-                epoch_relative_update = 0.0
+            # Forward before step
+            out = model(train_features)
+            loss = loss_function(out, lbl)
+            loss_before = loss.item()
 
-                for train_features, lbl in pbar:
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    lbl = lbl.to(device=self.device, dtype=self.dtype)
+            with torch.no_grad():
+                out_sc = self.scale_ps.postprocess(out)
+                lbl_sc = self.scale_ps.postprocess(lbl)
+                loss_sc = loss_function(out_sc, lbl_sc).item()
 
-                    optimizer.zero_grad()
+            # Save params before backward/step so we can measure update size
+            old_params = _clone_trainable_params(model)
 
-                    # Forward before step
-                    out = model(train_features)
-                    loss = loss_function(out, lbl)
-                    loss_before_step = loss.item()
+            # Backward
+            loss.backward()
 
-                    with torch.no_grad():
-                        out_sc = self.scale_ps.postprocess(out)
-                        lbl_sc = self.scale_ps.postprocess(lbl)
-                        loss_sc = loss_function(out_sc, lbl_sc).item()
+            # Diagnostics before step
+            grad_norm = _get_global_grad_norm(model)
+            param_norm = _get_param_norm(model)
 
-                    # Save params before backward/step so we can measure update size
-                    old_params = _clone_trainable_params(model)
+            # Optimizer step
+            optimizer.step()
 
-                    # Backward
-                    loss.backward()
+            # Forward after step on the exact same batch
+            with torch.no_grad():
+                out_after = model(train_features)
+                loss_after = loss_function(out_after, lbl).item()
 
-                    # Diagnostics before step
-                    grad_norm = _get_global_grad_norm(model)
-                    param_norm = _get_param_norm(model)
+            update_norm = _get_update_norm(model, old_params)
+            relative_update = update_norm / (param_norm + 1e-12)
 
-                    # Optimizer step
-                    optimizer.step()
+            batch_loss = loss.item()
+            rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
+            dt = time.time() - t0
 
-                    # Forward after step on the exact same batch
-                    with torch.no_grad():
-                        out_after = model(train_features)
-                        loss_after = loss_function(out_after, lbl).item()
+            if not header_printed:
+                print(f"{'Ep':>4} | {'Loss':>10} | {'rate (1/s)':>10}")
+                print("-" * 44)
+                header_printed = True
 
-                    update_norm = _get_update_norm(model, old_params)
-                    relative_update = update_norm / (param_norm + 1e-12)
+            dt = time.time() - t0
+            ep_per_sec = 1.0 / dt if dt > 0 else float("inf")
+            gpu = get_gpu_stats(handle)
 
-                    rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
-                    pbar.set_postfix({'Loss': rep_loss})
+            print(
+                f"{epoch+1:4d} | "
+                f"{rep_loss:10.3e} | "
+                f"{ep_per_sec:7.2f} ep/s | "
+                f"{gpu['gpu_util']:3d}% util | "
+                f"{gpu['temp_C']:2d} C | "
+                f"{gpu['power_W']:6.1f} W | "
+                f"{gpu['sm_clock_MHz']:4d} MHz"
+            )
 
-                    batch_loss += loss.item()
-                    scale_loss += loss_sc
-
-                    epoch_loss_before_step += loss_before_step
-                    epoch_loss_after_step += loss_after
-                    epoch_grad_norm += grad_norm
-                    epoch_param_norm += param_norm
-                    epoch_update_norm += update_norm
-                    epoch_relative_update += relative_update
-
-                n_batches = len(train_dataloader)
-
-                batch_loss /= n_batches
-                scale_loss /= n_batches
-
-                epoch_loss_before_step /= n_batches
-                epoch_loss_after_step /= n_batches
-                epoch_grad_norm /= n_batches
-                epoch_param_norm /= n_batches
-                epoch_update_norm /= n_batches
-                epoch_relative_update /= n_batches
-
-                all_batch_loss.append(batch_loss)
-                all_scale_loss.append(scale_loss)
-
-            self.out_loss_record.append([
+            loss_record_lines.append([
                 epoch + 1,
-                scale_loss,
+                loss_sc,
                 batch_loss,
-                epoch_loss_before_step,
-                epoch_loss_after_step,
-                epoch_grad_norm,
-                epoch_param_norm,
-                epoch_update_norm,
-                epoch_relative_update,
+                loss_before,
+                loss_after,
+                grad_norm,
+                param_norm,
+                update_norm,
+                relative_update,
             ])
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
+
+        for l in loss_record_lines:
+            self.out_loss_record.append(l)
 
 
 def _get_param_norm(model, norm_type=2.0):
