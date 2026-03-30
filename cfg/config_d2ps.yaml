@@ -58,7 +58,6 @@ adamw_wd : 0.0
 # use_pos_enc_lut_sweep: false, true
 use_pos_enc_lut: false
 # use_pos_enc_lut: true
-sftp://10.176.140.106/bigdata/cmb_project/data/Datasets/I_128_20850/cmb2ps_SimpleEncDec_MR_AdamW/Nsims-5_lr-1e-05_AdamW_wd-0.0_scale-4000_pe-False_en-none_gelu_pool-max_1/Analysis_Figures/loss_plot.png
 ### Models: Either 
 # nn_model: MobileViTCMBRegressor
 # px_arrange: cmbNNCS
