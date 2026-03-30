@@ -13,19 +13,24 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_MR_Full/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR_Full/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}_${cmml_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, scale:${model.scale_ps} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
+fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, scale:${model.scale_ps} \n Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}, CMML${cmml_num}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 ################################################################
 #   Leave this section on in dev- branches; turn off in run-   #
 ################################################################
 model_num: ???
+# model_num_sweep: 1,2,3
 # model_num: 1
 # model_num: 2
 # model_num: 3
+
+cmml_num: 0
+cmml_num: 2
+cmml_num: 3
 
 learning_rate: ???
 # learning_rate_sweep: 5e-6, 1e-5, 2e-5
@@ -52,11 +57,13 @@ use_pos_enc_lut: ???
 ### Or
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
-norm_kind: none
-norm_kind: bn
-norm_kind: gn
+norm_kind: ???
+norm_sweep: none, bn, gn
+# norm_kind: none
+# norm_kind: bn
+# norm_kind: gn
 pooling: ???
-# pooling_sweep: max, avg
+pooling_sweep: max, avg
 # pooling: max
 # pooling: avg
 activation: ???

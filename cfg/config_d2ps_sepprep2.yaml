@@ -15,12 +15,13 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      model_num: 3
+      model_num: 1
       learning_rate: 2e-5
       scale_ps: 4000
       use_pos_enc_lut: false
       activation: gelu
-      pooling: max
+      pooling: ${pooling_sweep}
+      norm_kind: ${norm_sweep}
       # learning_rate: 1e-7, 1e-6, 1e-5, 1e-4
       # learning_rate: 1e-7, 2.5e-7, 5e-7, 1e-6, 2.5e-6, 5e-6, 1e-5, 2.5e-5, 5e-5, 1e-4
       # adamw_wd: 0.0, 1e-3, 1e-4, 1e-5, 1e-6
