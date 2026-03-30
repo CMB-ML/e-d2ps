@@ -361,7 +361,24 @@ class TrainingExecutor(BaseD2PSExecutor):
                 **constant
             )
             optim_dict = {"params": "model.parameters()", "which opt": "AdamW", **constant}
-
+        elif adamwtf == 4:
+            optimizer = torch.optim.AdamW(
+                model.parameters(),
+                lr = self.learning_rate,
+                foreach=False,
+                fused=False,
+                weight_decay=1e-3
+            )
+            optim_dict = {"params": "model.parameters()", "which opt": "AdamW", "foreach": False, "fused": False, "lr": self.learning_rate, "weight_decay": 1e-3}
+        elif adamwtf == 5:
+            optimizer = torch.optim.AdamW(
+                model.parameters(),
+                lr = self.learning_rate,
+                foreach=None,
+                fused=None,
+                weight_decay=0.0
+            )
+            optim_dict = {"params": "model.parameters()", "which opt": "AdamW", "foreach": None, "fused": None, "lr": self.learning_rate, "weight_decay": 0.0}
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
 
