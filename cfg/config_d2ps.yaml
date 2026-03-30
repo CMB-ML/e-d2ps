@@ -33,7 +33,7 @@ use_pos_enc_lut: ???
 
 optimizer: Adam
 # optimizer: AdamW
-# adamw_wd : ???
+adamw_wd : 0.0  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.0, 1e-3, 1e-4, 1e-5
 
 learning_rate: ???
