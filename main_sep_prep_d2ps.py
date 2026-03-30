@@ -24,6 +24,7 @@ from d2ps_nn.ex import (
     MakeLutExecutor,
     MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
+    FindPxMapStatsExecutor,
     FindSpectraStatsExecutor,
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
