@@ -230,6 +230,9 @@ def mark_crits(
     trans = ax.get_xaxis_transform()  # x=data, y=axes
 
     for ell in crit_ells:
+        if ell is None:
+            continue
+
         y_pos = [0, tick_frac] if theory else [1-tick_frac, 1]
 
         ax.plot(
@@ -242,34 +245,3 @@ def mark_crits(
             solid_capstyle="butt",
             clip_on=False,
         )
-
-    # marker_fill = color if theory else 'none'
-    # offset = (0, -dash_pts) if theory else (0, +dash_pts)
-
-    # for ell0 in crit_ells:
-    #     y0 = ps[int(ell0)]
-
-    #     ax.scatter(
-    #         [ell0], [y0],
-    #         s=ms,
-    #         facecolors=marker_fill,
-    #         edgecolors=color,
-    #         linewidths=linewidth,
-    #         zorder=zorder,
-    #     )
-
-    #     ax.annotate(
-    #         "",
-    #         xy=(ell0, y0),
-    #         xytext=offset,
-    #         textcoords="offset points",
-    #         arrowprops=dict(
-    #             arrowstyle='-',
-    #             color=color,
-    #             lw=linewidth,
-    #             ls=ls,
-    #             shrinkA=0,
-    #             shrinkB=0,
-    #         ),
-    #         zorder=zorder,
-    #     )
