@@ -79,11 +79,11 @@ preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
     - train
     - valid
 
-model_init:
+model_init:  # Fa_init_model / ModelInitExecutor
   assets_out:
     model:
       handler: PyTorchModel
-      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/model_init_{model_num}_pe-{pos_enc}.pth"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_${features_type}2ps_init_{model_num}_pe-{pos_enc}.pth"
   dir_name: F_Model_Init
 
 train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor
