@@ -157,7 +157,7 @@ class MeanStdvProcessor(SpectrumProcessor):
     Mean/st.dev are loaded from files on first use, then cached.
     """
     selection_space = "pre"
-    report_space = "pre"
+    report_space = "post"
     pre_name = "standardized_Dl"
     post_name = "Dl"
 
