@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_Scale_ps_px_init/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
@@ -83,14 +83,14 @@ n_sims: ???
 splits:
   Train:
     n_sims: ${n_sims}
-  Test:
-    n_sims: ${n_sims}
-  TestFFN:
-    n_sims: ${n_sims}
-  TestFP:
-    n_sims: ${n_sims}
-  Valid:
-    n_sims: ${n_sims}
+  # Test:
+  #   n_sims: ${n_sims}
+  # TestFFN:
+  #   n_sims: ${n_sims}
+  # TestFP:
+  #   n_sims: ${n_sims}
+  # Valid:
+  #   n_sims: ${n_sims}
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
@@ -115,8 +115,8 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-# num_epochs         : 300
-num_epochs         : 3  # 0000
+num_epochs         : 300
+# num_epochs         : 1000  # 0000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

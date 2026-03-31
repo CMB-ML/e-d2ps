@@ -44,4 +44,3 @@ hydra:
 
       # adamw_wd: ${adamw_wd_sweep}
       adamw_wd: 0.0
-
