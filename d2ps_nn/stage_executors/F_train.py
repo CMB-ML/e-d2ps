@@ -471,7 +471,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
             ep_per_sec = 1.0 / dt if dt > 0 else float("inf")
             gpu = get_gpu_stats(handle)
 
-            print(
+            logger.info(
                 f"{epoch+1:4d} | "
                 f"{rep_loss:10.3e} | "
                 f"{ep_per_sec:7.2f} ep/s | "
