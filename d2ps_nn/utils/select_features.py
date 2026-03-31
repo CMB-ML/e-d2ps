@@ -1,7 +1,26 @@
 from typing import Dict
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from cmbml.core import Asset
 from cmbml.utils.planck_instrument import Instrument
+
+
+@dataclass(frozen=True)
+class FeatureAssetNames:
+    cmb: str = "cmb_map"
+    obs: str = "obs_maps"
+
+    def get(self, choice: str) -> str:
+        if choice == "cmb":
+            return self.cmb
+        elif choice == "obs":
+            return self.obs
+        raise ValueError(
+            f"Unsupported choice: {choice}. Supported choices are 'cmb' and 'obs'."
+        )
+
+
+DEFAULT_NAMES = FeatureAssetNames()
 
 
 class FeatureAsset(Asset, ABC):
@@ -9,21 +28,25 @@ class FeatureAsset(Asset, ABC):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def select(assets_in: Dict[str, Asset], 
-               choice: str, 
-               instrument: Instrument = None) -> 'FeatureAsset':
+    def select(
+        assets: Dict[str, Asset],
+        choice: str,
+        instrument: Instrument = None,
+        name_map: FeatureAssetNames = DEFAULT_NAMES,
+    ) -> "FeatureAsset":
+        asset = assets[name_map.get(choice)]
+
         if choice == "cmb":
-            asset = assets_in["cmb_map"]
-            res = CMBFeatureAsset.__new__(CMBFeatureAsset)
-            res.__dict__.update(asset.__dict__)
+            return CMBFeatureAsset.create_from(asset)
+
         elif choice == "obs":
-            asset = assets_in["obs_maps"]
-            res = ObsFeatureAsset.__new__(ObsFeatureAsset)
-            res.__dict__.update(asset.__dict__)
+            res = ObsFeatureAsset.create_from(asset)
             res.instrument = instrument
-        else:
-            raise ValueError(f"Unsupported choice: {choice}. Supported choices are 'cmb' and 'obs'.")
-        return res
+            return res
+
+        raise ValueError(
+            f"Unsupported choice: {choice}. Supported choices are 'cmb' and 'obs'."
+        )
 
     @classmethod
     def create_from(cls, asset):
@@ -51,7 +74,7 @@ class CMBFeatureAsset(FeatureAsset):
 
     def feature_iter(self):
         """
-        CMB features are single maps, so we return an iterator with a single element.
+        CMB features are single maps, so return an iterator with a single element.
         """
         yield "cmb", self
 

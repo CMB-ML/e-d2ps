@@ -56,11 +56,8 @@ class FindDatasetStatsParallelExecutor(BaseStageExecutor):
         in_cmb_map_handler: HealpyMap
         in_obs_map_handler: HealpyMap
 
-        scaling = cfg.model.get("scaling", None)
-        if scaling and scaling != "minmax":
-            msg = f"Only minmax scaling is supported, not {scaling}."
-            raise NotImplementedError(msg)
-        self.get_extrema = scaling == "minmax"
+        scaling = cfg.model.get("scale_px", None)
+        self.get_extrema = scaling in ["global_minmax"]
 
         self.scale_scan_method = None
         self.scale_sift_method = None

@@ -80,7 +80,10 @@ class TrainingExecutor(BaseD2PSExecutor):
         in_model_handler: PyTorchModel
 
         self.lut_style = cfg.model.patches.get("lut_style", None)
+
+        # How data was processed ()
         self.scale_ps = make_ps_processor(cfg.model.scale_ps, cfg)
+        self.scale_px = cfg.model.scale_px
 
         # How model is evaluated
         self.loss_key      = cfg.model.train.loss
@@ -169,7 +172,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         elif self.random_init:
             logger.info(f"Starting new, randomly initialized model.")
             with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model)
+                self.out_model.write(model=model, epoch="init")
         else:
             logger.info(f"Loading transfer-initialization model.")
             context = dict(model_num=self.model_num,
@@ -177,7 +180,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             with self.name_tracker.set_contexts(context):
                 self.in_initial_model.read(model=model, strict=False)
             with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model)
+                self.out_model.write(model=model, epoch="init")
 
         if do_loss_record == "continue":
             self.out_loss_record.start()  # New lines will be added, naively
@@ -283,7 +286,8 @@ class TrainingExecutor(BaseD2PSExecutor):
             self.out_model.write(model=model, epoch="final")
 
     def set_up_dataset(self, split: Split) -> None:
-        with self.name_tracker.set_context("style", self.lut_style):
+        context = dict(px_arrange=self.px_arrange, scale=self.scale_px)
+        with self.name_tracker.set_contexts(context):
             trgt_path_template = self.make_fn_template(split, self.in_trgt_asset)
             feat_path_template = self.make_fn_template(split, self.in_feat_asset)
 

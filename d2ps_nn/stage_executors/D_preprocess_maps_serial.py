@@ -20,6 +20,7 @@ from cmbml.utils.map_fields_helper import map_field_str2int
 from d2ps_nn.utils.minmax_scale import minmax_scale
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.numpy_dtype import get_np_dtype
+from d2ps_nn.utils.px_scale import make_px_processor, MapProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -48,16 +49,13 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         self.in_features = FeatureAsset.select(self.assets_in, 
                                                cfg.features_type, 
                                                self.instrument)
-        self.in_dataset_stats: Asset = self.assets_in["dataset_stats"]
         self.in_lut: Asset = self.assets_in["lut"]
         in_obs_map_handler: HealpyMap
         in_dataset_stats_handler: Config
         in_lut_handler: NumpyMap
 
-        self.scaling = cfg.model.get("scaling", None)
-        if self.scaling and self.scaling != "minmax":
-            msg = f"Only minmax scaling is supported, not {self.scaling}."
-            raise NotImplementedError(msg)
+        self.scaling = cfg.model.get("scale_px", None)
+        self.scale_px: MapProcessor = make_px_processor(cfg.model.scale_px, cfg)
 
         self.dtype = get_np_dtype(cfg.model.dtype)
 
@@ -69,7 +67,6 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
         self.ensure_splits()
         self.load_lut()
-        self.load_dataset_stats()
         for split in self.splits:
             logger.info(f"{self.__class__.__name__} preprocessing {split.name}.")
             with self.name_tracker.set_context("split", split.name):
@@ -78,11 +75,6 @@ class PreprocessMapsExecutor(BaseStageExecutor):
     def load_lut(self) -> None:
         with self.name_tracker.set_context("style", self.lut_style):
             self.lut = self.in_lut.read()
-
-    def load_dataset_stats(self) -> None:
-        # TODO: Use a class to better handle scaling/normalization
-        if self.scaling == "minmax":
-            self.dataset_stats = self.in_dataset_stats.read()
 
     def process_split(self, 
                       split: Split) -> None:
@@ -96,14 +88,15 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         # Process observations
         for channel, asset in self.in_features.feature_iter():
             obs_map = asset.read(precision=self.dtype)
-            map_stats = self.get_dataset_stats(channel)
-            out = self.process_map(obs_map, map_stats)
-            with self.name_tracker.set_context("style", self.lut_style):
+            out = self.process_map(obs_map, channel)
+            context = dict(px_arrange=self.lut_style,
+                           scale=self.scaling)
+            with self.name_tracker.set_contexts(context):
                 self.out_feat.write(data=out)
 
     def process_map(self,
                     map_data: np.ndarray,  # Or Astropy Quantity
-                    dataset_stats: Dict[str, Dict[str, Any]],
+                    channel
                     ) -> None:
         """
         From map data, extract patches, scale, and save them to an asset.
@@ -112,20 +105,22 @@ class PreprocessMapsExecutor(BaseStageExecutor):
         for field_str in self.map_fields:
             field_int = map_field_str2int(field_str)
             m = map_data[field_int]
-            if self.scaling == "minmax":
-                m = minmax_scale(m, 
-                                 dataset_stats[field_str]["vmin"], 
-                                 dataset_stats[field_str]["vmax"])
+            m = self.scale_px.preprocess(m, channel, field_str=field_str)
             out.append(m[self.lut])
         out = np.array(out)
         return out
 
-    def get_dataset_stats(self, freq):
-        dataset_stats = None
-        try:
-            dataset_stats = self.dataset_stats[freq]
-        except TypeError:
-            pass  # Allow TypeError to go through? Unknown why this is here.
-        except Exception:
-            raise TypeError(f"No stats for {freq} in file {self.in_dataset_stats.path}")
-        return dataset_stats
+    # def load_dataset_stats(self) -> None:
+    #     # TODO: Use a class to better handle scaling/normalization
+    #     if self.scaling == "minmax":
+    #         self.dataset_stats = self.in_dataset_stats.read()
+
+    # def get_dataset_stats(self, freq):
+    #     dataset_stats = None
+    #     try:
+    #         dataset_stats = self.dataset_stats[freq]
+    #     except TypeError:
+    #         pass  # Allow TypeError to go through? Unknown why this is here.
+    #     except Exception:
+    #         raise TypeError(f"No stats for {freq} in file {self.in_dataset_stats.path}")
+    #     return dataset_stats

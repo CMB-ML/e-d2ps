@@ -1,0 +1,19 @@
+defaults:
+  - config_d2ps
+  - _self_
+
+working_dir        : ${prep_working_dir}
+
+hydra:
+  mode: MULTIRUN
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose      : false
+  sweeper:
+    params: null  # Nothing needed
+
+n_sims: 20000

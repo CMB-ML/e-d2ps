@@ -48,6 +48,7 @@ class PredictExecutor(BaseD2PSExecutor):
 
         # How data is processed
         self.scale_ps = make_ps_processor(cfg.model.scale_ps, cfg)
+        self.scale_px = cfg.model.scale_px
 
         self.model = None  # Placeholder for model
 
@@ -93,7 +94,8 @@ class PredictExecutor(BaseD2PSExecutor):
                         self.out_cmb_asset.write(data=pred)
 
     def set_up_dataset(self, template_split: Split) -> TestDataset:
-        with self.name_tracker.set_context("style", self.lut_style):
+        context = dict(px_arrange=self.px_arrange, scale=self.scale_px)
+        with self.name_tracker.set_contexts(context):
             obs_path_template = self.make_fn_template(template_split, self.in_feat_asset)
         freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
 

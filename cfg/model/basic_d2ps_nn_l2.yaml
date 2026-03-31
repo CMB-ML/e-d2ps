@@ -1,7 +1,6 @@
 # Consistent properties for all stages:
 model_seed: "model_seed_{iter}"
 dtype     : float   # "float" is 32-bit; "double" is 64-bit. Conversions used in preprocess map, train, predict
-scaling   : minmax  # minmax or null (for maps)
 lmax      : ${lmax}  # lmax for prediction of power spectra
 # Use ells follows numpy format [ell_min:ell_max:step] with multiple
 #   ranges separated by commas; e.g. "[2:11],[20:201:10]"
@@ -9,7 +8,14 @@ lmax      : ${lmax}  # lmax for prediction of power spectra
 use_ells  : "[2:${lmax}+1:1]"
 # use_ells  : "[2:31],[40:${lmax}:10]"
 
-# Scaling the power spectra
+# Scaling maps
+#   Accepts: global_minmax
+#            local_minmax
+#            local_meanstdv
+#            null
+scale_px  : ${scale_px}
+
+# Scaling power spectra
 #   Accepts: a float/int (a divisor for the Dl)
 #            cl (convert Dl back to Cl, not recommended unless using matching loss)
 #            meanstdv (for use with FindSpectraStatsExecutor)

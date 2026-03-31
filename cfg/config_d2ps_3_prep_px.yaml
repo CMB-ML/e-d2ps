@@ -15,7 +15,6 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      use_pos_enc_lut: ${use_pos_enc_lut_sweep}
+      scale_px: ${scale_px_sweep}
 
-activation: relu
-pooling: max
+n_sims: 5

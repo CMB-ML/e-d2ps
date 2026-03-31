@@ -33,23 +33,10 @@ class FindSpectraStatsExecutor(BaseStageExecutor):
         in_cmb_ps_handler: CambPowerSpectrum
 
         self.ells = parse_ells(cfg.model.use_ells)
-        self.scale_ps_choice = cfg.model.scale_ps
-
-        # self.lmax = cfg.model.lmax
-        # self.scale_ps_choice = cfg.model.scale_ps
-
-        # If using Wishart, we need to skip the monopole and dipole
-        # self.skip_mono_dipole = cfg.model.train.loss == "wishart"
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
         self.ensure_splits()
-
-        # Assumption: power spectra are currently in Dl ("log-normalized")
-        # if self.scale_ps_choice == "Cl":
-        #     self.scale_ps = make_cl_lognorm_scale(self.lmax)
-        # elif self.scale_ps_choice is None:
-        #     self.scale_ps = 1
 
         for split in self.splits:
             logger.info(f"{self.__class__.__name__} preprocessing {split.name}.")
