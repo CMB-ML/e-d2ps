@@ -16,13 +16,14 @@ hydra:
   sweeper:
     params:
       # n_sims: ${n_sims_sweep}
-      n_sims: 5
+      n_sims: 2000
 
       # learning_rate: ${learning_rate_sweep}
       learning_rate: 2e-5
 
-      scale_px: ${scale_px_sweep}
+      # scale_px: ${scale_px_sweep}
       # scale_px: global_minmax
+      scale_px: local_meanstdv
 
       scale_ps: ${scale_ps_sweep}
       # scale_ps: 4000
@@ -31,7 +32,7 @@ hydra:
       # use_pos_enc_lut: false
       
       # norm_kind: ${norm_sweep}
-      norm_kind: none
+      norm_kind: gn
       
       # activation: ${activation_sweep}
       activation: gelu
@@ -42,5 +43,5 @@ hydra:
       # model_num: ${model_num_sweep}
       model_num: 1
 
-      # adamw_wd: ${adamw_wd_sweep}
-      adamw_wd: 0.0
+      adamw_wd: ${adamw_wd_sweep}
+      # adamw_wd: 0.0
