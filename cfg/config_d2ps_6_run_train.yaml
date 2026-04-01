@@ -35,10 +35,10 @@ hydra:
       norm_kind: gn
       
       # activation: ${activation_sweep}
-      activation: gelu
+      # activation: gelu
       
       # pooling: ${pooling_sweep}
-      pooling: max
+      # pooling: max
       
       # model_num: ${model_num_sweep}
       model_num: 1

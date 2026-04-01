@@ -16,7 +16,9 @@ hydra:
   sweeper:
     params:
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
-      activation: relu
-      pooling: max
+      # activation: relu
+      # pooling: max
       model_num: ${model_num_sweep}
       norm_kind: none
+
+n_sims: 2000
