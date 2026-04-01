@@ -16,14 +16,14 @@ hydra:
   sweeper:
     params:
       # n_sims: ${n_sims_sweep}
-      n_sims: 2000
+      n_sims: ${n_sims_train}
 
-      # learning_rate: ${learning_rate_sweep}
-      learning_rate: 2e-5
+      learning_rate: ${learning_rate_sweep}
+      # learning_rate: 2e-5
 
-      # scale_px: ${scale_px_sweep}
+      scale_px: ${scale_px_sweep}
       # scale_px: global_minmax
-      scale_px: local_meanstdv
+      # scale_px: local_meanstdv
 
       scale_ps: ${scale_ps_sweep}
       # scale_ps: 4000
@@ -40,8 +40,8 @@ hydra:
       # pooling: ${pooling_sweep}
       pooling: max
       
-      # model_num: ${model_num_sweep}
-      model_num: 1
+      model_num: ${model_num_sweep}
+      # model_num: 1
 
-      adamw_wd: ${adamw_wd_sweep}
-      # adamw_wd: 0.0
+      # adamw_wd: ${adamw_wd_sweep}
+      adamw_wd: 0.0

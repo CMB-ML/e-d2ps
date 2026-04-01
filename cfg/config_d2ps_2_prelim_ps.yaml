@@ -16,4 +16,4 @@ hydra:
   sweeper:
     params: null  # Nothing needed
 
-n_sims: 20000
+n_sims: ${n_sims_prep}

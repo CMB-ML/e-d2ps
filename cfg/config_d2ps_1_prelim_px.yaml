@@ -18,4 +18,4 @@ hydra:
       scale_px: global_minmax  # Otherwise, FindDatasetStats won't run
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
 
-n_sims: 20000
+n_sims: ${n_sims_prep}
