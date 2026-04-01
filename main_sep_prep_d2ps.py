@@ -116,9 +116,9 @@ def run_6_train(cfg):
         ShowPredictionsPeaksExecutor,
         # # PowerSpectrumAnalysisExecutor,
         # # ShowBWPredictionsExecutor,
-        BundleTrueExecutor,
-        BundlePredExecutor,
-        ShowTrebleEll
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 

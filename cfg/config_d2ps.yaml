@@ -23,10 +23,10 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 #                                                              #
 ################################################################
 model_num: ???
-model_num_sweep: 1, 2, 3
+model_num_sweep: 1  #, 2, 3
 
 scale_px: ???
-scale_px_sweep: global_minmax, local_meanstdv, local_minmax
+scale_px_sweep: global_minmax, local_meanstdv, local_minmax, null
 # scale_px_sweep: global_minmax
 # scale_px_sweep: local_minmax
 # scale_px_sweep: local_meanstdv
@@ -37,7 +37,9 @@ scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
 use_pos_enc_lut_sweep: false
+use_pos_enc_lut_sweep: true
 # use_pos_enc_lut_sweep: false, true
+
 
 optimizer: Adam
 # optimizer: AdamW
@@ -47,7 +49,7 @@ adamw_wd : 0.0  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.0, 1e-2
 
 learning_rate: ???
-# learning_rate_sweep: 5e-6, 1e-5, 2e-5
+learning_rate_sweep: 5e-6, 1e-5, 2e-5, 5e-5
 
 ### Models: Either 
 nn_model: SimpleEncDec
@@ -55,9 +57,9 @@ px_arrange: cmbNNCS
 norm_kind: ???
 # norm_sweep: none, bn, gn
 pooling: ???
-# pooling_sweep: max, avg
+pooling_sweep: max, avg
 activation: ???
-# activation_sweep: relu, gelu
+activation_sweep: relu, gelu
 
 ### Or
 # nn_model: TLPEncAggDec
