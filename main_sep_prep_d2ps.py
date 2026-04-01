@@ -109,8 +109,8 @@ def run_6_train(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         CheckGPULoadExecutor,
-        # OverfitTrainingExecutor,
-        TrainingExecutor,
+        OverfitTrainingExecutor,
+        # TrainingExecutor,
         PredictExecutor,
         LossPlotExecutor,
         ShowPredictionsPeaksExecutor,
@@ -164,8 +164,8 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_1_prelim_px()
-    run_2_prelim_ps()
+    # run_1_prelim_px()
+    # run_2_prelim_ps()
     run_3_prep_px()
     run_4_prep_ps()
     run_5_make_models()
