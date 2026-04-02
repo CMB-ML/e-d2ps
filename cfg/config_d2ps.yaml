@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_MR_AdamWTF/adamwtf-v-${adamwtf}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_MR_AdamWTF_TF32/adamwtf-v-${adamwtf}-Baseline/"
 # working_dir        : &wd "${features_type}2ps_${nn_model}_MR/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_scale-${model.scale_ps}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_${model_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
@@ -30,10 +30,7 @@ model_num: 1
 # model_num: 3
 
 adamwtf: null
-adamwtf_sweep: 5
-adamwtf_sweep: 4
-adamwtf_sweep: 3
-adamwtf_sweep: 0,1,2
+adamwtf_sweep: 0
 
 learning_rate: 1e-5
 # learning_rate: ???
