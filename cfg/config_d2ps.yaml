@@ -16,7 +16,7 @@ dataset_name       : "${map_fields}_${scenario.nside}_20850"
 working_dir        : &wd "${features_type}2ps_TF32_Sweep/${nn_model}_tf32disable-${force_disable_tf32}_spx-${scale_px}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
+fig_model_name     : "${features_type} to PS, SimpleEncDec, Looking at A100 Differences \n px Scale: ${scale_px} force_disable_tf32 ${force_disable_tf32}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 ################################################################
