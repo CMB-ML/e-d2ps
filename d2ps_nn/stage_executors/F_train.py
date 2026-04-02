@@ -393,6 +393,15 @@ class OverfitTrainingExecutor(TrainingExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
+        old1 = torch.backends.cuda.matmul.allow_tf32
+        old2 = torch.backends.cudnn.allow_tf32
+
+        torch.backends.cuda.matmul.allow_tf32 = False
+        logger.info(f"torch.backends.cuda.matmul.allow_tf32 was {old1}, is now {torch.backends.cuda.matmul.allow_tf32}")
+        
+        torch.backends.cudnn.allow_tf32 = False
+        logger.info(f"torch.backends.cudnn.allow_tf32 was {old2}, is now {torch.backends.cudnn.allow_tf32}")
+
         model = self.init_model()
         context = dict(model_num=self.model_num,
                     pos_enc=self.use_pos_enc_lut)
