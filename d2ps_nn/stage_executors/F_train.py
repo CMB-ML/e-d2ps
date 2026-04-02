@@ -374,143 +374,148 @@ class OverfitTrainingExecutor(TrainingExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        old1 = torch.backends.cuda.matmul.allow_tf32
-        old2 = torch.backends.cudnn.allow_tf32
+        old_cuda_tf32 = torch.backends.cuda.matmul.allow_tf32
+        old_cudnntf32 = torch.backends.cudnn.allow_tf32
 
         if self.disable_tf32:
             torch.backends.cuda.matmul.allow_tf32 = False
-        logger.info(f"torch.backends.cuda.matmul.allow_tf32 was {old1}, is now {torch.backends.cuda.matmul.allow_tf32}")
+        logger.info(f"torch.backends.cuda.matmul.allow_tf32 was {old_cuda_tf32}, is now {torch.backends.cuda.matmul.allow_tf32}")
         
         if self.disable_tf32:
             torch.backends.cudnn.allow_tf32 = False
-        logger.info(f"torch.backends.cudnn.allow_tf32 was {old2}, is now {torch.backends.cudnn.allow_tf32}")
+        logger.info(f"torch.backends.cudnn.allow_tf32 was {old_cudnntf32}, is now {torch.backends.cudnn.allow_tf32}")
 
-        model = self.init_model()
-        context = dict(model_num=self.model_num,
-                    pos_enc=self.use_pos_enc_lut)
-        with self.name_tracker.set_contexts(context):
-            self.in_initial_model.read(model=model, strict=False)
+        if True:
 
-        train_split = self.splits.get("train")
+            model = self.init_model()
+            context = dict(model_num=self.model_num,
+                        pos_enc=self.use_pos_enc_lut)
+            with self.name_tracker.set_contexts(context):
+                self.in_initial_model.read(model=model, strict=False)
 
-        train_dataset = self.set_up_dataset(train_split)
-        dataloader_params = dict(
-            batch_size=self.batch_size, 
-            shuffle=False,
-            num_workers=self.num_workers
-        )
-        train_dataloader = DataLoader(train_dataset, **dataloader_params)
-        logger.info(f"Dataloader: {dataloader_params}")
+            train_split = self.splits.get("train")
 
-        logger.info(f"Training on {len(train_dataloader)}batches, batch size {self.batch_size}.")
-
-        loss_function = get_loss(self.loss_key, self.ells)
-        loss_function = loss_function.to(self.device)
-        logger.info(f"Loss: {self.loss_key}")
-
-        optimizer = self.get_optimizer(model)
-
-        logger.info(f"Starting new model.")
-        with self.name_tracker.set_context("epoch", "init"):
-            self.out_model.write(model=model, epoch="init")
-        start_epoch = 0
-        loss_record_headers = [
-            'Epoch',
-            'Training Loss',          # scale/report-space epoch average, as before
-            'Original Training Loss', # raw epoch average, as before
-            'Loss Before Step',
-            'Loss After Step',
-            'Grad Norm',
-            'Param Norm',
-            'Update Norm',
-            'Relative Update',
-        ]
-        self.out_loss_record.write(data=loss_record_headers)
-
-        train_features, lbl = next(iter(train_dataloader))
-        train_features = train_features.to(device=self.device, dtype=self.dtype)
-        lbl = lbl.to(device=self.device, dtype=self.dtype)
-
-        header_printed = False
-
-        loss_record_lines = []
-
-        for epoch in range(start_epoch, self.n_epochs):
-            t0 = time.time()
-
-            optimizer.zero_grad()
-
-            # Forward before step
-            out = model(train_features)
-            loss = loss_function(out, lbl)
-            loss_before = loss.item()
-
-            with torch.no_grad():
-                out_sc = self.scale_ps.postprocess(out)
-                lbl_sc = self.scale_ps.postprocess(lbl)
-                loss_sc = loss_function(out_sc, lbl_sc).item()
-
-            # Save params before backward/step so we can measure update size
-            old_params = _clone_trainable_params(model)
-
-            # Backward
-            loss.backward()
-
-            # Diagnostics before step
-            grad_norm = _get_global_grad_norm(model)
-            param_norm = _get_param_norm(model)
-
-            # Optimizer step
-            optimizer.step()
-
-            # Forward after step on the exact same batch
-            with torch.no_grad():
-                out_after = model(train_features)
-                loss_after = loss_function(out_after, lbl).item()
-
-            update_norm = _get_update_norm(model, old_params)
-            relative_update = update_norm / (param_norm + 1e-12)
-
-            batch_loss = loss.item()
-            rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
-            dt = time.time() - t0
-
-            if not header_printed:
-                print(f"{'Ep':>4} | {'Loss':>10} | {'rate (1/s)':>10}")
-                print("-" * 44)
-                header_printed = True
-
-            dt = time.time() - t0
-            ep_per_sec = 1.0 / dt if dt > 0 else float("inf")
-            gpu = get_gpu_stats(handle)
-
-            logger.info(
-                f"{epoch+1:4d} | "
-                f"{rep_loss:10.3e} | "
-                f"{ep_per_sec:7.2f} ep/s | "
-                f"{gpu['gpu_util']:3d}% util | "
-                f"{gpu['temp_C']:2d} C | "
-                f"{gpu['power_W']:6.1f} W | "
-                f"{gpu['sm_clock_MHz']:4d} MHz"
+            train_dataset = self.set_up_dataset(train_split)
+            dataloader_params = dict(
+                batch_size=self.batch_size, 
+                shuffle=False,
+                num_workers=self.num_workers
             )
+            train_dataloader = DataLoader(train_dataset, **dataloader_params)
+            logger.info(f"Dataloader: {dataloader_params}")
 
-            loss_record_lines.append([
-                epoch + 1,
-                loss_sc,
-                batch_loss,
-                loss_before,
-                loss_after,
-                grad_norm,
-                param_norm,
-                update_norm,
-                relative_update,
-            ])
+            logger.info(f"Training on {len(train_dataloader)}batches, batch size {self.batch_size}.")
 
-        with self.name_tracker.set_context("epoch", "final"):
-            self.out_model.write(model=model, epoch="final")
+            loss_function = get_loss(self.loss_key, self.ells)
+            loss_function = loss_function.to(self.device)
+            logger.info(f"Loss: {self.loss_key}")
 
-        for l in loss_record_lines:
-            self.out_loss_record.append(l)
+            optimizer = self.get_optimizer(model)
+
+            logger.info(f"Starting new model.")
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model, epoch="init")
+            start_epoch = 0
+            loss_record_headers = [
+                'Epoch',
+                'Training Loss',          # scale/report-space epoch average, as before
+                'Original Training Loss', # raw epoch average, as before
+                'Loss Before Step',
+                'Loss After Step',
+                'Grad Norm',
+                'Param Norm',
+                'Update Norm',
+                'Relative Update',
+            ]
+            self.out_loss_record.write(data=loss_record_headers)
+
+            train_features, lbl = next(iter(train_dataloader))
+            train_features = train_features.to(device=self.device, dtype=self.dtype)
+            lbl = lbl.to(device=self.device, dtype=self.dtype)
+
+            header_printed = False
+
+            loss_record_lines = []
+
+            for epoch in range(start_epoch, self.n_epochs):
+                t0 = time.time()
+
+                optimizer.zero_grad()
+
+                # Forward before step
+                out = model(train_features)
+                loss = loss_function(out, lbl)
+                loss_before = loss.item()
+
+                with torch.no_grad():
+                    out_sc = self.scale_ps.postprocess(out)
+                    lbl_sc = self.scale_ps.postprocess(lbl)
+                    loss_sc = loss_function(out_sc, lbl_sc).item()
+
+                # Save params before backward/step so we can measure update size
+                old_params = _clone_trainable_params(model)
+
+                # Backward
+                loss.backward()
+
+                # Diagnostics before step
+                grad_norm = _get_global_grad_norm(model)
+                param_norm = _get_param_norm(model)
+
+                # Optimizer step
+                optimizer.step()
+
+                # Forward after step on the exact same batch
+                with torch.no_grad():
+                    out_after = model(train_features)
+                    loss_after = loss_function(out_after, lbl).item()
+
+                update_norm = _get_update_norm(model, old_params)
+                relative_update = update_norm / (param_norm + 1e-12)
+
+                batch_loss = loss.item()
+                rep_loss = loss.item() if self.scale_ps.report_space == "pre" else loss_sc
+                dt = time.time() - t0
+
+                if not header_printed:
+                    print(f"{'Ep':>4} | {'Loss':>10} | {'rate (1/s)':>10}")
+                    print("-" * 44)
+                    header_printed = True
+
+                dt = time.time() - t0
+                ep_per_sec = 1.0 / dt if dt > 0 else float("inf")
+                gpu = get_gpu_stats(handle)
+
+                logger.info(
+                    f"{epoch+1:4d} | "
+                    f"{rep_loss:10.3e} | "
+                    f"{ep_per_sec:7.2f} ep/s | "
+                    f"{gpu['gpu_util']:3d}% util | "
+                    f"{gpu['temp_C']:2d} C | "
+                    f"{gpu['power_W']:6.1f} W | "
+                    f"{gpu['sm_clock_MHz']:4d} MHz"
+                )
+
+                loss_record_lines.append([
+                    epoch + 1,
+                    loss_sc,
+                    batch_loss,
+                    loss_before,
+                    loss_after,
+                    grad_norm,
+                    param_norm,
+                    update_norm,
+                    relative_update,
+                ])
+
+            with self.name_tracker.set_context("epoch", "final"):
+                self.out_model.write(model=model, epoch="final")
+
+            for l in loss_record_lines:
+                self.out_loss_record.append(l)
+
+        torch.backends.cuda.matmul.allow_tf32 = old_cuda_tf32
+        torch.backends.cudnn.allow_tf32 = old_cudnntf32
 
 
 def _get_param_norm(model, norm_type=2.0):

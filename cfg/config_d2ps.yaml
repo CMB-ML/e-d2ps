@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_TF32_Sweep/${nn_model}_tf32disable-${force_disable_tf32}_spx-${scale_px}/"
+working_dir        : &wd "${features_type}2ps_TF32_Sweep_20kep_Redo3/${nn_model}_tf32disable-${force_disable_tf32}_spx-${scale_px}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, SimpleEncDec, Looking at A100 Differences \n px Scale: ${scale_px} force_disable_tf32 ${force_disable_tf32}"
@@ -121,7 +121,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 5000
+num_epochs         : 20000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
