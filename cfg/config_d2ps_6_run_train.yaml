@@ -44,3 +44,5 @@ hydra:
 
       # adamw_wd: ${adamw_wd_sweep}
       adamw_wd: 0.0
+
+      force_disable_tf32: ${force_disable_tf32_sweep}

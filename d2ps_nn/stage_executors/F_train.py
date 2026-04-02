@@ -369,8 +369,21 @@ class OverfitTrainingExecutor(TrainingExecutor):
         self.use_preload   = cfg.model.train.get("use_preload", False)
         self.batch_size    = cfg.splits.Train.n_sims
 
+        self.disable_tf32  = cfg.force_disable_tf32
+
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        old1 = torch.backends.cuda.matmul.allow_tf32
+        old2 = torch.backends.cudnn.allow_tf32
+
+        if self.disable_tf32:
+            torch.backends.cuda.matmul.allow_tf32 = False
+        logger.info(f"torch.backends.cuda.matmul.allow_tf32 was {old1}, is now {torch.backends.cuda.matmul.allow_tf32}")
+        
+        if self.disable_tf32:
+            torch.backends.cudnn.allow_tf32 = False
+        logger.info(f"torch.backends.cudnn.allow_tf32 was {old2}, is now {torch.backends.cudnn.allow_tf32}")
 
         model = self.init_model()
         context = dict(model_num=self.model_num,
