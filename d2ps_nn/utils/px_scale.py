@@ -327,17 +327,17 @@ def make_px_processor(
 
     if mode == "global_minmax":
         dataset_stats_asset = ch.get_assets_in(n, stage_str)['dataset_stats']
-        mean_ref = LazyDatasetChannelStat(
+        min_ref = LazyDatasetChannelStat(
             stats_asset=dataset_stats_asset,
             which="vmin",
         )
-        stdv_ref = LazyDatasetChannelStat(
+        max_ref = LazyDatasetChannelStat(
             stats_asset=dataset_stats_asset,
             which="vmax",
         )
         return MinMaxProcessor(
-            min_ref=mean_ref,
-            max_ref=stdv_ref,
+            min_ref=min_ref,
+            max_ref=max_ref,
         )
 
     if mode == "local_minmax":
@@ -351,18 +351,18 @@ def make_px_processor(
             name_map=stat_name_map,
         )
 
-        mean_ref = LazyFeaturePixelStat(
+        min_ref = LazyFeaturePixelStat(
             feature_stats_asset=feature_stats,
             which_idx=STAT_MIN,
         )
-        stdv_ref = LazyFeaturePixelStat(
+        max_ref = LazyFeaturePixelStat(
             feature_stats_asset=feature_stats,
             which_idx=STAT_MAX,
         )
 
         return MinMaxProcessor(
-            min_ref=mean_ref,
-            max_ref=stdv_ref,
+            min_ref=min_ref,
+            max_ref=max_ref,
         )
 
     if mode == "local_meanstdv":
