@@ -4,6 +4,7 @@ from functools import partial
 
 import healpy as hp
 import numpy as np
+import pysm3.units as u
 
 from omegaconf import DictConfig
 
@@ -43,6 +44,7 @@ class FindPxMapStatsExecutor(BaseStageExecutor):
                                                self.instrument)
         in_obs_map_handler: HealpyMap
         self.nside = cfg.scenario.nside
+        self.map_prep_beam = cfg.get("map_prep_beam", 0)
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -77,6 +79,8 @@ class FindPxMapStatsExecutor(BaseStageExecutor):
         }
 
         count = 0
+        map_prep_beam = u.Quantity(self.map_prep_beam, u.degree).to(u.radian).value
+        logger.info(f"Using {self.map_prep_beam} degree beam on maps.")
 
         for sim in tqdm(split.iter_sims(), total=n_sims):
             logger.debug(f"Updating conditioning stats for sim {sim}.")
@@ -85,6 +89,8 @@ class FindPxMapStatsExecutor(BaseStageExecutor):
                 count += 1
                 for channel, asset in self.in_features.feature_iter():
                     x = asset.read(precision=np.float64)[0].value
+
+                    x = hp.smoothing(x, fwhm=map_prep_beam)
 
                     min_maps[channel] = np.minimum(min_maps[channel], x)
                     max_maps[channel] = np.maximum(max_maps[channel], x)
@@ -106,4 +112,5 @@ class FindPxMapStatsExecutor(BaseStageExecutor):
                 mean_maps[channel],
                 stdv_maps[channel],
             ])
-            asset.write(data=out_maps)
+            with self.name_tracker.set_context("map_prep_beam", self.map_prep_beam):
+                asset.write(data=out_maps)

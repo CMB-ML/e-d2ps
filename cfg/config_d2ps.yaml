@@ -79,6 +79,7 @@ activation: ???
 #   Lesser-used set-up
 ###############################################################
 n_sims: ???
+map_prep_beam: 5  # Degrees
 
 splits:
   Train:
