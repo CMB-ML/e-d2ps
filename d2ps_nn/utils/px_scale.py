@@ -327,17 +327,17 @@ def make_px_processor(
 
     if mode == "global_minmax":
         dataset_stats_asset = ch.get_assets_in(n, stage_str)['dataset_stats']
-        min_ref = LazyDatasetChannelStat(
+        mean_ref = LazyDatasetChannelStat(
             stats_asset=dataset_stats_asset,
             which="vmin",
         )
-        max_ref = LazyDatasetChannelStat(
+        stdv_ref = LazyDatasetChannelStat(
             stats_asset=dataset_stats_asset,
             which="vmax",
         )
         return MinMaxProcessor(
-            min_ref=min_ref,
-            max_ref=max_ref,
+            min_ref=mean_ref,
+            max_ref=stdv_ref,
         )
 
     if mode == "local_minmax":
@@ -351,18 +351,18 @@ def make_px_processor(
             name_map=stat_name_map,
         )
 
-        min_ref = LazyFeaturePixelStat(
+        mean_ref = LazyFeaturePixelStat(
             feature_stats_asset=feature_stats,
             which_idx=STAT_MIN,
         )
-        max_ref = LazyFeaturePixelStat(
+        stdv_ref = LazyFeaturePixelStat(
             feature_stats_asset=feature_stats,
             which_idx=STAT_MAX,
         )
 
         return MinMaxProcessor(
-            min_ref=min_ref,
-            max_ref=max_ref,
+            min_ref=mean_ref,
+            max_ref=stdv_ref,
         )
 
     if mode == "local_meanstdv":
@@ -376,18 +376,18 @@ def make_px_processor(
             name_map=stat_name_map,
         )
 
-        min_ref = LazyFeaturePixelStat(
+        mean_ref = LazyFeaturePixelStat(
             feature_stats_asset=feature_stats,
             which_idx=STAT_MEAN,
         )
-        max_ref = LazyFeaturePixelStat(
+        stdv_ref = LazyFeaturePixelStat(
             feature_stats_asset=feature_stats,
             which_idx=STAT_STDV,
         )
 
         return MeanStDevProcessor(
-            mean_ref=min_ref,
-            stdv_ref=max_ref,
+            mean_ref=mean_ref,
+            stdv_ref=stdv_ref,
         )
 
     raise ValueError(f"Unknown map preprocessing mode: {mode!r}")
