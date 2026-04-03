@@ -43,5 +43,5 @@ hydra:
       model_num: ${model_num_sweep}
       # model_num: 1
 
-      # adamw_wd: ${adamw_wd_sweep}
-      adamw_wd: 0.0
+      adamw_wd: ${adamw_wd_sweep}
+      # adamw_wd: 0.0

@@ -30,8 +30,8 @@ model_num_sweep: 1  #, 2, 3
 
 scale_px: ???
 # scale_px_sweep: global_minmax, local_meanstdv, local_minmax
-scale_px_sweep: global_minmax
-scale_px_sweep: local_minmax
+# scale_px_sweep: global_minmax
+# scale_px_sweep: local_minmax
 scale_px_sweep: local_meanstdv
 
 scale_ps: ???
@@ -43,15 +43,15 @@ use_pos_enc_lut: ???
 use_pos_enc_lut_sweep: false
 # use_pos_enc_lut_sweep: false, true
 
-optimizer: Adam
-# optimizer: AdamW
+# optimizer: Adam
+optimizer: AdamW
 # adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
-# adamw_wd_sweep: 0.0, 1e-2
+adamw_wd_sweep: 1e-1, 1e-2, 1e-3
 
 learning_rate: ???
-learning_rate_sweep: 5e-6, 1e-5, 2e-5
+learning_rate_sweep: 5e-6, 1e-5, 2e-5, 5e-5
 
 ### Models: Either 
 nn_model: SimpleEncDec
@@ -120,7 +120,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 300
+num_epochs         : 50
 # num_epochs         : 1000  # 0000
 
 # In the pipeline yamls
