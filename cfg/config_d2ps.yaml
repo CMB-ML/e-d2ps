@@ -27,7 +27,7 @@ n_sims_train: 20000
 
 n_init_features: 8
 n_levels: 4
-batch_size: 50
+batch_size: 200
 
 model_num: ???
 model_num_sweep: 1  #, 2, 3
