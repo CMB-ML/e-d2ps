@@ -17,5 +17,7 @@ hydra:
     params:
       scale_px: global_minmax  # Otherwise, FindDatasetStats won't run
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
+      features_type: cmb, obs
+      map_prep_beam: 0, 1, 5
 
 n_sims: 20000
