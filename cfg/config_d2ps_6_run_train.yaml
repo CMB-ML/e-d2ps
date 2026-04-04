@@ -28,11 +28,13 @@ hydra:
       scale_ps: ${scale_ps_sweep}
       # scale_ps: 4000
       
-      use_pos_enc_lut: ${use_pos_enc_lut_sweep}
-      # use_pos_enc_lut: false
+      # use_pos_enc_lut: ${use_pos_enc_lut_sweep}
+      use_pos_enc_lut: false
+      use_pos_enc_lut: true
       
       # norm_kind: ${norm_sweep}
       norm_kind: gn
+      norm_kind: bn
       
       # activation: ${activation_sweep}
       activation: gelu
