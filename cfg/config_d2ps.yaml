@@ -13,7 +13,7 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_TEST_TIMING/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_pool-${pooling}_${model_num}/"
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${pooling}-pool, Model Init ${model_num}"
@@ -23,24 +23,25 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 #                                                              #
 ################################################################
 model_num: ???
-model_num_sweep: 1, 2, 3
+model_num_sweep: 1  #, 2, 3
 
 scale_px: ???
-scale_px_sweep: global_minmax, local_minmax, local_meanstdv, null
+# scale_px_sweep: global_minmax, local_minmax, local_meanstdv, null
 # scale_px_sweep: global_minmax
 # scale_px_sweep: local_minmax
-# scale_px_sweep: local_meanstdv
+scale_px_sweep: local_meanstdv
 
 scale_ps: ???
-scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
+# scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
+scale_ps_sweep: meanstdv
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
-use_pos_enc_lut_sweep: false
+use_pos_enc_lut_sweep: true
 # use_pos_enc_lut_sweep: false, true
 
-optimizer: Adam
-# optimizer: AdamW
+# optimizer: Adam
+optimizer: AdamW
 # adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
 adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
@@ -49,26 +50,26 @@ learning_rate: ???
 # learning_rate_sweep: 5e-6, 1e-5, 2e-5
 
 ### Models: Either 
-nn_model: SimpleEncDec
-px_arrange: cmbNNCS
-norm_kind: ???
+# nn_model: SimpleEncDec
+# px_arrange: cmbNNCS
+# norm_kind: ???
 # norm_sweep: none, bn, gn
-pooling: ???
+# pooling: ???
 # pooling_sweep: max, avg
-activation: ???
+# activation: ???
 # activation_sweep: relu, gelu
 
 ### Or
 # nn_model: TLPEncAggDec
-# nn_model: TLPEnc2AggDec
-# px_arrange: channel
+nn_model: TLPEnc2AggDec
+px_arrange: channel
 # norm_kind: none
 # norm_kind: bn
-# norm_kind: gn
-# pooling: max
+norm_kind: gn
+pooling: max
 # pooling: avg
 # activation: relu
-# activation: gelu
+activation: gelu
 
 ### Or
 # nn_model: MobileViTCMBRegressor
