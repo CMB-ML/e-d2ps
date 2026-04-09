@@ -30,7 +30,7 @@ get_px_map_stats: # C3_find_map_stats_serial.py / FindPxMapStatsExecutor
   assets_out:
     cmb_map: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/cmb_px_stats_beam.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/cmb_px_stats.npy"
       # path_template: "{root}/{dataset}/{working}{stage}/cmb_px_stats_beam_{map_prep_beam}d.npy"
     obs_maps: 
       handler: NumpyMap
