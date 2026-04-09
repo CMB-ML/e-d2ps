@@ -129,7 +129,7 @@ class LazyFeaturePixelStat(LazyStat):
       - extract requested stat and field on demand
     """
     feature_stats_asset: object
-    map_prep_beam: float
+    # map_prep_beam: float
     which_idx: int
 
     _cached_payloads: dict = field(default_factory=dict, init=False, repr=False)
@@ -144,7 +144,9 @@ class LazyFeaturePixelStat(LazyStat):
 
         if key not in self._cached_payloads:
             asset = self._get_asset_for_channel(channel)
-            context = {"freq": key, "map_prep_beam": self.map_prep_beam}
+            context = {"freq": key, 
+                    #    "map_prep_beam": self.map_prep_beam
+                       }
             with asset.name_tracker.set_contexts(context):
                 self._cached_payloads[key] = asset.read()
 
@@ -342,7 +344,7 @@ def make_px_processor(
             max_ref=max_ref,
         )
 
-    map_prep_beam = cfg.map_prep_beam
+    # map_prep_beam = cfg.map_prep_beam
     if mode == "local_minmax":
         assets_in = ch.get_assets_in(n, stage_str)
 
