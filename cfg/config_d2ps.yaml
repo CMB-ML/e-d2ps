@@ -37,17 +37,18 @@ scale_ps_sweep: meanstdv  # cl also exists, but... yeah.
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
+use_pos_enc_lut_sweep: true
 use_pos_enc_lut_sweep: false
 # use_pos_enc_lut_sweep: false, true
 
-optimizer: Adam
-# optimizer: AdamW
+# optimizer: Adam
+optimizer: AdamW
 # adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
-adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
+adamw_wd_sweep: 0.0, 1e-3, 1e-2, 5e-1
 
 learning_rate: ???
-# learning_rate_sweep: 5e-6, 1e-5, 2e-5
+learning_rate_sweep: 5e-6, 1e-5, 2e-5, 5-e5
 
 ### Models: Either 
 # nn_model: SimpleEncDec
@@ -60,14 +61,14 @@ learning_rate: ???
 # # activation_sweep: relu, gelu
 
 ### Or
-# nn_model: TLPEncAggDec
+nn_model: TLPEncAggDec
 nn_model: TLPEnc2AggDec
 px_arrange: channel
 norm_kind: ???
 # norm_sweep: none, bn, gn
 down_reductions: ???
 # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-down_reductions_sweep: Xm
+down_reductions_sweep: max, avg, Xm
 spatial_reduction: ???
 # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
@@ -75,7 +76,7 @@ face_reduction: ???
 # face_reduction_sweep: avg, max, weighted, softmax
 face_reduction_sweep: avg
 activation: ???
-# activation_sweep: relu, gelu
+activation_sweep: relu, gelu
 
 ### Or
 # nn_model: MobileViTCMBRegressor

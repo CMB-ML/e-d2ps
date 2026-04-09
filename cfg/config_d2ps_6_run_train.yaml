@@ -18,8 +18,8 @@ hydra:
       # n_sims: ${n_sims_sweep}
       n_sims: 5
 
-      # learning_rate: ${learning_rate_sweep}
-      learning_rate: 2e-5
+      learning_rate: ${learning_rate_sweep}
+      # learning_rate: 2e-5
 
       scale_px: ${scale_px_sweep}
       # scale_px: global_minmax
@@ -33,8 +33,8 @@ hydra:
       # norm_kind: ${norm_sweep}
       norm_kind: none
       
-      # activation: ${activation_sweep}
-      activation: gelu
+      activation: ${activation_sweep}
+      # activation: gelu
       
       down_reductions: ${down_reductions_sweep}
 
