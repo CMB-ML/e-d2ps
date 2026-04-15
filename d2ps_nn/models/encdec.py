@@ -140,7 +140,7 @@ class SimpleEncDec(nn.Module):
     def __init__(
                  self,
                  nside,          # Unused, for compatibility with TLP models
-                 n_ells,
+                 n_outputs,
                  n_in_channels,  # Should be the number of detectors
                  n_init_features=16,
                  n_levels=5,
@@ -171,7 +171,7 @@ class SimpleEncDec(nn.Module):
         self.dec = FCNDecoder(
             in_channels=self.enc.bottleneck_features,
             mid_channels=self.enc.bottleneck_features // 2,
-            out_channels=n_ells,
+            out_channels=n_outputs,
             dropout_rate=dropout_rate,
             activation=activation,
             bottleneck_pooling=bottleneck_pooling,

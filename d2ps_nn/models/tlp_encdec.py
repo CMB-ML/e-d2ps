@@ -139,7 +139,7 @@ class TLPEncAggDec(nn.Module):
     def __init__(
                  self,
                  nside,
-                 n_ells,
+                 n_outputs,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
                  n_init_features=16,
@@ -172,7 +172,7 @@ class TLPEncAggDec(nn.Module):
         self.dec = FCNDecoder(
             in_channels=self.enc.bottleneck_features,
             mid_channels=self.enc.bottleneck_features // 2,
-            out_channels=n_ells,
+            out_channels=n_outputs,
             use_batch_norm=use_batch_norm_dec,
             dropout_rate=dropout_rate,
             activation=activation,
@@ -215,7 +215,7 @@ class TLPEnc2AggDec(nn.Module):
     def __init__(
                  self,
                  nside,
-                 n_ells,
+                 n_outputs,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
                  n_init_features=16,
@@ -252,7 +252,7 @@ class TLPEnc2AggDec(nn.Module):
         self.dec = FCNDecoder(
             in_channels=self.enc_polar.bottleneck_features,
             mid_channels=self.enc_polar.bottleneck_features // 2,
-            out_channels=n_ells,
+            out_channels=n_outputs,
             use_batch_norm=use_batch_norm_dec,
             dropout_rate=dropout_rate,
             activation=activation,

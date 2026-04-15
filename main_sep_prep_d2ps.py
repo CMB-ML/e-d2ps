@@ -111,14 +111,14 @@ def run_6_train(cfg):
         CheckGPULoadExecutor,
         OverfitTrainingExecutor,
         # TrainingExecutor,
-        PredictExecutor,
+        # PredictExecutor,
         LossPlotExecutor,
-        ShowPredictionsPeaksExecutor,
+        # ShowPredictionsPeaksExecutor,
         # # PowerSpectrumAnalysisExecutor,
         # # ShowBWPredictionsExecutor,
-        BundleTrueExecutor,
-        BundlePredExecutor,
-        ShowTrebleEll
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -166,9 +166,9 @@ def run(cfg, pipes):
 if __name__ == "__main__":
     # run_1_prelim_px()
     # run_2_prelim_ps()
-    run_3_prep_px()
+    # run_3_prep_px()
     # run_4_prep_ps()
     # run_5_make_models()
-    # run_6_train()
+    run_6_train()
     # run_7_prep_planck()
     # run_8_run_planck()
