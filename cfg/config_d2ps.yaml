@@ -29,7 +29,8 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 ################################################################
 spectrum_layer_kind: polynomial
 return_mode: spectrum
-basis_kind: monomial
+basis_kind: ???
+basis_kind_sweep: monomial, legendre, chebyshev
 degree: 18                 # Set to "" if not using a degree (for filenames)
 out_range: [-1, 1]
 
@@ -43,8 +44,8 @@ scale_px_sweep: global_minmax
 # scale_px_sweep: local_meanstdv
 
 scale_ps: ???
-# scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
-scale_ps_sweep: meanstdv  # cl also exists, but... yeah.
+scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
+# scale_ps_sweep: meanstdv  # cl also exists, but... yeah.
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
@@ -67,8 +68,8 @@ norm_kind: ???
 # norm_sweep: none, bn, gn
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-down_reductions_sweep: Xm
+down_reductions_sweep: avg, max, X, XXm, mXX
+# down_reductions_sweep: Xm
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
@@ -139,7 +140,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 3  # 0000
+num_epochs         : 5000
 # num_epochs         : 1000  # 0000
 
 # In the pipeline yamls
@@ -155,5 +156,4 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-# run_inference_on      : test   # Either "test" ("train" should work, but is not recommended)
 run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)
