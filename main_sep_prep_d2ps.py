@@ -62,8 +62,8 @@ def run_1_prelim_px(cfg):
     pipes = [
         MakeLutExecutor,
         MakePosEncLutExecutor,
-        FindDatasetStatsParallelExecutor,
-        FindPxMapStatsExecutor,
+        # FindDatasetStatsParallelExecutor,
+        # FindPxMapStatsExecutor,
     ]
     run(cfg, pipes)
 
@@ -108,17 +108,17 @@ def run_5_make_models(cfg):
 def run_6_train(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        CheckGPULoadExecutor,
+        # CheckGPULoadExecutor,
         OverfitTrainingExecutor,
         # TrainingExecutor,
-        PredictExecutor,
-        LossPlotExecutor,
-        ShowPredictionsPeaksExecutor,
-        # # PowerSpectrumAnalysisExecutor,
-        # # ShowBWPredictionsExecutor,
-        BundleTrueExecutor,
-        BundlePredExecutor,
-        ShowTrebleEll
+        # PredictExecutor,
+        # LossPlotExecutor,
+        # ShowPredictionsPeaksExecutor,
+        # # # PowerSpectrumAnalysisExecutor,
+        # # # ShowBWPredictionsExecutor,
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -166,9 +166,9 @@ def run(cfg, pipes):
 if __name__ == "__main__":
     # run_1_prelim_px()
     # run_2_prelim_ps()
-    run_3_prep_px()
+    # run_3_prep_px()
     # run_4_prep_ps()
-    # run_5_make_models()
-    # run_6_train()
+    run_5_make_models()
+    run_6_train()
     # run_7_prep_planck()
     # run_8_run_planck()

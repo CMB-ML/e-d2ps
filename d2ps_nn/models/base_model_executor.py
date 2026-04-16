@@ -62,7 +62,8 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             self.init_model = self.init_mobileViT
             self.norm_kind     = cfg.norm_kind
         
-        elif self.nn_model in ["SimpleEncDec", "TLPEnc2AggDec", "TLPEncAggDec"]:
+        elif self.nn_model in ["SimpleEncDec"]:
+            # TODO: change SimpleEncDec from pooling to reductions-stuff
             self.init_model = self.init_simple
             self.model_n_init_features = cfg.model.n_init_features
             self.model_n_levels = cfg.model.n_levels
@@ -73,6 +74,24 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
 
             self.downsample_pooling = cfg.model.downsample_pooling
             self.bottleneck_pooling = cfg.model.bottleneck_pooling
+            self.final_activation = cfg.model.final_activation
+
+            if self.activation is None:
+                raise ValueError("Activation cannot be None. Please specify 'relu' or 'gelu' in config.")
+        
+        elif self.nn_model in ["TLPEnc2AggDec", "TLPEncAggDec"]:
+            self.init_model = self.init_simple
+            self.model_n_init_features = cfg.model.n_init_features
+            self.model_n_levels = cfg.model.n_levels
+
+            self.norm_kind = cfg.model.norm_kind
+            self.activation = cfg.model.activation
+            self.dropout_rate = cfg.model.dropout_rate
+
+            self.down_reductions = cfg.model.down_reductions
+            self.spatial_reduction = cfg.model.spatial_reduction
+            self.face_reduction = cfg.model.face_reduction
+
             self.final_activation = cfg.model.final_activation
 
             if self.activation is None:
@@ -117,6 +136,11 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         if use_model in [SimpleEncDec]:
             model_dict["downsample_pooling"] = self.downsample_pooling
             model_dict["bottleneck_pooling"] = self.bottleneck_pooling
+
+        if use_model in [TLPEncAggDec, TLPEnc2AggDec]:
+            model_dict["down_reductions"]   = self.down_reductions
+            model_dict["spatial_reduction"] = self.spatial_reduction
+            model_dict["face_reduction"]    = self.face_reduction
 
         # Make the model
         logger.info(f"Model params: {model_dict}")

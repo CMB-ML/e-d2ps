@@ -36,8 +36,11 @@ hydra:
       # activation: ${activation_sweep}
       activation: gelu
       
-      # pooling: ${pooling_sweep}
-      pooling: max
+      down_reductions: ${down_reductions_sweep}
+
+      spatial_reduction: ${spatial_reduction_sweep}
+
+      face_reduction: ${face_reduction_sweep}
       
       # model_num: ${model_num_sweep}
       model_num: 1
