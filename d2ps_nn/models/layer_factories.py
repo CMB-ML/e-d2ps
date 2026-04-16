@@ -36,7 +36,7 @@ def get_downsample_pooling(kind: str) -> nn.Module:
         raise ValueError(f"Unknown pooling '{kind}'. Choose from: 'avg', 'max'.")
 
 
-def get_bottleneck_pooling(kind: str) -> nn.Module:
+def get_spatial_reduction(kind: str) -> nn.Module:
     """Return a global adaptive pooling module from a string spec."""
     if kind is None:
         raise ValueError("Pooling must be specified. Choose from: 'avg', 'max'.")

@@ -33,11 +33,11 @@ norm_kind: ${norm_kind}
 dropout_rate: 0.0
 activation: ${activation}
 
-# For SimpleEncDec: (TO BE REMOVED)
-downsample_pooling: ${pooling}
-bottleneck_pooling: ${pooling}
+# # For SimpleEncDec: (TO BE REMOVED)
+# downsample_pooling: ${pooling}
+# bottleneck_pooling: ${pooling}
 
-# For TLPEncAggDec, TLPEnc2AggDec
+# For SimpleEncDec, TLPEncAggDec, TLPEnc2AggDec
 down_reductions: ${down_reductions}
 spatial_reduction: ${spatial_reduction}
 face_reduction: ${face_reduction}

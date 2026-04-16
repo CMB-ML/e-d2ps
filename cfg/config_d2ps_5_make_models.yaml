@@ -21,4 +21,6 @@ hydra:
       norm_kind: none
       down_reductions: max
       spatial_reduction: avg
-      face_reduction: avg
+
+      # For TLP models only
+      # face_reduction: avg

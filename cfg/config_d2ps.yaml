@@ -13,10 +13,15 @@ defaults:
   - _self_
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
-working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2${spatial_reduction}_r3${face_reduction}_${model_num}/"
+# SimpleEncDec
+working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2${spatial_reduction}_${model_num}/"
+fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, Model Init ${model_num}"
+## TLP
+# working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2${spatial_reduction}_r3${face_reduction}_${model_num}/"
+# fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, {face_reduction}, Model Init ${model_num}"
+
 trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, {face_reduction}, Model Init ${model_num}"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 ################################################################
@@ -50,32 +55,38 @@ learning_rate: ???
 # learning_rate_sweep: 5e-6, 1e-5, 2e-5
 
 ### Models: Either 
-# nn_model: SimpleEncDec
-# px_arrange: cmbNNCS
-# norm_kind: ???
-# # norm_sweep: none, bn, gn
-# pooling: ???
-# # pooling_sweep: max, avg
-# activation: ???
-# # activation_sweep: relu, gelu
-
-### Or
-# nn_model: TLPEncAggDec
-nn_model: TLPEnc2AggDec
-px_arrange: channel
+nn_model: SimpleEncDec
+px_arrange: cmbNNCS
 norm_kind: ???
 # norm_sweep: none, bn, gn
 down_reductions: ???
+# for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
 down_reductions_sweep: Xm
 spatial_reduction: ???
-# spatial_reduction_sweep: avg, max
+# # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
-face_reduction: ???
-# face_reduction_sweep: avg, max, weighted, softmax
-face_reduction_sweep: avg
 activation: ???
 # activation_sweep: relu, gelu
+
+### Or
+# # nn_model: TLPEncAggDec
+# nn_model: TLPEnc2AggDec
+# px_arrange: channel
+# norm_kind: ???
+# # norm_sweep: none, bn, gn
+# down_reductions: ???
+# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
+# # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
+# down_reductions_sweep: Xm
+# spatial_reduction: ???
+# # spatial_reduction_sweep: avg, max
+# spatial_reduction_sweep: avg
+# face_reduction: ???
+# # face_reduction_sweep: avg, max, weighted, softmax
+# face_reduction_sweep: avg
+# activation: ???
+# # activation_sweep: relu, gelu
 
 ### Or
 # nn_model: MobileViTCMBRegressor
@@ -122,7 +133,7 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 30000
+num_epochs         : 3  # 0000
 # num_epochs         : 1000  # 0000
 
 # In the pipeline yamls

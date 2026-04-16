@@ -13,8 +13,9 @@ from .layer_factories import (
     get_dropout,
     get_norm,
     get_downsample_pooling,
-    get_bottleneck_pooling
+    get_spatial_reduction
 )
+from .down_reduction_spec import expand_down_reduction_spec
 
 
 class DoubleConv(nn.Module):
@@ -56,11 +57,11 @@ class Down(nn.Module):
                  norm_kind,
                  dropout_rate,
                  activation,
-                 pool_kind):
+                 down_reduction):
         super().__init__()
         out_channels = in_channels * 2
 
-        self.pool = get_downsample_pooling(pool_kind)
+        self.pool = get_downsample_pooling(down_reduction)
         self.dconv = DoubleConv(in_channels, out_channels, norm_kind, dropout_rate, activation)
 
     def forward(self, x):
@@ -77,7 +78,7 @@ class Encoder(nn.Module):
                  norm_kind,
                  dropout_rate,
                  activation,
-                 downsample_pooling_kind):
+                 down_reduction_spec):
         super().__init__()
         self.in_c = DoubleConv(in_channels=n_in_channels,
                                out_channels=n_init_features,
@@ -85,17 +86,19 @@ class Encoder(nn.Module):
                                dropout_rate=dropout_rate,
                                activation=activation)
 
-        downs = []
         curr_features = n_init_features
-        for _ in range(n_levels):
+        down_reductions = expand_down_reduction_spec(down_reduction_spec,
+                                                     n_levels)
+        downs = []
+        for dr in down_reductions:
             downs.append(Down(curr_features, 
                               norm_kind=norm_kind,
                               dropout_rate=dropout_rate,
                               activation=activation,
-                              pool_kind=downsample_pooling_kind))
+                              down_reduction=dr))
             curr_features *= 2
         self.dns = nn.ModuleList(downs)
-        self.bottleneck_features = curr_features
+        self.num_enc_out_features = curr_features
 
     def forward(self, x):
         x = self.in_c(x)
@@ -111,14 +114,14 @@ class FCNDecoder(nn.Module):
                  out_channels, 
                  dropout_rate,
                  activation,
-                 bottleneck_pooling,
+                 spatial_reduction,
                  final_activation):
         super().__init__()
 
         # norm_kind = 'none' if norm_kind is None else norm_kind.lower()
         # use_bias  = norm_kind == 'none'
 
-        self.pool = get_bottleneck_pooling(bottleneck_pooling)
+        self.pool = get_spatial_reduction(spatial_reduction)
         self.flat = nn.Flatten()
         self.mlp1 = nn.Linear(in_channels, mid_channels, bias=True)
         self.act1 = get_activation(activation)
@@ -143,14 +146,14 @@ class SimpleEncDec(nn.Module):
                  n_ells,
                  n_in_channels,  # Should be the number of detectors
                  n_init_features=16,
-                 n_levels=5,
+                 n_levels=7,
                  norm_kind=None,
                  dropout_rate=0.0,
-                 downsample_pooling='avg',
-                 bottleneck_pooling='avg',
+                 down_reductions='avg',
+                 spatial_reduction='avg',
                  activation='relu',
                  final_activation=None,
-                 note='',
+                 note=''
                  ):
         super().__init__()
         self.nside = nside
@@ -161,20 +164,20 @@ class SimpleEncDec(nn.Module):
         self.enc = Encoder(
             n_in_channels = n_in_channels,
             n_init_features=n_init_features,
+            n_levels=n_levels,
             norm_kind=norm_kind,
             dropout_rate=dropout_rate,
             activation=activation,
-            n_levels=n_levels,
-            downsample_pooling_kind=downsample_pooling
+            down_reduction_spec=down_reductions
         )
 
         self.dec = FCNDecoder(
-            in_channels=self.enc.bottleneck_features,
-            mid_channels=self.enc.bottleneck_features // 2,
+            in_channels=self.enc.num_enc_out_features,
+            mid_channels=self.enc.num_enc_out_features // 2,
             out_channels=n_ells,
             dropout_rate=dropout_rate,
             activation=activation,
-            bottleneck_pooling=bottleneck_pooling,
+            spatial_reduction=spatial_reduction,
             final_activation=final_activation
         )
 
