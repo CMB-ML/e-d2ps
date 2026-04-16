@@ -294,7 +294,7 @@ class TLPEncAggDec(nn.Module):
     def __init__(
                  self,
                  nside,
-                 n_ells,
+                 n_outputs,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
                  n_init_features=16,
@@ -335,7 +335,7 @@ class TLPEncAggDec(nn.Module):
         self.dec = FCNDecoder(
             in_channels=self.agg.num_agg_out_features,
             mid_channels=self.agg.num_agg_out_features // 2,
-            out_channels=n_ells,
+            out_channels=n_outputs,
             dropout_rate=dropout_rate,
             activation=activation,
             final_activation=final_activation
@@ -349,7 +349,7 @@ class TLPEncAggDec(nn.Module):
         _, D, H_, W_ = z.shape
         z = z.reshape(B, 12, D, H_, W_)   # (B, F, D, H', W')
         z = self.agg(z)                   # (B, D)
-        y = self.dec(z)                   # (B, n_ells)
+        y = self.dec(z)                   # (B, n_outputs)
         return y
 
 
@@ -357,7 +357,7 @@ class TLPEnc2AggDec(nn.Module):
     def __init__(
                  self,
                  nside,
-                 n_ells,
+                 n_outputs,
                  n_in_channels,  # Should be the number of detectors
                  final_activation=None,
                  n_init_features=16,
@@ -398,7 +398,7 @@ class TLPEnc2AggDec(nn.Module):
         self.dec = FCNDecoder(
             in_channels=self.agg.num_agg_out_features,
             mid_channels=self.agg.num_agg_out_features // 2,
-            out_channels=n_ells,
+            out_channels=n_outputs,
             dropout_rate=dropout_rate,
             activation=activation,
             final_activation=final_activation
@@ -441,5 +441,5 @@ class TLPEnc2AggDec(nn.Module):
         z = torch.cat([z_polar, z_equat], dim=1)   # (B, F, D, H', W')
 
         z = self.agg(z)                            # (B, D)
-        y = self.dec(z)                            # (B, n_ells)
+        y = self.dec(z)                            # (B, n_outputs)
         return y

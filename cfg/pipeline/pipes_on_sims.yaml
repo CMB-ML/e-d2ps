@@ -98,7 +98,7 @@ model_init:
   assets_out:
     model:
       handler: PyTorchModel
-      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_init_{model_num}_pe-{pos_enc}.pth"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_init_{model_num}_pe-{pos_enc}_d${degree}.pth"
   dir_name: F_Model_Init
 
 train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor

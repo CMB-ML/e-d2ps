@@ -14,10 +14,10 @@ defaults:
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2${spatial_reduction}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${basis_kind}${degree}_${model_num}/"
 fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, Model Init ${model_num}"
 ## TLP
-# working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2${spatial_reduction}_r3${face_reduction}_${model_num}/"
+# working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1${down_reductions}_r2${spatial_reduction}_r3${face_reduction}_${model_num}/"
 # fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, {face_reduction}, Model Init ${model_num}"
 
 trained_wd         : *wd
@@ -27,6 +27,12 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 ################################################################
 #                                                              #
 ################################################################
+spectrum_layer_kind: polynomial
+return_mode: spectrum
+basis_kind: monomial
+degree: 18                 # Set to "" if not using a degree (for filenames)
+out_range: [-1, 1]
+
 model_num: ???
 model_num_sweep: 1 #, 2, 3
 
