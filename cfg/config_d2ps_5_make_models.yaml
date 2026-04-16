@@ -21,6 +21,7 @@ hydra:
       norm_kind: none
       down_reductions: max
       spatial_reduction: avg
+      basis_kind: monomial  # Placeholder; no impact on stage
 
       # For TLP models only
       # face_reduction: avg
