@@ -32,6 +32,7 @@ return_mode: spectrum
 basis_kind: ???
 basis_kind_sweep: monomial, legendre, chebyshev
 degree: 18                 # Set to "" if not using a degree (for filenames)
+degree_sweep: 10, 15, 18, 20, 25
 out_range: [-1, 1]
 
 model_num: ???
@@ -52,11 +53,11 @@ use_pos_enc_lut: ???
 use_pos_enc_lut_sweep: false
 # use_pos_enc_lut_sweep: false, true
 
-# optimizer: Adam
-optimizer: AdamW
+optimizer: Adam
+# optimizer: AdamW
 # adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
-adamw_wd_sweep: 0.0, 1e-2, 1e-1
+# adamw_wd_sweep: 0.0, 1e-2, 1e-1
 
 learning_rate: ???
 learning_rate_sweep: 1e-5, 1e-4, 1e-3, 1e-2, 1e-1
