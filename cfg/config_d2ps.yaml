@@ -44,7 +44,7 @@ scale_px: ???
 scale_px_sweep: local_meanstdv
 
 scale_ps: ???
-scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
+scale_ps_sweep: 4000  #, null, meanstdv  # cl also exists, but... yeah.
 # scale_ps_sweep: meanstdv  # cl also exists, but... yeah.
 
 use_pos_enc_lut: ???
@@ -52,14 +52,14 @@ use_pos_enc_lut: ???
 use_pos_enc_lut_sweep: false
 # use_pos_enc_lut_sweep: false, true
 
-optimizer: Adam
-# optimizer: AdamW
+# optimizer: Adam
+optimizer: AdamW
 # adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
-adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
+adamw_wd_sweep: 0.0, 1e-2, 1e-1
 
 learning_rate: ???
-# learning_rate_sweep: 5e-6, 1e-5, 2e-5
+learning_rate_sweep: 1e-5, 1e-4, 1e-3, 1e-2, 1e-1
 
 ### Models: Either 
 nn_model: SimpleEncDec
@@ -68,7 +68,7 @@ norm_kind: ???
 # norm_sweep: none, bn, gn
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# down_reductions_sweep: avg, max, X, XXm, mXX
+# down_reductions_sweep: avg, max, X, mX, mXX, XXm
 down_reductions_sweep: avg
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max

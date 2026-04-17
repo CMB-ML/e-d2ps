@@ -18,8 +18,8 @@ hydra:
       # n_sims: ${n_sims_sweep}
       n_sims: 5
 
-      # learning_rate: ${learning_rate_sweep}
-      learning_rate: 2e-5
+      learning_rate: ${learning_rate_sweep}
+      # learning_rate: 2e-5
 
       scale_px: ${scale_px_sweep}
       # scale_px: global_minmax
@@ -45,7 +45,7 @@ hydra:
       # model_num: ${model_num_sweep}
       model_num: 1
 
-      # adamw_wd: ${adamw_wd_sweep}
-      adamw_wd: 0.0
+      adamw_wd: ${adamw_wd_sweep}
+      # adamw_wd: 0.0
 
       basis_kind: ${basis_kind_sweep}
