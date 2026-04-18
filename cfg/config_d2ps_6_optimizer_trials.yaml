@@ -1,0 +1,36 @@
+# /bigdata/aankit/e-d2ps/cfg/config_d2ps_6_optimizer_trials.yaml
+defaults:
+  - config_d2ps_6_run_train
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      # --- Overfit Settings ---
+      n_sims: 5
+      num_epochs: 5000
+      
+      # --- Optimizer Selection ---
+      # Uncomment one block below to run that family
+
+      # 1. AdamW (25 trials)
+      # optimizer: AdamW
+      # learning_rate: 5e-6, 1e-5, 2e-5, 5e-5, 1e-4
+      # adamw_wd: 0, 1e-6, 1e-5, 1e-4, 1e-3
+
+      # 2. RAdam (50 trials)
+      optimizer: RAdam
+      learning_rate: 5e-6, 1e-5, 2e-5, 5e-5, 1e-4
+      adamw_wd: 0, 1e-6, 1e-5, 1e-4, 1e-3
+      radam_decoupled_wd: false, true
+
+      # 3. NAdam (20 trials)
+      # optimizer: NAdam
+      # learning_rate: 5e-6, 1e-5, 2e-5, 5e-5
+      # adamw_wd: 0, 1e-6, 1e-5, 1e-4, 1e-3
+
+      # 4. SGD (30 trials)
+      # optimizer: SGD
+      # learning_rate: 1e-3, 2e-3, 5e-3, 1e-2, 2e-2
+      # adamw_wd: 1e-5, 1e-4, 1e-3
+      # sgd_momentum: 0.9, 0.95

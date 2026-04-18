@@ -89,9 +89,11 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.loss_key      = cfg.model.train.loss
 
         # How model is updated
-        self.learning_rate = cfg.model.train.learning_rate
-        self.optimizer     = cfg.model.train.optimizer
-        self.adamw_wd      = cfg.model.train.get("adamw_wd", None)
+        self.learning_rate       = cfg.model.train.learning_rate
+        self.optimizer           = cfg.model.train.optimizer
+        self.adamw_wd            = cfg.model.train.get("adamw_wd", None)
+        self.radam_decoupled_wd  = cfg.model.train.get("radam_decoupled_wd", False)
+        self.sgd_momentum        = cfg.model.train.get("sgd_momentum", None)
 
         # How long it runs
         self.n_epochs      = cfg.model.train.n_epochs
@@ -322,45 +324,76 @@ class TrainingExecutor(BaseD2PSExecutor):
         return pos_enc_lut
 
     def get_optimizer(self, model):
+        # 1. Separate params for weight decay logic
+        decay, no_decay = [], []
+        for name, p in model.named_parameters():
+            if not p.requires_grad:
+                continue
+            # Bias and 1D tensors (like layer norm) get no weight decay
+            if p.ndim == 1 or name.endswith(".bias"):
+                no_decay.append(p)
+            else:
+                decay.append(p)
+
+        wd = self.adamw_wd if self.adamw_wd is not None else 0.0
+
+        # 2. Optimizer Selection
         if self.optimizer == "Adam":
+            optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
             optim_dict = dict(lr=self.learning_rate)
-            optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
 
         elif self.optimizer == "AdamW":
             if self.adamw_wd is None:
-                raise ValueError(
-                    "Must set a value for AdamW weight decay in config, "
-                    "even if forcing it to 0.0"
-                )
-
-            decay, no_decay = [], []
-            for name, p in model.named_parameters():
-                if not p.requires_grad:
-                    continue
-                if p.ndim == 1 or name.endswith(".bias"):
-                    no_decay.append(p)
-                else:
-                    decay.append(p)
-
-            optim_dict = dict(
-                lr=self.learning_rate,
-                weight_decay=self.adamw_wd,
-                n_decay_params=len(decay),
-                n_no_decay_params=len(no_decay),
-            )
-
+                raise ValueError("Must set adamw_wd in config for AdamW")
             optimizer = torch.optim.AdamW(
                 [
-                    {"params": decay, "weight_decay": self.adamw_wd},
+                    {"params": decay,    "weight_decay": wd},
                     {"params": no_decay, "weight_decay": 0.0},
                 ],
                 lr=self.learning_rate,
             )
+            optim_dict = dict(lr=self.learning_rate, weight_decay=wd)
+
+        elif self.optimizer == "RAdam":
+            optimizer = torch.optim.RAdam(
+                [
+                    {"params": decay,    "weight_decay": wd},
+                    {"params": no_decay, "weight_decay": 0.0},
+                ],
+                lr=self.learning_rate,
+                decoupled_weight_decay=self.radam_decoupled_wd,
+            )
+            optim_dict = dict(lr=self.learning_rate, weight_decay=wd, 
+                              decoupled_wd=self.radam_decoupled_wd)
+
+        elif self.optimizer == "NAdam":
+            optimizer = torch.optim.NAdam(
+                [
+                    {"params": decay,    "weight_decay": wd},
+                    {"params": no_decay, "weight_decay": 0.0},
+                ],
+                lr=self.learning_rate,
+            )
+            optim_dict = dict(lr=self.learning_rate, weight_decay=wd)
+
+        elif self.optimizer == "SGD":
+            if self.sgd_momentum is None:
+                raise ValueError("Must set sgd_momentum in config for SGD")
+            optimizer = torch.optim.SGD(
+                [
+                    {"params": decay,    "weight_decay": wd},
+                    {"params": no_decay, "weight_decay": 0.0},
+                ],
+                lr=self.learning_rate,
+                momentum=self.sgd_momentum,
+            )
+            optim_dict = dict(lr=self.learning_rate, weight_decay=wd, 
+                              momentum=self.sgd_momentum)
 
         else:
-            raise ValueError(f"Unknown optimizer {self.optimizer}")
+            raise ValueError(f"Unknown optimizer: {self.optimizer}")
 
-        logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
+        logger.info(f"Optimizer: {optimizer.__class__.__name__} | {optim_dict}")
         return optimizer
 
 class OverfitTrainingExecutor(TrainingExecutor):

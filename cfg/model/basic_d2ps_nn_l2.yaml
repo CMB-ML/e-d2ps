@@ -56,6 +56,10 @@ train:
   learning_rate     : ${learning_rate}
   optimizer         : ${optimizer}
 
+  adamw_wd          : ${adamw_wd}
+  radam_decoupled_wd: ${radam_decoupled_wd}
+  sgd_momentum      : ${sgd_momentum}
+
   # Epochs
   n_epochs          : ${num_epochs}
   restart_epoch     : null  # Set to null to create a new model, or give a checkpoint number
