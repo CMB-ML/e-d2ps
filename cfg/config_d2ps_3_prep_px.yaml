@@ -17,4 +17,4 @@ hydra:
     params:
       scale_px: ${scale_px_sweep}
 
-n_sims: 5
+n_sims: 2000
