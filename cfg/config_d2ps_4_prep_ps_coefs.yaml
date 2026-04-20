@@ -1,5 +1,6 @@
 defaults:
   - config_d2ps
+  - override pipeline: assembly_coefs
   - _self_
 
 working_dir        : ${prep_working_dir}
