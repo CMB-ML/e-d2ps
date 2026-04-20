@@ -49,8 +49,8 @@ scale_ps: None
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
-use_pos_enc_lut_sweep: false
-# use_pos_enc_lut_sweep: false, true
+# use_pos_enc_lut_sweep: false
+use_pos_enc_lut_sweep: false, true
 
 optimizer: Adam
 # optimizer: AdamW
@@ -60,7 +60,7 @@ adamw_wd : ???  # Due to interpolation, must be provided.
 adamw_wd_sweep: 0.0
 
 learning_rate: ???
-learning_rate_sweep: 1e-4
+learning_rate_sweep: 1e-5, 1e-4
 
 ### Models: Either 
 nn_model: SimpleEncDec
