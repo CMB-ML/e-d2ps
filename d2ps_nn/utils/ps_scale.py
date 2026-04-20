@@ -17,8 +17,6 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 Array = np.ndarray
 
 
-
-
 class SpectrumProcessor(ABC):
     """
     Reversible preprocessing transform for spectra.
