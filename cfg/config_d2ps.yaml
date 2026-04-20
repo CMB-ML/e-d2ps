@@ -45,9 +45,7 @@ scale_px_sweep: global_minmax
 # scale_px_sweep: local_minmax
 # scale_px_sweep: local_meanstdv
 
-scale_ps: ???
-# scale_ps_sweep: 4000, null, meanstdv  # cl also exists, but... yeah.
-scale_ps_sweep: None  # cl also exists, but... yeah.
+scale_ps: None
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
@@ -72,7 +70,7 @@ norm_kind: ???
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: Xm
+down_reductions_sweep: avg
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
