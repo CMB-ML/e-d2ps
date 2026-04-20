@@ -425,6 +425,7 @@ class OverfitTrainingExecutor(TrainingExecutor):
         for epoch in range(start_epoch, self.n_epochs):
             t0 = time.time()
 
+            model.train()
             optimizer.zero_grad()
 
             # Forward before step
