@@ -18,14 +18,11 @@ hydra:
       # n_sims: ${n_sims_sweep}
       n_sims: 5
 
-      # learning_rate: ${learning_rate_sweep}
-      learning_rate: 2e-5
+      learning_rate: ${learning_rate_sweep}
+      # learning_rate: 2e-5
 
       scale_px: ${scale_px_sweep}
       # scale_px: global_minmax
-
-      scale_ps: ${scale_ps_sweep}
-      # scale_ps: 4000
 
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
       # use_pos_enc_lut: false
