@@ -250,7 +250,7 @@ def make_ps_processor(
     "meanstdv"
         Gets `mean_path` and `stdv_path` from cfg.
     """
-    if mode is None or mode == "none":
+    if mode is None or mode.lower() == "none":
         return IdentityProcessor()
 
     # if mode is just a number...
