@@ -27,6 +27,11 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 ################################################################
 #                                                              #
 ################################################################
+# TODO: use this interpolation in configs
+n_sims_train: 5
+n_sims_train: 2000
+n_sims_train: 20000
+
 spectrum_layer_kind: polynomial
 return_mode: spectrum
 basis_kind: ???
