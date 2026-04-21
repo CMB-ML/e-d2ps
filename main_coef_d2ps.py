@@ -34,7 +34,7 @@ from d2ps_nn.ex import (
     CheckGPULoadExecutor,
     ModelInitExecutor,
     TrainingCoefExecutor,
-    OverfitTrainingExecutor,
+    OverfitTrainingCoefExecutor,
     PredictExecutor,
     LossPlotExecutor,
     ShowPredictionsPeaksExecutor,
@@ -114,7 +114,7 @@ def run_6_train(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor,
-        OverfitTrainingExecutor,
+        OverfitTrainingCoefExecutor,
         # TrainingCoefExecutor,
         LossPlotExecutor
     ]

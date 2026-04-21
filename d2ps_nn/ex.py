@@ -10,7 +10,7 @@ from .stage_executors.E2_prep_coef_get_stats import PreprocessStatSpectraCoefExe
 from .stage_executors.E3_prep_coef_process import PreprocessPrepSpectraCoefExecutor
 from .stage_executors.Fa_init_model import ModelInitExecutor
 from .stage_executors.F_train import TrainingExecutor, OverfitTrainingExecutor
-from .stage_executors.F_train_coefs import TrainingCoefExecutor
+from .stage_executors.F_train_coefs import TrainingCoefExecutor, OverfitTrainingCoefExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor
 from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor

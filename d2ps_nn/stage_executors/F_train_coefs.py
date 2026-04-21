@@ -386,7 +386,7 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
 
-class OverfitTrainingExecutor(TrainingCoefExecutor):
+class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
     def __init__(self, cfg, stage_str="train"):
         super().__init__(cfg, stage_str=stage_str)
         self.use_preload   = cfg.model.train.get("use_preload", False)
