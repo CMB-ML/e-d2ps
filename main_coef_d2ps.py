@@ -120,7 +120,7 @@ def run_6_train(cfg):
     ]
     run(cfg, pipes)
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_7_run_infer")
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_7_run_infer_coefs")
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
