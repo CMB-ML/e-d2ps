@@ -24,8 +24,8 @@ hydra:
       scale_px: ${scale_px_sweep}
       # scale_px: global_minmax
 
-      scale_ps: ${scale_ps_sweep}
-      # scale_ps: 4000
+      # scale_ps: ${scale_ps_sweep}
+      scale_ps: 4000
 
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
       # use_pos_enc_lut: false
@@ -49,3 +49,4 @@ hydra:
       adamw_wd: 0.0
 
       basis_kind: ${basis_kind_sweep}
+      degree: 18

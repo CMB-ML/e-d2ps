@@ -151,8 +151,11 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
 
         # Initialize for training
         all_batch_loss = []
-        all_train_pre_loss = []
-        all_valid_pre_loss = []
+        all_train_scl_loss = []
+        all_valid_scl_loss = []
+
+        all_train_raw_loss = []
+        all_valid_raw_loss = []
 
         all_train_mid_loss = []
         all_valid_mid_loss = []
@@ -175,7 +178,7 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                                                          )
             start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch']) + 1
             if model_record['best_loss'] is not None:
-                all_valid_pre_loss.append(model_record['best_loss'])
+                all_valid_scl_loss.append(model_record['best_loss'])
             do_loss_record = "continue"
             logger.warning("Restarting training without finding previous best loss!")
         elif self.random_init:
@@ -196,11 +199,16 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
             loss_record_headers = ['Epoch', 
-                                   'Batch Loss', 
-                                   'Validation Pre Loss', 
-                                   'Training Pre Loss', 
-                                   'Validation Loss', 
-                                   'Training Loss', ]
+                                   'Batch Loss',
+                                   'Training Scl Loss',
+                                   'Training Raw Loss',
+                                   'Training Mid Loss',
+                                   'Training Loss',  # train_pst_loss
+                                   'Validation Scl Loss',
+                                   'Validation Raw Loss',
+                                   'Validation Mid Loss',
+                                   'Validation Loss',  # valid_pst_loss
+                                   ]
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
@@ -234,11 +242,14 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
 
             # Validation
             model.eval()
-            train_pre_loss = 0
-            valid_pre_loss = 0
+            train_scl_loss = 0
+            train_raw_loss = 0
             train_mid_loss = 0
-            valid_mid_loss = 0
             train_pst_loss = 0
+
+            valid_scl_loss = 0
+            valid_raw_loss = 0
+            valid_mid_loss = 0
             valid_pst_loss = 0
             model.return_mode = "both"
             with torch.no_grad():
@@ -247,20 +258,23 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
                     train_truth = train_truth.to(device=self.device, dtype=self.dtype)
                     output = model(train_features)
-                    coefs = output["coefs"]
+                    coefs = output["coefs_scl"]
                     spectrum = output["spectrum"]
-                    train_pre_loss += loss_function(coefs, train_label).item()
-                    train_mid_loss += loss_function(spectrum, model.spectrum_layer(train_label)).item()
+                    train_scl_loss += loss_function(coefs, train_label).item()
+                    train_raw_loss += loss_function(model.post(coefs), model.post(train_label)).item()
+                    train_mid_loss += loss_function(spectrum, model.to_ps(train_label)).item()
                     train_pst_loss += loss_function(spectrum, train_truth).item()
-                train_pre_loss /= len(train_dataloader)
+                train_scl_loss /= len(train_dataloader)
+                train_raw_loss /= len(train_dataloader)
                 train_mid_loss /= len(train_dataloader)
                 train_pst_loss /= len(train_dataloader)
-                all_train_pre_loss.append(train_pre_loss)
+                all_train_scl_loss.append(train_scl_loss)
+                all_train_raw_loss.append(train_raw_loss)
                 all_train_mid_loss.append(train_mid_loss)
                 all_train_pst_loss.append(train_pst_loss)
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"train_{model.coef_processor.pre_name}: {train_pre_loss:.02e} | "
+                    f"train_{model.coef_processor.pre_name}: {train_scl_loss:.02e} | "
                     f"train_{model.coef_processor.post_name}: {train_pst_loss:.02e}"
                 )
 
@@ -269,27 +283,41 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
                     valid_truth = valid_truth.to(device=self.device, dtype=self.dtype)
                     output = model(valid_features)
-                    coefs = output["coefs"]
+                    coefs = output["coefs_scl"]
                     spectrum = output["spectrum"]
-                    valid_pre_loss += loss_function(coefs, valid_label).item()
-                    valid_mid_loss += loss_function(spectrum, model.spectrum_layer(valid_label)).item()
+                    valid_scl_loss += loss_function(coefs, valid_label).item()
+                    train_raw_loss += loss_function(model.post(coefs), model.post(valid_label)).item()
+                    valid_mid_loss += loss_function(spectrum, model.to_ps(valid_label)).item()
                     valid_pst_loss += loss_function(spectrum, valid_truth).item()
-                valid_pre_loss /= len(valid_dataloader)
+                valid_scl_loss /= len(valid_dataloader)
+                valid_raw_loss /= len(valid_dataloader)
                 valid_mid_loss /= len(valid_dataloader)
                 valid_pst_loss /= len(valid_dataloader)
-                all_valid_pre_loss.append(valid_pre_loss)
+                all_valid_scl_loss.append(valid_scl_loss)
+                all_valid_raw_loss.append(valid_raw_loss)
                 all_valid_mid_loss.append(valid_mid_loss)
                 all_valid_pst_loss.append(valid_pst_loss)
-                note_min_loss = " *" if valid_pre_loss == min(all_valid_pre_loss) else ""
+                note_min_loss = " *" if valid_scl_loss == min(all_valid_scl_loss) else ""
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"valid_{model.coef_processor.pre_name}: {valid_pre_loss:.02e} | "
+                    f"valid_{model.coef_processor.pre_name}: {valid_scl_loss:.02e} | "
                     f"valid_{model.coef_processor.post_name}: {valid_pst_loss:.02e}"
                     f"{note_min_loss}"
                 )
-            self.out_loss_record.append([epoch + 1, batch_loss, valid_pre_loss, train_pre_loss, valid_pst_loss, train_pst_loss, valid_mid_loss, train_mid_loss])
+            self.out_loss_record.append([
+                                         epoch + 1,
+                                         batch_loss,
+                                         valid_scl_loss,
+                                         valid_raw_loss,
+                                         valid_mid_loss,
+                                         valid_pst_loss,
+                                         train_scl_loss,
+                                         train_raw_loss,
+                                         train_mid_loss,
+                                         train_pst_loss,
+                                         ])
 
-            is_best_condition_a = valid_pre_loss == min(all_valid_pre_loss)
+            is_best_condition_a = valid_scl_loss == min(all_valid_scl_loss)
             is_best_condition_b = epoch >= self.earliest_best
             if is_best_condition_a and is_best_condition_b:
                 with self.name_tracker.set_context("epoch", "best"):
@@ -304,7 +332,7 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                 with self.name_tracker.set_context("epoch", epoch + 1):
                     self.out_model.write(model=model,
                                          optimizer=optimizer,
-                                         best_loss=min(all_valid_pre_loss),
+                                         best_loss=min(all_valid_scl_loss),
                                          epoch=epoch + 1)
 
         with self.name_tracker.set_context("epoch", "final"):
@@ -386,7 +414,7 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
 
-class OverfitTrainingExecutor(TrainingCoefExecutor):
+class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
     def __init__(self, cfg, stage_str="train"):
         super().__init__(cfg, stage_str=stage_str)
         self.use_preload   = cfg.model.train.get("use_preload", False)
@@ -426,11 +454,11 @@ class OverfitTrainingExecutor(TrainingCoefExecutor):
         start_epoch = 0
         loss_record_headers = [
             'Epoch',
-            'Training Loss',
             'Loss Before Step',
             'Loss After Step',
             'MidLoss After Step',
             'PostLoss After Step',
+            'Training Loss',       # Duplicate of PostLoss After Step
             'Grad Norm',
             'Param Norm',
             'Update Norm',
@@ -438,8 +466,8 @@ class OverfitTrainingExecutor(TrainingCoefExecutor):
         ]
         self.out_loss_record.write(data=loss_record_headers)
 
-        train_features, label, truth = next(iter(train_dataloader))
-        train_features = train_features.to(device=self.device, dtype=self.dtype)
+        feats, label, truth = next(iter(train_dataloader))
+        feats = feats.to(device=self.device, dtype=self.dtype)
         label = label.to(device=self.device, dtype=self.dtype)
         truth = truth.to(device=self.device, dtype=self.dtype)
 
@@ -455,17 +483,15 @@ class OverfitTrainingExecutor(TrainingCoefExecutor):
             optimizer.zero_grad()
 
             # Forward before step
-            out = model(train_features)
-            coefs, spectrum = out["coef"], out["spectrum"]
+            out = model(feats)
+            coefs, spectrum = out["coefs_scl"], out["spectrum"]
 
             loss = loss_function(coefs, label)
             pre_loss_before = loss.item()
-
-            # model.eval()
-            # with torch.no_grad():
-            #     mid_loss_before = loss_function(spectrum, model.spectrum_layer(label)).item()
-            #     pst_loss_before = loss_function(spectrum, truth).item()
-            # model.train()
+            # loss_coef = loss_function(coefs, label)
+            # loss_spec = loss_function(spectrum / 4000, truth / 4000)
+            # loss = loss_coef + loss_spec * 1e-6
+            # pre_loss_before = loss.item()
 
             # Save params before backward/step so we can measure update size
             old_params = _clone_trainable_params(model)
@@ -483,19 +509,17 @@ class OverfitTrainingExecutor(TrainingCoefExecutor):
             # Forward after step on the exact same batch
             model.eval()
             with torch.no_grad():
-                out_after = model(train_features)
-                coefs, spectrum = out_after["coef"], out_after["spectrum"]
+                out_after = model(feats)
+                coefs, spectrum = out_after["coefs_scl"], out_after["spectrum"]
 
                 pre_loss_after = loss_function(coefs, label).item()
-                mid_loss_after = loss_function(spectrum, model.spectrum_layer(label)).item()
+                mid_loss_after = loss_function(spectrum, model.to_ps(label)).item()
                 pst_loss_after = loss_function(spectrum, truth).item()
             model.train()
 
             update_norm = _get_update_norm(model, old_params)
             relative_update = update_norm / (param_norm + 1e-12)
 
-            batch_loss = loss.item()
-            rep_loss = loss.item() if model.coef_processor.report_space == "pre" else pst_loss_after
             dt = time.time() - t0
 
             if not header_printed:
@@ -509,7 +533,10 @@ class OverfitTrainingExecutor(TrainingCoefExecutor):
 
             logger.info(
                 f"{epoch+1:4d} | "
-                f"{rep_loss:10.3e} | "
+                f"{pre_loss_before:10.3e} | "
+                f"{pre_loss_after:10.3e} | "
+                f"{mid_loss_after:10.3e} | "
+                f"{pst_loss_after:10.3e} | "
                 f"{ep_per_sec:7.2f} ep/s | "
                 f"{gpu['gpu_util']:3d}% util | "
                 f"{gpu['temp_C']:2d} C | "
@@ -520,11 +547,10 @@ class OverfitTrainingExecutor(TrainingCoefExecutor):
             loss_record_lines.append([
                 epoch + 1,
                 pre_loss_before,
-                batch_loss,
-                pre_loss_before,
                 pre_loss_after,
                 mid_loss_after,
                 pst_loss_after,
+                pst_loss_after,  # Duplicate for clarity
                 grad_norm,
                 param_norm,
                 update_norm,

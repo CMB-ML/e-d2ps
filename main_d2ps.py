@@ -111,7 +111,7 @@ def run_6_train(cfg):
         # CheckGPULoadExecutor,
         OverfitTrainingExecutor,
         # TrainingExecutor,
-        LossPlotExecutor,
+        # LossPlotExecutor,
         # BundleTrueExecutor
     ]
     run(cfg, pipes)
@@ -175,8 +175,8 @@ if __name__ == "__main__":
     # run_2_prelim_ps()
     # run_3_prep_px()
     # run_4_prep_ps()
-    run_5_make_models()
+    # run_5_make_models()
     run_6_train()
-    run_7_infer()
+    # run_7_infer()
     # run_8_prep_planck()
     # run_9_run_planck()

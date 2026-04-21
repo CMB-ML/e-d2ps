@@ -57,19 +57,27 @@ class WrappedSpectrumModel(nn.Module):
         self.example_in_shape = self.backbone_layer.example_in_shape
 
     def forward(self, x: torch.Tensor):
-        coefs_proc = self.backbone_layer(x)
+        coefs_scl = self.backbone_layer(x)
 
         if self.return_mode == "coefs":
-            return coefs_proc
+            return coefs_scl
 
-        coefs_raw = self.coef_processor.postprocess(coefs_proc)
+        coefs_raw = self.coef_processor.postprocess(coefs_scl)
         spectrum = self.spectrum_layer(coefs_raw)
 
         if self.return_mode == "spectrum":
             return spectrum
 
         return {
-            "coefs": coefs_proc,
+            "coefs_scl": coefs_scl,
             "coefs_raw": coefs_raw,
             "spectrum": spectrum,
         }
+
+    def post(self, coef_scl):
+        coef_raw = self.coef_processor.postprocess(coef_scl)
+        return coef_raw
+
+    def to_ps(self, coeff_scl):
+        coeff_raw = self.post(coeff_scl)
+        return self.spectrum_layer(coeff_raw)
