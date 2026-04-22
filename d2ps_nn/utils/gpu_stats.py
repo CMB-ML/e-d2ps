@@ -7,7 +7,6 @@ from pynvml import (
     nvmlDeviceGetName,
     nvmlDeviceGetUUID,
     nvmlDeviceGetSerial,
-    nvmlDeviceGetPciInfo,
     nvmlDeviceGetUtilizationRates,
     nvmlDeviceGetTemperature,
     nvmlDeviceGetPowerUsage,
@@ -20,73 +19,55 @@ from pynvml import (
 
 
 class TorchGPUStats:
-    """
-    Resolve an NVML handle from a torch device once, then reuse it.
-
-    Example
-    -------
-    stats = TorchGPUStats("cuda:0")
-    print(stats.describe())
-    print(stats.get_stats())
-    """
-
     def __init__(self, device="cuda:0"):
         nvmlInit()
+        self._nvml_active = True
 
         self.device = torch.device(device)
         if self.device.type != "cuda":
-            raise ValueError(f"Expected a CUDA device, got {self.device!r}")
-
+            raise ValueError(f"Expected CUDA device, got {self.device!r}")
         if not torch.cuda.is_available():
             raise RuntimeError("torch.cuda.is_available() is False")
 
-        self.torch_index = self._resolve_torch_index(self.device)
-        self.bus_id = self._get_torch_bus_id(self.torch_index)
-        self.handle = self._get_nvml_handle_from_bus_id(self.bus_id)
-
-    @staticmethod
-    def _resolve_torch_index(device: torch.device) -> int:
-        # torch.device("cuda") can have index=None; treat that as current device
-        if device.index is None:
-            return torch.cuda.current_device()
-        return device.index
-
-    @staticmethod
-    def _normalize_bus_id(bus_id) -> str:
-        # torch returns a string like '00000000:17:00.0'
-        # NVML may return bytes or str depending on binding/version
-        if isinstance(bus_id, bytes):
-            bus_id = bus_id.decode("utf-8")
-        return bus_id.strip().lower()
-
-    def _get_torch_bus_id(self, torch_index: int) -> str:
-        bus_id = torch.cuda.get_device_properties(torch_index).pci_bus_id
-        return self._normalize_bus_id(bus_id)
-
-    def _get_nvml_handle_from_bus_id(self, target_bus_id: str):
-        n = nvmlDeviceGetCount()
-
-        for nvml_index in range(n):
-            handle = nvmlDeviceGetHandleByIndex(nvml_index)
-            pci = nvmlDeviceGetPciInfo(handle)
-            nvml_bus_id = self._normalize_bus_id(pci.busId)
-
-            if nvml_bus_id == target_bus_id:
-                self.nvml_index = nvml_index
-                return handle
-
-        raise RuntimeError(
-            f"Could not find NVML handle matching torch bus ID {target_bus_id!r}"
+        self.torch_index = (
+            torch.cuda.current_device()
+            if self.device.index is None
+            else self.device.index
         )
 
-    def describe(self) -> dict:
+        self.torch_uuid = self._normalize_uuid(
+            torch.cuda.get_device_properties(self.torch_index).uuid
+        )
+        self.handle, self.nvml_index, self.nvml_uuid = self._get_nvml_match()
+
+    @staticmethod
+    def _normalize_uuid(uuid_val):
+        if isinstance(uuid_val, bytes):
+            uuid_val = uuid_val.decode("utf-8")
+        return str(uuid_val).strip().lower()
+
+    def _get_nvml_match(self):
+        for i in range(nvmlDeviceGetCount()):
+            handle = nvmlDeviceGetHandleByIndex(i)
+            nvml_uuid = self._normalize_uuid(nvmlDeviceGetUUID(handle))
+
+            # direct equality first
+            if nvml_uuid == self.torch_uuid:
+                return handle, i, nvml_uuid
+
+            # fallback in case torch gives shortened UUID form
+            if nvml_uuid.endswith(self.torch_uuid) or self.torch_uuid.endswith(nvml_uuid):
+                return handle, i, nvml_uuid
+
+        raise RuntimeError(
+            f"No NVML device matched torch device {self.device} "
+            f"(torch UUID: {self.torch_uuid})"
+        )
+
+    def describe(self):
         name = nvmlDeviceGetName(self.handle)
         if isinstance(name, bytes):
             name = name.decode("utf-8")
-
-        uuid = nvmlDeviceGetUUID(self.handle)
-        if isinstance(uuid, bytes):
-            uuid = uuid.decode("utf-8")
 
         try:
             serial = nvmlDeviceGetSerial(self.handle)
@@ -98,14 +79,14 @@ class TorchGPUStats:
         return {
             "torch_device": str(self.device),
             "torch_index": self.torch_index,
+            "torch_uuid": self.torch_uuid,
             "nvml_index": self.nvml_index,
+            "nvml_uuid": self.nvml_uuid,
             "name": name,
-            "bus_id": self.bus_id,
-            "uuid": uuid,
             "serial": serial,
         }
 
-    def get_stats(self) -> dict:
+    def get_stats(self):
         util = nvmlDeviceGetUtilizationRates(self.handle)
         temp = nvmlDeviceGetTemperature(self.handle, NVML_TEMPERATURE_GPU)
         power_w = nvmlDeviceGetPowerUsage(self.handle) / 1000.0
@@ -114,8 +95,8 @@ class TorchGPUStats:
         mem = nvmlDeviceGetMemoryInfo(self.handle)
 
         return {
-            "gpu_util": util.gpu,                    # percent
-            "mem_util": util.memory,                # percent
+            "gpu_util": util.gpu,
+            "mem_util": util.memory,
             "temp_C": temp,
             "power_W": power_w,
             "sm_clock_MHz": sm_clock,
@@ -125,12 +106,9 @@ class TorchGPUStats:
             "mem_free_MB": mem.free / 1024**2,
         }
 
-    def shutdown(self):
-        nvmlShutdown()
-
     def __del__(self):
-        # Best-effort cleanup
         try:
-            nvmlShutdown()
+            if getattr(self, "_nvml_active", False):
+                nvmlShutdown()
         except Exception:
             pass
