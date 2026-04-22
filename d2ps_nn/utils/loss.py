@@ -20,12 +20,14 @@ class SingleDWishartLoss(torch.nn.Module):
 
         return torch.sum(per_ell)
 
-def get_loss(loss_key, ells):
+def get_loss(loss_key, ells=None):
     if loss_key == "l1":
         loss_function = torch.nn.L1Loss(reduction='mean')
     elif loss_key == "l2":
         loss_function = torch.nn.MSELoss(reduction='mean')
     elif loss_key == "wishart":
+        if ells is None:
+            raise ValueError("Must provide ells when using Dishart loss.")
         loss_function = SingleDWishartLoss(ells=ells)
     else:
         raise ValueError(f"Unknown loss function: {loss_key}")
