@@ -30,10 +30,10 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 spectrum_layer_kind: polynomial
 return_mode: spectrum
 basis_kind: ???
-basis_kind_sweep: chebyshev, legendre, monomial
+basis_kind_sweep: chebyshev  #, legendre, monomial
 # basis_kind_sweep: chebyshev
 degree: ???
-degree_sweep: 18, 20, 25
+degree_sweep: 18  #, 20, 25
 out_range: [-1, 1]
 scale_coef: local_meanstdv
 
@@ -61,8 +61,8 @@ adamw_wd : ???  # Due to interpolation, must be provided.
 adamw_wd_sweep: 0.0
 
 learning_rate: ???
-learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
-# learning_rate_sweep: 1e-4
+# learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
+learning_rate_sweep: 1e-3
 
 ### Models: Either 
 nn_model: SimpleEncDec
