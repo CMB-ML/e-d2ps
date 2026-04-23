@@ -62,16 +62,13 @@ class WrappedSpectrumModel(nn.Module):
         if self.return_mode == "coefs":
             return coefs_scl
 
-        coefs_raw = self.coef_processor.postprocess(coefs_scl)
-        spectrum = self.spectrum_layer(coefs_raw)
-
         if self.return_mode == "spectrum":
-            return spectrum
+            return self.to_ps(coefs_scl)
 
         return {
             "coefs_scl": coefs_scl,
-            "coefs_raw": coefs_raw,
-            "spectrum": spectrum,
+            "coefs_raw": self.post(coefs_scl),
+            "spectrum": self.to_ps(coefs_scl),
         }
 
     def post(self, coef_scl):
