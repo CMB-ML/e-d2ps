@@ -31,12 +31,12 @@ n_sims_train_full: 20000  # 128
 # n_sims_train_full: 2000   # 512
 
 # Overfit scheme
-n_sims_train: 5
-num_epochs: 5000
+# n_sims_train: 5
+# num_epochs: 5000
 
 # Normal training scheme
-# n_sims_train: ${n_sims_train_full}
-# num_epochs: 200
+n_sims_train: ${n_sims_train_full}
+num_epochs: 200
 
 spectrum_layer_kind: polynomial
 return_mode: spectrum
