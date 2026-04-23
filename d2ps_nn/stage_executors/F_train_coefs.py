@@ -541,10 +541,10 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         for l in loss_record_lines:
             self.out_loss_record.append(l)
 
-        with self.name_tracker.set_context("record_type", "scl_coef_record"):    
+        with self.name_tracker.set_context("record_type", "scl_coef"):    
             for l in coef_preds:
                 self.out_coef_record.append(l)
-        with self.name_tracker.set_context("record_type", "raw_coef_record"):    
+        with self.name_tracker.set_context("record_type", "raw_coef"):    
             for l in coef_preds:
                 self.out_coef_record.append(model.post(l))
 
