@@ -21,6 +21,8 @@ hydra:
       norm_kind: none
       down_reductions: max
       spatial_reduction: avg
+      degree: ${degree_sweep}
+      basis: chebyshev  # Does not matter
 
       # For TLP models only
       # face_reduction: avg
