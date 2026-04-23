@@ -89,16 +89,14 @@ class PolynomialSpectrumLayer(BaseSpectrumLayer):
         self.out_range = out_range
 
         self.register_buffer(
-            "index_positions",
-            torch.as_tensor(pos_np, dtype=dtype),
-        )
-        self.register_buffer(
             "x",
             torch.as_tensor(x_np, dtype=dtype),
+            persistent=False  # Do not save this with the model
         )
         self.register_buffer(
             "phi",
             torch.as_tensor(phi_np, dtype=dtype),
+            persistent=False  # Do not save this with the model
         )
 
     def forward(self, coeffs: torch.Tensor) -> torch.Tensor:
@@ -118,7 +116,9 @@ class PolynomialSpectrumLayer(BaseSpectrumLayer):
         if coeffs.dtype != phi.dtype:
             phi = phi.to(dtype=coeffs.dtype)
 
-        return coeffs @ phi.T
+        res = coeffs @ phi.T
+
+        return res
 
     def extra_repr(self) -> str:
         return (
