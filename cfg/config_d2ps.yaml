@@ -27,6 +27,17 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 ################################################################
 #                                                              #
 ################################################################
+n_sims_train_full: 20000  # 128
+# n_sims_train_full: 2000   # 512
+
+# Overfit scheme
+n_sims_train: 5
+num_epochs: 5000
+
+# Normal training scheme
+# n_sims_train: ${n_sims_train_full}
+# num_epochs: 200
+
 spectrum_layer_kind: polynomial
 return_mode: spectrum
 basis_kind: ???
@@ -72,7 +83,7 @@ norm_kind: ???
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: avg
+down_reductions_sweep: Xm
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
@@ -143,8 +154,9 @@ detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
 # In the model yaml
-num_epochs         : 5000
-# num_epochs         : 1000
+# SET ABOVE
+# # num_epochs         : 5000
+# # num_epochs         : 1000  # 0000
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

@@ -114,12 +114,12 @@ def tuple_sort_key(t: tuple[str, ...]) -> tuple[str, ...]:
     return tuple("" if x is None else str(x) for x in t)
 
 
-def format_tuple_label(keys: list[str], values: tuple[str, ...]) -> str:
-    if not keys:
-        return ""
-    if len(keys) == 1:
-        return str(values[0])
-    return "\n".join(f"{k}={v}" for k, v in zip(keys, values))
+# def format_tuple_label(keys: list[str], values: tuple[str, ...]) -> str:
+#     if not keys:
+#         return ""
+#     if len(keys) == 1:
+#         return str(values[0])
+#     return "\n".join(f"{k}={v}" for k, v in zip(keys, values))
 
 
 def put_image_or_blank(cell, path: Path | None, img_width_in: float = 10.0) -> None:
@@ -129,6 +129,52 @@ def put_image_or_blank(cell, path: Path | None, img_width_in: float = 10.0) -> N
         run.add_picture(str(path), width=Inches(img_width_in))
     else:
         cell.text = ""
+
+
+def get_unique_axis_tuples(
+    records: list[RunRecord],
+    keys: list[str],
+) -> list[tuple[str, ...]]:
+    return sorted(
+        {get_key_tuple(rec, keys) for rec in records},
+        key=tuple_sort_key,
+    )
+
+
+def value_repeats_every(col_tuples: list[tuple[str, ...]], level: int) -> list[tuple[int, int, str]]:
+    """
+    For a given column-key level, return runs of identical values across columns.
+
+    Returns a list of:
+        (start_col_index, end_col_index_exclusive, label)
+
+    Example:
+        col_tuples = [
+            ("C.1", "D.1"),
+            ("C.1", "D.2"),
+            ("C.2", "D.1"),
+            ("C.2", "D.2"),
+        ]
+
+        level=0 -> [(0, 2, "C=C.1"), (2, 4, "C=C.2")]
+        level=1 -> [(0, 1, "D=D.1"), (1, 2, "D=D.2"), ...]
+    """
+    if not col_tuples:
+        return []
+
+    spans = []
+    start = 0
+    current = col_tuples[0][level]
+
+    for i in range(1, len(col_tuples)):
+        val = col_tuples[i][level]
+        if val != current:
+            spans.append((start, i, current))
+            start = i
+            current = val
+
+    spans.append((start, len(col_tuples), current))
+    return spans
 
 
 def build_grid_lookup(
@@ -163,42 +209,67 @@ def build_docx_grid(
     col_keys: list[str],
     out_path: Path,
 ):
-    doc = Document()
-    doc.add_heading("Overfit run report", level=1)
-
-    row_tuples = sorted(
-        {get_key_tuple(rec, row_keys) for rec in records},
-        key=tuple_sort_key,
-    )
-    col_tuples = sorted(
-        {get_key_tuple(rec, col_keys) for rec in records},
-        key=tuple_sort_key,
-    )
-
-    grid = build_grid_lookup(records, row_keys, col_keys)
-
-    n_row_header_cols = 1
-    n_cols = n_row_header_cols + len(col_tuples)
-
-    table = doc.add_table(rows=1 + len(row_tuples), cols=n_cols)
-    table.style = "Table Grid"
-
-    hdr = table.rows[0].cells
-    hdr[0].text = format_tuple_label(row_keys, tuple(row_keys))
-
-    for j, col_t in enumerate(col_tuples, start=1):
-        hdr[j].text = format_tuple_label(col_keys, col_t)
+    if len(IMAGE_SPECS) != 1:
+        raise ValueError(
+            f"Overfit grid expects exactly one image spec, got {len(IMAGE_SPECS)}"
+        )
 
     fig_key = IMAGE_SPECS[0][1]
 
-    for i, row_t in enumerate(row_tuples, start=1):
-        row_cells = table.rows[i].cells
-        row_cells[0].text = format_tuple_label(row_keys, row_t)
+    doc = Document()
+    doc.add_heading("Overfit run report", level=1)
 
-        for j, col_t in enumerate(col_tuples, start=1):
+    row_tuples = get_unique_axis_tuples(records, row_keys)
+    col_tuples = get_unique_axis_tuples(records, col_keys)
+
+    grid = build_grid_lookup(records, row_keys, col_keys)
+
+    n_row_header_rows = max(1, len(col_keys))
+    n_row_label_cols = max(1, len(row_keys))
+
+    n_rows = n_row_header_rows + len(row_tuples)
+    n_cols = n_row_label_cols + len(col_tuples)
+
+    table = doc.add_table(rows=n_rows, cols=n_cols)
+    table.style = "Table Grid"
+
+    # ----------------------------
+    # Header block, top-left corner
+    # ----------------------------
+    for i, key in enumerate(row_keys):
+        table.cell(n_row_header_rows - 1, i).text = key
+
+    # ----------------------------
+    # Column header rows
+    # ----------------------------
+    # One header row per column key.
+    # Row 0 = major column key, next row = next column key, etc.
+    for level, col_key in enumerate(col_keys):
+        spans = value_repeats_every(col_tuples, level)
+
+        for start, end, val in spans:
+            cell = table.cell(level, n_row_label_cols + start)
+            cell.text = f"{col_key}={val}"
+
+            # Merge horizontally if the same value spans multiple columns
+            if end - start > 1:
+                cell.merge(table.cell(level, n_row_label_cols + end - 1))
+
+    # ----------------------------
+    # Left row-label columns
+    # ----------------------------
+    for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
+        for j, value in enumerate(row_t):
+            table.cell(i, j).text = str(value)
+
+    # ----------------------------
+    # Interior cells: figures
+    # ----------------------------
+    for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
+        for j, col_t in enumerate(col_tuples, start=n_row_label_cols):
             rec = grid.get((row_t, col_t))
             p = None if rec is None else rec.get_figure(fig_key)
-            put_image_or_blank(row_cells[j], p, img_width_in=10.0)
+            put_image_or_blank(table.cell(i, j), p, img_width_in=2.2)
 
     doc.save(out_path)
 
@@ -217,10 +288,6 @@ def validate_image_specs(fig_files: dict[str, str], image_specs: list[tuple[str,
 
 def main() -> None:
     validate_image_specs(FIG_FILES, IMAGE_SPECS)
-    if len(IMAGE_SPECS) != 1:
-        raise ValueError(
-            f"Overfit grid expects exactly one image spec, got {len(IMAGE_SPECS)}"
-        )
 
     run_dirs = sorted([p for p in ROOT.iterdir() if p.is_dir()])
 
