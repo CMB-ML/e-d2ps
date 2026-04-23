@@ -419,11 +419,14 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         super().__init__(cfg, stage_str=stage_str)
         self.use_preload   = cfg.model.train.get("use_preload", False)
         self.batch_size    = cfg.splits.Train.n_sims
+        self.out_coef_record   = self.assets_out["other_record"]
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
+        model.coef_processor = self.coef_scaler
+
         context = dict(model_num=self.model_num,
                     pos_enc=self.use_pos_enc_lut)
         with self.name_tracker.set_contexts(context):
@@ -466,6 +469,11 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         ]
         self.out_loss_record.write(data=loss_record_headers)
 
+        with self.name_tracker.set_context("record_type", "scl_coeff"):
+            self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
+        with self.name_tracker.set_context("record_type", "raw_coeff"):
+            self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
+
         feats, label, truth = next(iter(train_dataloader))
         feats = feats.to(device=self.device, dtype=self.dtype)
         label = label.to(device=self.device, dtype=self.dtype)
@@ -474,6 +482,7 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         header_printed = False
 
         loss_record_lines = []
+        coef_preds = []
         model.return_mode = "both"
 
         for epoch in range(start_epoch, self.n_epochs):
@@ -511,6 +520,7 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
             with torch.no_grad():
                 out_after = model(feats)
                 coefs, spectrum = out_after["coefs_scl"], out_after["spectrum"]
+                coef_preds.append(coefs[0].cpu().tolist())
 
                 pre_loss_after = loss_function(coefs, label).item()
                 mid_loss_after = loss_function(spectrum, model.to_ps(label)).item()
@@ -563,6 +573,12 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         for l in loss_record_lines:
             self.out_loss_record.append(l)
 
+        with self.name_tracker.set_context("record_type", "scl_coef_record"):    
+            for l in coef_preds:
+                self.out_coef_record.append(l)
+        with self.name_tracker.set_context("record_type", "raw_coef_record"):    
+            for l in coef_preds:
+                self.out_coef_record.append(model.post(l))
 
 def _get_param_norm(model, norm_type=2.0):
     vals = []
