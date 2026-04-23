@@ -117,6 +117,37 @@ class LazyStackedStat(LazyStat):
         return self._cached_payload[self.which_idx]
 
 
+@dataclass
+class LazyStackedStatManual(LazyStat):
+    """
+    Late-load one stat from a stacked stats asset.
+
+    Expected saved payload shape:
+        arr[STAT_MIN]
+        arr[STAT_MAX]
+        arr[STAT_MEAN]
+        arr[STAT_STDV]
+    """
+    stats_path: str
+    which_idx: int
+
+    _cached_payload: Optional[Array] = field(default=None, init=False, repr=False)
+
+    def get(self):
+        if self._cached_payload is None:
+            payload = np.load(self.stats_path)
+            payload = np.asarray(payload)
+
+            if payload.shape[0] < 4:
+                raise ValueError(
+                    f"Expected stacked stats with first axis size >= 4, got {payload.shape}"
+                )
+
+            self._cached_payload = payload
+
+        return self._cached_payload[self.which_idx]
+
+
 @dataclass(frozen=True)
 class LocalMinMaxProcessor(Processor):
     selection_space = "pre"
@@ -201,6 +232,43 @@ def make_coef_processor(
         return LocalMeanStDevProcessor(
             mean_ref=LazyStackedStat(coef_stats_asset, STAT_MEAN),
             stdv_ref=LazyStackedStat(coef_stats_asset, STAT_STDV),
+        )
+
+    raise ValueError(f"Unknown coef preprocessing mode: {mode!r}")
+
+
+def make_coef_processor_manual(
+    mode: Optional[str],
+    *,
+    coef_stats_path,
+) -> Processor:
+    """
+    Factory for coefficient preprocessing.
+
+    Supported modes
+    ---------------
+    None, "null", "none":
+        no preprocessing
+
+    "local_minmax":
+        use stacked coef stats [min, max, mean, stdv]
+
+    "local_meanstdv":
+        use stacked coef stats [min, max, mean, stdv]
+    """
+    if mode is None or mode in {"null", "none"}:
+        return IdentityProcessor()
+
+    if mode == "local_minmax":
+        return LocalMinMaxProcessor(
+            min_ref=LazyStackedStatManual(coef_stats_path, STAT_MIN),
+            max_ref=LazyStackedStatManual(coef_stats_path, STAT_MAX),
+        )
+
+    if mode == "local_meanstdv":
+        return LocalMeanStDevProcessor(
+            mean_ref=LazyStackedStatManual(coef_stats_path, STAT_MEAN),
+            stdv_ref=LazyStackedStatManual(coef_stats_path, STAT_STDV),
         )
 
     raise ValueError(f"Unknown coef preprocessing mode: {mode!r}")
