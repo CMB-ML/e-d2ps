@@ -21,7 +21,6 @@ from d2ps_nn.utils.gpu_stats import TorchGPUStats
 logger = logging.getLogger(__name__)
 
 
-
 class TrainingExecutor(BaseD2PSExecutor):
     def __init__(self, cfg: DictConfig, stage_str="train") -> None:
         super().__init__(cfg, stage_str=stage_str)

@@ -15,45 +15,10 @@ from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset_coef import TrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.scale_coef import make_coef_processor
-
-
-# Use `pip install nvidia-ml-py3` for this library
-from pynvml import (
-    nvmlInit,
-    nvmlShutdown,
-    nvmlDeviceGetHandleByIndex,
-    nvmlDeviceGetUtilizationRates,
-    nvmlDeviceGetTemperature,
-    nvmlDeviceGetPowerUsage,
-    nvmlDeviceGetClockInfo,
-    NVML_TEMPERATURE_GPU,
-    NVML_CLOCK_SM,
-    NVML_CLOCK_MEM,
-)
-
-nvmlInit()
-handle = nvmlDeviceGetHandleByIndex(0)  # match your CUDA device index
-
-
-def get_gpu_stats(handle):
-    util = nvmlDeviceGetUtilizationRates(handle)
-    temp = nvmlDeviceGetTemperature(handle, NVML_TEMPERATURE_GPU)
-    power_w = nvmlDeviceGetPowerUsage(handle) / 1000.0
-    sm_clock = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_SM)
-    mem_clock = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_MEM)
-
-    return {
-        "gpu_util": util.gpu,       # percent
-        "mem_util": util.memory,    # percent
-        "temp_C": temp,
-        "power_W": power_w,
-        "sm_clock_MHz": sm_clock,
-        "mem_clock_MHz": mem_clock,
-    }
+from d2ps_nn.utils.gpu_stats import TorchGPUStats
 
 
 logger = logging.getLogger(__name__)
-
 
 
 class TrainingCoefExecutor(BaseD2PSExecutor):
@@ -420,9 +385,12 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         self.use_preload   = cfg.model.train.get("use_preload", False)
         self.batch_size    = cfg.splits.Train.n_sims
         self.out_coef_record   = self.assets_out["other_record"]
+        self.gpu_stats     = None
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        self.gpu_stats = TorchGPUStats(self.device)
 
         model = self.init_model()
         model.coef_processor = self.coef_scaler
@@ -539,7 +507,7 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
 
             dt = time.time() - t0
             ep_per_sec = 1.0 / dt if dt > 0 else float("inf")
-            gpu = get_gpu_stats(handle)
+            gpu = self.gpu_stats.get_stats()
 
             logger.info(
                 f"{epoch+1:4d} | "
