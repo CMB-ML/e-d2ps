@@ -15,8 +15,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # n_sims: ${n_sims_sweep}
-      n_sims: 5
+      n_sims: ${n_sims_train}
 
       learning_rate: ${learning_rate_sweep}
       # learning_rate: 2e-5
