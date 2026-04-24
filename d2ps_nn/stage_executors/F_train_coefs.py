@@ -272,14 +272,14 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
             self.out_loss_record.append([
                                          epoch + 1,
                                          batch_loss,
-                                         valid_scl_loss,
-                                         valid_raw_loss,
-                                         valid_mid_loss,
-                                         valid_pst_loss,
                                          train_scl_loss,
                                          train_raw_loss,
                                          train_mid_loss,
                                          train_pst_loss,
+                                         valid_scl_loss,
+                                         valid_raw_loss,
+                                         valid_mid_loss,
+                                         valid_pst_loss,
                                          ])
 
             is_best_condition_a = valid_scl_loss == min(all_valid_scl_loss)
