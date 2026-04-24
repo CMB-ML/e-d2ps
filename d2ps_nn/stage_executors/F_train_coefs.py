@@ -164,10 +164,10 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
             loss_record_headers = ['Epoch', 
-                                #    'Batch Loss',
-                                #    'Training Scl Loss',
-                                #    'Training Raw Loss',
-                                #    'Training Mid Loss',
+                                   'Batch Loss',
+                                   'Training Scl Loss',
+                                   'Training Raw Loss',
+                                   'Training Mid Loss',
                                    'Training Loss',  # train_pst_loss
                                 #    'Validation Scl Loss',
                                 #    'Validation Raw Loss',
@@ -180,7 +180,7 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
-            with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
+            with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}, leave=False) as pbar:
                 model.return_mode = "coefs"
                 model.train()
                 batch_loss = 0
@@ -216,7 +216,7 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
             # valid_raw_loss = 0
             # valid_mid_loss = 0
             # valid_pst_loss = 0
-            # model.return_mode = "both"
+            model.return_mode = "both"
             with torch.no_grad():
                 for train_features, train_label, train_truth in tqdm(train_dataloader, leave=False):
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
