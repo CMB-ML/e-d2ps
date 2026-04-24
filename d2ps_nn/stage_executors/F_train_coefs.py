@@ -437,11 +437,6 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
         ]
         self.out_loss_record.write(data=loss_record_headers)
 
-        with self.name_tracker.set_context("record_type", "scl_coeff"):
-            self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
-        with self.name_tracker.set_context("record_type", "raw_coeff"):
-            self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
-
         feats, label, truth = next(iter(train_dataloader))
         feats = feats.to(device=self.device, dtype=self.dtype)
         label = label.to(device=self.device, dtype=self.dtype)
@@ -542,9 +537,11 @@ class OverfitTrainingCoefExecutor(TrainingCoefExecutor):
             self.out_loss_record.append(l)
 
         with self.name_tracker.set_context("record_type", "scl_coef"):    
+            self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
             for l in coef_preds:
                 self.out_coef_record.append(l)
         with self.name_tracker.set_context("record_type", "raw_coef"):    
+            self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
             for l in coef_preds:
                 self.out_coef_record.append(model.post(l))
 
