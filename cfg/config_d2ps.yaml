@@ -83,7 +83,7 @@ norm_sweep: none
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: Xm
+down_reductions_sweep: avg, Xm
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
