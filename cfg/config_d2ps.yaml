@@ -27,7 +27,7 @@ pl_fig_model_name  : "${features_type} to PS, On Planck"
 ################################################################
 #                                                              #
 ################################################################
-n_sims_train_full: 2000  # 128
+n_sims_train_full: 20000  # 128
 # n_sims_train_full: 2000   # 512
 
 # Overfit scheme
@@ -35,7 +35,7 @@ n_sims_train_full: 2000  # 128
 # num_epochs: 5000
 
 # Normal training scheme
-n_sims_train: ${n_sims_train_full}
+n_sims_train: 2000
 num_epochs: 200
 
 spectrum_layer_kind: polynomial
@@ -73,22 +73,23 @@ adamw_wd_sweep: 0.0
 
 learning_rate: ???
 # learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
-learning_rate_sweep: 1e-4
+learning_rate_sweep: 1e-4, 2e-4, 5e-4, 1e-3
 
 ### Models: Either 
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
 norm_kind: ???
-# norm_sweep: none, bn, gn
+norm_sweep: gn
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: Xm
+down_reductions_sweep: X, XX, mXX
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
 activation: ???
 # activation_sweep: relu, gelu
+activation_sweep: gelu
 
 ### Or
 # # nn_model: TLPEncAggDec
