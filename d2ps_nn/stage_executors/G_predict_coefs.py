@@ -24,7 +24,7 @@ from d2ps_nn.utils.scale_coef import make_coef_processor
 logger = logging.getLogger(__name__)
 
 
-class PredictExecutor(BaseD2PSExecutor):
+class PredictCoefsExecutor(BaseD2PSExecutor):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg, stage_str="predict")
 

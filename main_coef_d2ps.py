@@ -35,7 +35,7 @@ from d2ps_nn.ex import (
     ModelInitExecutor,
     TrainingCoefExecutor,
     OverfitTrainingCoefExecutor,
-    PredictExecutor,
+    PredictCoefsExecutor,
     LossPlotExecutor,
     ShowPredictionsPeaksExecutor,
     # # PowerSpectrumAnalysisExecutor,
@@ -124,7 +124,7 @@ def run_6_train(cfg):
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        PredictExecutor,
+        PredictCoefsExecutor,
         ShowPredictionsPeaksExecutor,
         # BundlePredExecutor,
         # ShowTrebleEll
@@ -146,7 +146,7 @@ def run_8_prep_planck(cfg):
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-             PredictExecutor,
+             PredictCoefsExecutor,
             #  PowerSpectrumAnalysisExecutor,
             #  ShowPredictionsExecutor,
              ]
