@@ -26,8 +26,8 @@ hydra:
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
       # use_pos_enc_lut: false
 
-      # norm_kind: ${norm_sweep}
-      norm_kind: none
+      norm_kind: ${norm_sweep}
+      # norm_kind: none
 
       # activation: ${activation_sweep}
       activation: gelu

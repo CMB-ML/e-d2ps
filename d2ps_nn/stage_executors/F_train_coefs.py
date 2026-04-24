@@ -164,15 +164,15 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
             loss_record_headers = ['Epoch', 
-                                   'Batch Loss',
-                                   'Training Scl Loss',
-                                   'Training Raw Loss',
-                                   'Training Mid Loss',
+                                #    'Batch Loss',
+                                #    'Training Scl Loss',
+                                #    'Training Raw Loss',
+                                #    'Training Mid Loss',
                                    'Training Loss',  # train_pst_loss
-                                   'Validation Scl Loss',
-                                   'Validation Raw Loss',
-                                   'Validation Mid Loss',
-                                   'Validation Loss',  # valid_pst_loss
+                                #    'Validation Scl Loss',
+                                #    'Validation Raw Loss',
+                                #    'Validation Mid Loss',
+                                #    'Validation Loss',  # valid_pst_loss
                                    ]
             self.out_loss_record.write(data=loss_record_headers)
 
@@ -205,18 +205,18 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                 batch_loss /= len(train_dataloader)
                 all_batch_loss.append(batch_loss)
 
-            # Validation
+            # # Validation
             model.eval()
             train_scl_loss = 0
             train_raw_loss = 0
             train_mid_loss = 0
             train_pst_loss = 0
 
-            valid_scl_loss = 0
-            valid_raw_loss = 0
-            valid_mid_loss = 0
-            valid_pst_loss = 0
-            model.return_mode = "both"
+            # valid_scl_loss = 0
+            # valid_raw_loss = 0
+            # valid_mid_loss = 0
+            # valid_pst_loss = 0
+            # model.return_mode = "both"
             with torch.no_grad():
                 for train_features, train_label, train_truth in tqdm(train_dataloader, leave=False):
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
@@ -243,62 +243,62 @@ class TrainingCoefExecutor(BaseD2PSExecutor):
                     f"train_{model.coef_processor.post_name}: {train_pst_loss:.02e}"
                 )
 
-                for valid_features, valid_label, valid_truth in tqdm(valid_dataloader, leave=False):
-                    valid_features = valid_features.to(device=self.device, dtype=self.dtype)
-                    valid_label = valid_label.to(device=self.device, dtype=self.dtype)
-                    valid_truth = valid_truth.to(device=self.device, dtype=self.dtype)
-                    output = model(valid_features)
-                    coefs = output["coefs_scl"]
-                    spectrum = output["spectrum"]
-                    valid_scl_loss += loss_function(coefs, valid_label).item()
-                    train_raw_loss += loss_function(model.post(coefs), model.post(valid_label)).item()
-                    valid_mid_loss += loss_function(spectrum, model.to_ps(valid_label)).item()
-                    valid_pst_loss += loss_function(spectrum, valid_truth).item()
-                valid_scl_loss /= len(valid_dataloader)
-                valid_raw_loss /= len(valid_dataloader)
-                valid_mid_loss /= len(valid_dataloader)
-                valid_pst_loss /= len(valid_dataloader)
-                all_valid_scl_loss.append(valid_scl_loss)
-                all_valid_raw_loss.append(valid_raw_loss)
-                all_valid_mid_loss.append(valid_mid_loss)
-                all_valid_pst_loss.append(valid_pst_loss)
-                note_min_loss = " *" if valid_scl_loss == min(all_valid_scl_loss) else ""
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"valid_{model.coef_processor.pre_name}: {valid_scl_loss:.02e} | "
-                    f"valid_{model.coef_processor.post_name}: {valid_pst_loss:.02e}"
-                    f"{note_min_loss}"
-                )
+            #     for valid_features, valid_label, valid_truth in tqdm(valid_dataloader, leave=False):
+            #         valid_features = valid_features.to(device=self.device, dtype=self.dtype)
+            #         valid_label = valid_label.to(device=self.device, dtype=self.dtype)
+            #         valid_truth = valid_truth.to(device=self.device, dtype=self.dtype)
+            #         output = model(valid_features)
+            #         coefs = output["coefs_scl"]
+            #         spectrum = output["spectrum"]
+            #         valid_scl_loss += loss_function(coefs, valid_label).item()
+            #         train_raw_loss += loss_function(model.post(coefs), model.post(valid_label)).item()
+            #         valid_mid_loss += loss_function(spectrum, model.to_ps(valid_label)).item()
+            #         valid_pst_loss += loss_function(spectrum, valid_truth).item()
+            #     valid_scl_loss /= len(valid_dataloader)
+            #     valid_raw_loss /= len(valid_dataloader)
+            #     valid_mid_loss /= len(valid_dataloader)
+            #     valid_pst_loss /= len(valid_dataloader)
+            #     all_valid_scl_loss.append(valid_scl_loss)
+            #     all_valid_raw_loss.append(valid_raw_loss)
+            #     all_valid_mid_loss.append(valid_mid_loss)
+            #     all_valid_pst_loss.append(valid_pst_loss)
+            #     note_min_loss = " *" if valid_scl_loss == min(all_valid_scl_loss) else ""
+            #     logger.info(
+            #         f"Epoch {epoch + 1:<{n_epoch_digits}} "
+            #         f"valid_{model.coef_processor.pre_name}: {valid_scl_loss:.02e} | "
+            #         f"valid_{model.coef_processor.post_name}: {valid_pst_loss:.02e}"
+            #         f"{note_min_loss}"
+            #     )
             self.out_loss_record.append([
                                          epoch + 1,
                                          batch_loss,
-                                         valid_scl_loss,
-                                         valid_raw_loss,
-                                         valid_mid_loss,
-                                         valid_pst_loss,
                                          train_scl_loss,
                                          train_raw_loss,
                                          train_mid_loss,
                                          train_pst_loss,
+                                        #  valid_scl_loss,
+                                        #  valid_raw_loss,
+                                        #  valid_mid_loss,
+                                        #  valid_pst_loss,
                                          ])
 
-            is_best_condition_a = valid_scl_loss == min(all_valid_scl_loss)
-            is_best_condition_b = epoch >= self.earliest_best
-            if is_best_condition_a and is_best_condition_b:
-                with self.name_tracker.set_context("epoch", "best"):
-                    self.out_model.write(model=model,
-                                         epoch="best"
-                                         )
+            # is_best_condition_a = valid_scl_loss == min(all_valid_scl_loss)
+            # is_best_condition_b = epoch >= self.earliest_best
+            # if is_best_condition_a and is_best_condition_b:
+            #     with self.name_tracker.set_context("epoch", "best"):
+            #         self.out_model.write(model=model,
+            #                              epoch="best"
+            #                              )
 
             # Checkpoint every so many epochs
-            condition_a = (epoch + 1) in self.extra_check
-            condition_b = (epoch + 1) % self.checkpoint == 0
-            if (condition_a or condition_b):
-                with self.name_tracker.set_context("epoch", epoch + 1):
-                    self.out_model.write(model=model,
-                                         optimizer=optimizer,
-                                         best_loss=min(all_valid_scl_loss),
-                                         epoch=epoch + 1)
+            # condition_a = (epoch + 1) in self.extra_check
+            # condition_b = (epoch + 1) % self.checkpoint == 0
+            # if (condition_a or condition_b):
+            #     with self.name_tracker.set_context("epoch", epoch + 1):
+            #         self.out_model.write(model=model,
+            #                              optimizer=optimizer,
+            #                              best_loss=min(all_valid_scl_loss),
+            #                              epoch=epoch + 1)
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
