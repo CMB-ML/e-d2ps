@@ -18,6 +18,7 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
 from d2ps_nn.utils.ps_scale import make_ps_processor
+from d2ps_nn.utils.scale_coef import make_coef_processor
 
 
 logger = logging.getLogger(__name__)
@@ -37,10 +38,12 @@ class PredictExecutor(BaseD2PSExecutor):
                                                  self.instrument)
         self.in_model_asset: Asset = self.assets_in["model"]
         self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
+        self.in_cmb_coef_stats: Asset = self.assets_in["coef_stats"]
         in_obs_map_handler: HealpyMap
         in_model_handler: PyTorchModel
 
         self.lut_style = cfg.model.patches.get("lut_style", None)
+        self.coef_scaler = make_coef_processor(cfg.scale_coef, coef_stats_asset=self.in_cmb_coef_stats)
 
         # How it runs
         self.batch_size = cfg.model.test.batch_size
@@ -65,6 +68,7 @@ class PredictExecutor(BaseD2PSExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         self.model = self.init_model()
+        self.model.coef_processor = self.coef_scaler
         self.model.eval().to(self.device)
 
         with torch.no_grad():  # We don't need gradients for prediction
