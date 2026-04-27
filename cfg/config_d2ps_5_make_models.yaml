@@ -25,4 +25,4 @@ hydra:
       basis_kind: chebyshev  # Does not matter
 
       # For TLP models only
-      # face_reduction: avg
+      face_reduction: avg
