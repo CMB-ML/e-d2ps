@@ -41,26 +41,47 @@ prep_scale_polycoef: # E3_prep_coef_process.py / PreprocessPrepSpectraCoefExecut
     - valid
 
 train: # F_train_coefs.py / TrainingCoefExecutor
-  assets_out:
-    model: 
-      handler: PyTorchModel
-      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
-    loss_record:
-      handler: AppendingCsvHandler
-      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+  # assets_out:
+  #   model: 
+  #     handler: PyTorchModel
+  #     path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+  #   loss_record:
+  #     handler: AppendingCsvHandler
+  #     path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
   assets_in:
     cmb_ps_coef: {stage: prep_scale_polycoef, working: "${prep_working_dir}"}
     cmb_ps_thry: {stage: bundle_true, orig_name: ps_bundle}
-    cmb_map: {stage: preprocess_maps}
+    # cmb_map: {stage: preprocess_maps}
     coef_stats: {stage: prep_stat_polycoef, working: "${prep_working_dir}"}
-    obs_maps: {stage: preprocess_maps}
-    resume_model: {stage: train, orig_name: model}
-    initial_model: {stage: model_init, orig_name: model}
-    pos_enc_lut: {stage: make_pos_enc_lut}
-    mean_ps: {stage: get_spectra_stats}
-    stdv_ps: {stage: get_spectra_stats}
-  splits:
-    - train
-    - valid
-  dir_name: F_Model
-  make_stage_log: True
+    # obs_maps: {stage: preprocess_maps}
+    # resume_model: {stage: train, orig_name: model}
+    # initial_model: {stage: model_init, orig_name: model}
+    # pos_enc_lut: {stage: make_pos_enc_lut}
+    # mean_ps: {stage: get_spectra_stats}
+    # stdv_ps: {stage: get_spectra_stats}
+  # splits:
+  #   - train
+  #   - valid
+  # dir_name: F_Model
+  # make_stage_log: True
+
+predict: &final_inference # G_predict_coefs.py / PredictExecutor
+  # assets_out:
+  #   cmb_ps: 
+  #     handler: TextPowerSpectrum
+  #     path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.txt"
+  #     # handler: NumpyPowerSpectrum
+  #     # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
+  assets_in:
+    coef_stats: {stage: prep_stat_polycoef, working: "${prep_working_dir}"}
+    # cmb_map: {stage: preprocess_maps}
+    # obs_maps: {stage: preprocess_maps}
+    # model: {stage: train}
+    # pos_enc_lut: {stage: make_pos_enc_lut}
+    # mean_ps: {stage: get_spectra_stats}
+    # stdv_ps: {stage: get_spectra_stats}
+  # splits:
+  #   - ${splits.run_inference_on}
+  # epochs: ${use_epochs}
+  # dir_name: G_Predict
+  # make_stage_log: True

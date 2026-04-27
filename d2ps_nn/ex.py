@@ -12,6 +12,7 @@ from .stage_executors.Fa_init_model import ModelInitExecutor
 from .stage_executors.F_train import TrainingExecutor, OverfitTrainingExecutor
 from .stage_executors.F_train_coefs import TrainingCoefExecutor, OverfitTrainingCoefExecutor
 from .stage_executors.G_predict import PredictExecutor
+from .stage_executors.G_predict_coefs import PredictCoefsExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor
 from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
 from .stage_executors.J_ps_error_analysis import ErrorAnalysisExecutor
