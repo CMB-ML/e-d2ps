@@ -269,7 +269,7 @@ def build_docx_grid(
         for j, col_t in enumerate(col_tuples, start=n_row_label_cols):
             rec = grid.get((row_t, col_t))
             p = None if rec is None else rec.get_figure(fig_key)
-            put_image_or_blank(table.cell(i, j), p, img_width_in=2.2)
+            put_image_or_blank(table.cell(i, j), p, img_width_in=10.0)
 
     doc.save(out_path)
 
