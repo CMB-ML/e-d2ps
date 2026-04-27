@@ -73,42 +73,43 @@ adamw_wd_sweep: 0.0
 
 learning_rate: ???
 # learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
-learning_rate_sweep: 1e-4, 2e-4, 5e-4, 1e-3
+learning_rate_sweep: 2e-4
 
 ### Models: Either 
-nn_model: SimpleEncDec
-px_arrange: cmbNNCS
+# nn_model: SimpleEncDec
+# px_arrange: cmbNNCS
+# norm_kind: ???
+# norm_sweep: gn
+# down_reductions: ???
+# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
+# # down_reductions_sweep: avg, max, X, XXm, mXX
+# down_reductions_sweep: X, XX, mXX
+# spatial_reduction: ???
+# # # spatial_reduction_sweep: avg, max
+# spatial_reduction_sweep: avg
+# activation: ???
+# # activation_sweep: relu, gelu
+# activation_sweep: gelu
+
+### Or
+# nn_model: TLPEncAggDec
+nn_model: TLPEnc2AggDec
+px_arrange: channel
 norm_kind: ???
-norm_sweep: gn
+# norm_sweep: none, bn, gn
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# down_reductions_sweep: avg, max, X, XXm, mXX
+# down_reductions_sweep: max, avg, X, Xm, XXm, mXX
 down_reductions_sweep: X, XX, mXX
 spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
+# spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
+face_reduction: ???
+# face_reduction_sweep: avg, max, weighted, softmax
+face_reduction_sweep: avg
 activation: ???
 # activation_sweep: relu, gelu
 activation_sweep: gelu
-
-### Or
-# # nn_model: TLPEncAggDec
-# nn_model: TLPEnc2AggDec
-# px_arrange: channel
-# norm_kind: ???
-# # norm_sweep: none, bn, gn
-# down_reductions: ???
-# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-# down_reductions_sweep: Xm
-# spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
-# spatial_reduction_sweep: avg
-# face_reduction: ???
-# # face_reduction_sweep: avg, max, weighted, softmax
-# face_reduction_sweep: avg
-# activation: ???
-# # activation_sweep: relu, gelu
 
 ### Or
 # nn_model: MobileViTCMBRegressor
