@@ -22,7 +22,7 @@ class BaseSpectrumLayer(nn.Module):
         spectrum shape (B, n_ell)
     """
 
-    n_coeffs: int
+    n_coefs: int
     n_ell: int
 
     def forward(self, coeffs: torch.Tensor) -> torch.Tensor:
@@ -84,7 +84,7 @@ class PolynomialSpectrumLayer(BaseSpectrumLayer):
 
         self.n_ell = int(n_ell)
         self.degree = int(degree)
-        self.n_coeffs = self.degree + 1
+        self.n_coefs = self.degree + 1
         self.basis_kind = basis_kind
         self.out_range = out_range
 
@@ -102,13 +102,13 @@ class PolynomialSpectrumLayer(BaseSpectrumLayer):
     def forward(self, coeffs: torch.Tensor) -> torch.Tensor:
         if coeffs.ndim != 2:
             raise ValueError(
-                f"Expected coeffs with shape (B, {self.n_coeffs}), "
+                f"Expected coeffs with shape (B, {self.n_coefs}), "
                 f"got {tuple(coeffs.shape)}"
             )
 
-        if coeffs.shape[1] != self.n_coeffs:
+        if coeffs.shape[1] != self.n_coefs:
             raise ValueError(
-                f"Expected coeffs.shape[1] == {self.n_coeffs}, "
+                f"Expected coeffs.shape[1] == {self.n_coefs}, "
                 f"got {coeffs.shape[1]}"
             )
 
@@ -129,6 +129,65 @@ class PolynomialSpectrumLayer(BaseSpectrumLayer):
         )
 
 
+class ParameterSpectrumLayer(BaseSpectrumLayer):
+    """
+    Convert cosmological parameters to TT spectra. Not for use in training loops.
+    """
+
+    def __init__(self, 
+                 param_names: list[str], 
+                 ells: Sequence[int], 
+                 ps_getter) -> None:
+        super().__init__()
+
+        self.param_names = tuple(param_names)
+        self.n_coefs = len(self.param_names)  # compatibility name. TODO: Change from n_coefs
+
+        ells = np.asarray(ells, dtype=int)
+        if ells.ndim != 1:
+            raise ValueError(f"ells must be 1D, got shape {ells.shape}")
+        if len(ells) < 1:
+            raise ValueError("ells must contain at least one value")
+
+        self.ells = ells
+        self.lmax = int(ells[-1])
+        self.n_ell = len(ells)
+        self.ps_getter = ps_getter
+
+    def forward(self, params: torch.Tensor) -> torch.Tensor:
+        if torch.is_grad_enabled():
+            raise RuntimeError(
+                "ParameterSpectrumLayer is not differentiable. "
+                "Use return_mode='coeffs' during training."
+            )
+
+        if params.ndim != 2:
+            raise ValueError(
+                f"Expected coeffs with shape (B, {self.n_coefs}), "
+                f"got {tuple(params.shape)}"
+            )
+
+        if params.shape[1] != self.n_coefs:
+            raise ValueError(
+                f"Expected coeffs.shape[1] == {self.n_coefs}, "
+                f"got {params.shape[1]}"
+            )
+
+        rows = params.detach().cpu().numpy()
+
+        spectra = []
+        for row in rows:
+            cosmo_params = dict(zip(self.param_names, row.tolist()))
+            tt = self.ps_getter(cosmo_params, self.lmax, self.ells)
+            spectra.append(tt)
+
+        return torch.as_tensor(
+            np.stack(spectra),
+            dtype=params.dtype,
+            device=params.device,
+        )
+
+
 class IdentitySpectrumLayer(BaseSpectrumLayer):
     """
     Pass-through layer for cases where the backbone already predicts the spectrum.
@@ -140,26 +199,26 @@ class IdentitySpectrumLayer(BaseSpectrumLayer):
         if n_outputs < 1:
             raise ValueError(f"n_outputs must be >= 1, got {n_outputs}")
 
-        self.n_coeffs = int(n_outputs)
+        self.n_coefs = int(n_outputs)
         self.n_ell = int(n_outputs)
 
     def forward(self, coeffs: torch.Tensor) -> torch.Tensor:
         if coeffs.ndim != 2:
             raise ValueError(
-                f"Expected tensor with shape (B, {self.n_coeffs}), "
+                f"Expected tensor with shape (B, {self.n_coefs}), "
                 f"got {tuple(coeffs.shape)}"
             )
 
-        if coeffs.shape[1] != self.n_coeffs:
+        if coeffs.shape[1] != self.n_coefs:
             raise ValueError(
-                f"Expected second dimension {self.n_coeffs}, got {coeffs.shape[1]}"
+                f"Expected second dimension {self.n_coefs}, got {coeffs.shape[1]}"
             )
 
         return coeffs
 
     def extra_repr(self) -> str:
-        return f"n_outputs={self.n_coeffs}"
-    
+        return f"n_outputs={self.n_coefs}"
+        
 
 def make_scaled_positions(
     n_ell: int,

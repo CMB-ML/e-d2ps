@@ -14,8 +14,8 @@ defaults:
 
 dataset_name       : "${map_fields}_${scenario.nside}_20850"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_${nn_model}_overfit_coefs/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${basis_kind}${degree}_${model_num}/"
-fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, Model Init ${model_num}"
+working_dir        : &wd "${features_type}2ps_${nn_model}_overfit_params/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_params}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n Params Scale:${scale_params} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, Model Init ${model_num}"
 ## TLP
 # working_dir        : &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1${down_reductions}_r2${spatial_reduction}_r3${face_reduction}_${model_num}/"
 # fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, {face_reduction}, Model Init ${model_num}"
@@ -38,8 +38,8 @@ num_epochs: 5000
 # n_sims_train: ${n_sims_train_full}
 # num_epochs: 200
 
-spectrum_layer_kind: polynomial
-return_mode: spectrum
+spectrum_layer_kind: cosmo_param  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
+return_mode: coefs  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs # TODO: Change name
 basis_kind: ???
 # basis_kind_sweep: chebyshev, legendre, monomial
 basis_kind_sweep: chebyshev
@@ -47,6 +47,9 @@ degree: ???
 degree_sweep: 18
 out_range: [-1, 1]
 scale_coef: local_meanstdv
+scale_params: ???
+scale_params_sweep: local_meanstdv
+# scale_params_sweep: local_meanstdv, none
 
 model_num: ???
 model_num_sweep: 1 #, 2, 3
@@ -152,6 +155,14 @@ features_type      : cmb
 # features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
+
+cosmo_param_names  : ["As", "H0", "ns", "ombh2", "omch2", "tau"]
+pivot_scalar       : 0.002  # For WMAP, use 0.002. For Planck, use CAMB
+                            # default of 0.05
+log_As             : false  # This should match the source distribution
+                            # Currently (WMAP), As is provided with mean 
+                            # and standard deviation *not* log-scaled. 
+                            # If we switch to Planck, change this to true
 
 # In the model yaml
 # SET ABOVE

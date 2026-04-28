@@ -8,9 +8,11 @@ from .stage_executors.E_preprocess_ps_serial import PreprocessSpectraExecutor
 from .stage_executors.E1_prep_coef_get_coef import PreprocessGetSpectraCoefExecutor
 from .stage_executors.E2_prep_coef_get_stats import PreprocessStatSpectraCoefExecutor
 from .stage_executors.E3_prep_coef_process import PreprocessPrepSpectraCoefExecutor
+from .stage_executors.E4_prep_cosmo_param import BundleParamsExecutor, PreprocessStatParamsExecutor, PreprocessPrepParamsExecutor
 from .stage_executors.Fa_init_model import ModelInitExecutor
 from .stage_executors.F_train import TrainingExecutor, OverfitTrainingExecutor
 from .stage_executors.F_train_coefs import TrainingCoefExecutor, OverfitTrainingCoefExecutor
+from .stage_executors.F_train_params import TrainingParamsExecutor, OverfitTrainingParamsExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.G_predict_coefs import PredictCoefsExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor

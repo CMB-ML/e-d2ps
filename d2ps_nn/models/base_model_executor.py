@@ -2,6 +2,7 @@ import logging
 
 from tqdm import tqdm
 
+from functools import partial
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
@@ -19,11 +20,13 @@ from d2ps_nn.models import (
 from d2ps_nn.models.polynomial_layers import (
     PolynomialSpectrumLayer,
     IdentitySpectrumLayer,
+    ParameterSpectrumLayer
 )
 from d2ps_nn.models.wrapped_models import WrappedSpectrumModel
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.param_to_spectra import get_tt_spectrum_at_ells
 
 
 logger = logging.getLogger(__name__)
@@ -55,16 +58,21 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         self.spectrum_layer_kind = cfg.spectrum_layer_kind
         self.return_mode = cfg.return_mode
 
-        if self.spectrum_layer_kind not in ["identity", "polynomial"]:
+        if self.spectrum_layer_kind not in ["identity", "polynomial", "cosmo_param"]:
             raise ValueError(
                 f"cfg.spectrum_layer_kind={self.spectrum_layer_kind!r} not recognized. "
-                "Expected 'identity' or 'polynomial'."
+                "Expected 'identity', 'polynomial', or 'cosmo_param'."
             )
 
-        if self.return_mode not in ["spectrum", "coeffs", "both"]:
+        if self.return_mode not in ["spectrum", "coefs", "both"]:
             raise ValueError(
                 f"cfg.return_mode={self.return_mode!r} not recognized. "
-                "Expected 'spectrum', 'coeffs', or 'both'."
+                "Expected 'spectrum', 'coefs', or 'both'."
+            )
+
+        if self.spectrum_layer_kind == "cosmo_param" and self.return_mode != "coefs":
+            raise NotImplementedError(
+                f"When using cosmological params, return_mode must be set to coefs."
             )
 
         if self.spectrum_layer_kind == "polynomial":
@@ -76,6 +84,13 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
                 raise ValueError(f"cfg.degree must be >= 0, got {self.degree}")
 
             self.backbone_n_outputs = self.degree + 1
+        elif self.spectrum_layer_kind == "cosmo_param":
+            self.basis_kind = None
+            self.degree = len(cfg.cosmo_param_names)
+            self.out_range = None
+            self.backbone_n_outputs = self.degree
+            self.pivot_scalar = cfg.pivot_scalar
+            self.param_names = cfg.cosmo_param_names
         else:
             self.basis_kind = None
             self.degree = None
@@ -233,6 +248,15 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
                 dtype=self.dtype,
             )
             layer = PolynomialSpectrumLayer(**layer_dict)
+
+        elif self.spectrum_layer_kind == "cosmo_param":
+            layer_dict = dict(
+                param_names = self.param_names,
+                ells = self.ells,
+                ps_getter = partial(get_tt_spectrum_at_ells, 
+                                    pivot_scalar=self.pivot_scalar),
+            )
+            layer = ParameterSpectrumLayer(**layer_dict)
 
         else:
             raise ValueError(

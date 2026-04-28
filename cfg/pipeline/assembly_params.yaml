@@ -1,0 +1,55 @@
+defaults:
+  - assembly_on_sims_sepprep
+  - pipes_on_sims
+  - _self_
+
+
+params_bundle:  # E4_prep_cosmo_param.py / BundleParamsExecutor
+  assets_out:
+    params_bundle:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/bundle_params_{split}.npy"
+  assets_in:
+    cosmo_config: {stage: make_cosmo_configs, working: Simulation_Working/}
+  splits: &all_splits
+    - train
+    - test
+    - valid
+  dir_name: E_Prep_Params
+  make_stage_log: False
+  
+prep_stat_params: # E4_prep_cosmo_param.py / PreprocessStatParamsExecutor
+  assets_out:
+    params_stats:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/stats_params.npy"
+  assets_in:
+    params_bundle: {stage: params_bundle}
+  dir_name: E_Prep_Params
+  splits:
+    - train
+
+prep_scale_params: # E4_prep_cosmo_param.py / PreprocessPrepParamsExecutor
+  assets_out:
+    cosmo_params:
+      handler: NumpyPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/scale_${scale_params}_params_{split}.npy"
+  assets_in:
+    params_stats: {stage: prep_stat_params}
+    cosmo_params: {stage: params_bundle, orig_name: params_bundle}
+  dir_name: E_Prep_Params
+  splits:
+    - train
+    - valid
+
+model_init:
+  assets_out:
+    model:
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_init_{model_num}_pe-{pos_enc}_cosmo.pth"
+  dir_name: F_Model_Init
+
+train: # F_train_params.py / TrainingParamsExecutor
+  assets_in:
+    cosmo_params: {stage: prep_scale_params, working: "${prep_working_dir}"}
+    params_stats: {stage: prep_stat_params, working: "${prep_working_dir}"}
