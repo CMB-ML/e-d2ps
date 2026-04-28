@@ -2,7 +2,7 @@ import logging
 import time
 
 from tqdm import tqdm
-
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
@@ -12,8 +12,8 @@ from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler, NumpyPowerS
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from d2ps_nn.models import BaseD2PSExecutor
 from d2ps_nn.utils.loss import get_loss
-from d2ps_nn.dataset_params import TrainDataset
-# from d2ps_nn.dataset_coef import TrainDataset
+# from d2ps_nn.dataset_params import TrainDataset
+from d2ps_nn.dataset_coef import TrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.scale_coef import make_coef_processor as make_processor
 from d2ps_nn.utils.gpu_stats import TorchGPUStats
@@ -34,7 +34,7 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
 
         # What goes in
         self.in_label_asset: Asset = self.assets_in["cosmo_params"]
-        # self.in_truth_asset: Asset = self.assets_in["cmb_ps_thry"]
+        self.in_truth_asset: Asset = self.assets_in["cmb_ps_thry"]
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
                                                  cfg.features_type, 
                                                  self.instrument)
@@ -78,6 +78,7 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
         self.extra_check   = cfg.model.train.extra_check
         self.earliest_best = cfg.model.train.earliest_best
         self.random_init   = cfg.model.get("random_init", False)
+        self.camb_every    = 10
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -185,8 +186,8 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
                 model.return_mode = "coefs"
                 model.train()
                 batch_loss = 0
-                # for train_features, train_label, _ in pbar:  # For use with dataset_coefs (currently disabled)
-                for train_features, train_label in pbar:
+                for train_features, train_label, _ in pbar:  # For use with dataset_coefs
+                # for train_features, train_label in pbar:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
 
@@ -210,83 +211,86 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
             # Validation
             model.eval()
             train_scl_loss = 0
-            # train_raw_loss = 0
-            # train_mid_loss = 0
-            # train_pst_loss = 0
+            train_pst_loss = 0
 
             valid_scl_loss = 0
-            # valid_raw_loss = 0
-            # valid_mid_loss = 0
-            # valid_pst_loss = 0
-            # model.return_mode = "both"
-            model.return_mode = "coefs"
+            valid_pst_loss = 0
+
             with torch.no_grad():
-                for train_features, train_label in tqdm(train_dataloader, leave=False):  # For use with dataset_coefs (currently disabled)
-                # for train_features, train_label, train_truth in tqdm(train_dataloader, leave=False):
+                # Training set
+                model.return_mode = "coefs"
+                for i, (train_features, train_label, train_truth) in enumerate(tqdm(train_dataloader, leave=False)):
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
-                    # train_truth = train_truth.to(device=self.device, dtype=self.dtype)
                     output = model(train_features)
                     coefs = output
-                    # coefs = output["coefs_scl"]
-                    # spectrum = output["spectrum"]
                     train_scl_loss += loss_function(coefs, train_label).item()
-                    # train_raw_loss += loss_function(model.post(coefs), model.post(train_label)).item()
-                    # train_mid_loss += loss_function(spectrum, model.to_ps(train_label)).item()
-                    # train_pst_loss += loss_function(spectrum, train_truth).item()
                 train_scl_loss /= len(train_dataloader)
-                # train_raw_loss /= len(train_dataloader)
-                # train_mid_loss /= len(train_dataloader)
-                # train_pst_loss /= len(train_dataloader)
+                train_pst_loss = np.nan
+
+                if epoch % self.camb_every == self.camb_every - 1:
+                    model.return_mode = "both"
+                    train_pst_loss = 0
+                    for i, (train_features, train_label, train_truth) in enumerate(tqdm(train_dataloader, leave=False)):
+                        train_features = train_features.to(device=self.device, dtype=self.dtype)
+                        train_label = train_label.to(device=self.device, dtype=self.dtype)
+                        train_truth = train_truth.to(device=self.device, dtype=self.dtype)
+                        output = model(train_features)
+                        coefs = output["coefs_scl"]
+                        spectrum = output["spectrum"]
+                        train_pst_loss += loss_function(spectrum, train_truth).item()
+                        if i >= 49:
+                            break
+                    train_pst_loss /= len(train_dataloader)
+
                 all_train_scl_loss.append(train_scl_loss)
-                # all_train_raw_loss.append(train_raw_loss)
-                # all_train_mid_loss.append(train_mid_loss)
-                # all_train_pst_loss.append(train_pst_loss)
+                all_train_pst_loss.append(train_pst_loss)
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
                     f"train_{model.coef_processor.pre_name}: {train_scl_loss:.02e} | "
-                    # f"train_{model.coef_processor.post_name}: {train_pst_loss:.02e}"
+                    f"train_{model.coef_processor.post_name}: {train_pst_loss:.02e}"
                 )
 
-                for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
-                # for valid_features, valid_label, valid_truth in tqdm(valid_dataloader, leave=False):  # For use with dataset_coefs (currently disabled)
-                    valid_features = valid_features.to(device=self.device, dtype=self.dtype)
-                    valid_label = valid_label.to(device=self.device, dtype=self.dtype)
-                    # valid_truth = valid_truth.to(device=self.device, dtype=self.dtype)
-                    output = model(valid_features)
-                    coefs = output
-                    # coefs = output["coefs_scl"]
-                    # spectrum = output["spectrum"]
-                    valid_scl_loss += loss_function(coefs, valid_label).item()
-                    # train_raw_loss += loss_function(model.post(coefs), model.post(valid_label)).item()
-                    # valid_mid_loss += loss_function(spectrum, model.to_ps(valid_label)).item()
-                    # valid_pst_loss += loss_function(spectrum, valid_truth).item()
-                valid_scl_loss /= len(valid_dataloader)
-                # valid_raw_loss /= len(valid_dataloader)
-                # valid_mid_loss /= len(valid_dataloader)
-                # valid_pst_loss /= len(valid_dataloader)
+                # Validation Set
+                if epoch % self.camb_every == self.camb_every - 1:
+                    model.return_mode = "both"
+                    for valid_features, valid_label, valid_truth in tqdm(valid_dataloader, leave=False):
+                        valid_features = valid_features.to(device=self.device, dtype=self.dtype)
+                        valid_label = valid_label.to(device=self.device, dtype=self.dtype)
+                        valid_truth = valid_truth.to(device=self.device, dtype=self.dtype)
+                        output = model(valid_features)
+                        coefs = output["coefs_scl"]
+                        spectrum = output["spectrum"]
+                        valid_scl_loss += loss_function(coefs, valid_label).item()
+                        valid_pst_loss += loss_function(spectrum, valid_truth).item()
+                    valid_scl_loss /= len(valid_dataloader)
+                    valid_pst_loss /= len(valid_dataloader)
+                else:
+                    model.return_mode = "coefs"
+                    for valid_features, valid_label, valid_truth in tqdm(valid_dataloader, leave=False):
+                        valid_features = valid_features.to(device=self.device, dtype=self.dtype)
+                        valid_label = valid_label.to(device=self.device, dtype=self.dtype)
+                        output = model(valid_features)
+                        coefs = output
+                        valid_scl_loss += loss_function(coefs, valid_label).item()
+                    valid_scl_loss /= len(valid_dataloader)
+                    valid_pst_loss = np.nan
                 all_valid_scl_loss.append(valid_scl_loss)
-                # all_valid_raw_loss.append(valid_raw_loss)
-                # all_valid_mid_loss.append(valid_mid_loss)
-                # all_valid_pst_loss.append(valid_pst_loss)
+                all_valid_pst_loss.append(np.nan)
                 note_min_loss = " *" if valid_scl_loss == min(all_valid_scl_loss) else ""
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} "
                     f"valid_{model.coef_processor.pre_name}: {valid_scl_loss:.02e} | "
-                    # f"valid_{model.coef_processor.post_name}: {valid_pst_loss:.02e}"
+                    f"valid_{model.coef_processor.post_name}: {valid_pst_loss:.02e}"
                     f"{note_min_loss}"
                 )
+
             self.out_loss_record.append([
                                          epoch + 1,
                                          batch_loss,
                                          train_scl_loss,
-                                        #  train_raw_loss,
-                                        #  train_mid_loss,
-                                        #  train_pst_loss,
                                          valid_scl_loss,
-                                        #  valid_raw_loss,
-                                        #  valid_mid_loss,
-                                        #  valid_pst_loss,
+                                         valid_pst_loss
                                          ])
 
             is_best_condition_a = valid_scl_loss == min(all_valid_scl_loss)
@@ -314,7 +318,7 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
         context = dict(px_arrange=self.px_arrange, scale=self.scale_px, split=split.name)
         with self.name_tracker.set_contexts(context):
             label_path = self.in_label_asset.path
-            # truth_path = self.in_truth_asset.path
+            truth_path = self.in_truth_asset.path
             feat_path_template = self.make_fn_template(split, self.in_feat_asset)
 
         freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
@@ -327,8 +331,8 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
             label_handler=self.in_label_asset.handler,
             feature_path_template=feat_path_template,
             feature_handler=self.in_feat_asset.handler,
-            # truth_path=truth_path,
-            # truth_handler=self.in_truth_asset.handler,
+            truth_path=truth_path,
+            truth_handler=self.in_truth_asset.handler,
             px_arrange=self.px_arrange,
             pos_enc_lut=self.get_pos_enc_lut()
         )
@@ -393,6 +397,7 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
         self.batch_size    = cfg.splits.Train.n_sims
         self.out_coef_record   = self.assets_out["other_record"]
         self.gpu_stats     = None
+        self.camb_every    = 10
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -435,7 +440,7 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
             'Loss Before Step',
             'Loss After Step',
             # 'MidLoss After Step',
-            # 'PostLoss After Step',
+            'PostLoss After Step',
             'Training Loss',       # Duplicate of Loss After Step
             'Grad Norm',
             'Param Norm',
@@ -444,19 +449,19 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
         ]
         self.out_loss_record.write(data=loss_record_headers)
 
-        feats, label = next(iter(train_dataloader))
-        # feats, label, truth = next(iter(train_dataloader))  # For use with dataset_coefs (currently disabled)
+        # feats, label = next(iter(train_dataloader))
+        feats, label, truth = next(iter(train_dataloader))  # For use with dataset_coefs (currently disabled)
         feats = feats.to(device=self.device, dtype=self.dtype)
         label = label.to(device=self.device, dtype=self.dtype)
-        # truth = truth.to(device=self.device, dtype=self.dtype)
+        truth = truth.to(device=self.device, dtype=self.dtype)
 
         header_printed = False
 
         loss_record_lines = []
         coef_preds = []
-        model.return_mode = "coefs"
 
         for epoch in range(start_epoch, self.n_epochs):
+            model.return_mode = "coefs"
             t0 = time.time()
             model.train()
 
@@ -489,15 +494,25 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
 
             # Forward after step on the exact same batch
             model.eval()
-            with torch.no_grad():
-                out_after = model(feats)
-                coefs = out_after
-                # coefs, spectrum = out_after["coefs_scl"], out_after["spectrum"]
-                coef_preds.append(coefs[0].cpu().tolist())
+            if epoch % self.camb_every == self.camb_every - 1:
+                model.return_mode = "both"
+                with torch.no_grad():
+                    out_after = model(feats)
+                    coefs, spectrum = out_after["coefs_scl"], out_after["spectrum"]
+                    coef_preds.append(coefs[0].cpu().tolist())
 
-                pre_loss_after = loss_function(coefs, label).item()
-                # mid_loss_after = loss_function(spectrum, model.to_ps(label)).item()
-                # pst_loss_after = loss_function(spectrum, truth).item()
+                    pre_loss_after = loss_function(coefs, label).item()
+                    # mid_loss_after = loss_function(spectrum, model.to_ps(label)).item()
+                    pst_loss_after = loss_function(spectrum, truth).item()
+            else:
+                with torch.no_grad():
+                    out_after = model(feats)
+                    coefs = out_after
+                    coef_preds.append(coefs[0].cpu().tolist())
+
+                    pre_loss_after = loss_function(coefs, label).item()
+                    # mid_loss_after = np.nan
+                    pst_loss_after = np.nan
             model.train()
 
             update_norm = _get_update_norm(model, old_params)
@@ -519,7 +534,7 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
                 f"{pre_loss_before:10.3e} | "
                 f"{pre_loss_after:10.3e} | "
                 # f"{mid_loss_after:10.3e} | "
-                # f"{pst_loss_after:10.3e} | "
+                f"{pst_loss_after:10.3e} | "
                 f"{ep_per_sec:7.2f} ep/s | "
                 f"{gpu['gpu_util']:3d}% util | "
                 f"{gpu['temp_C']:2d} C | "
@@ -532,9 +547,8 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
                 pre_loss_before,
                 pre_loss_after,
                 # mid_loss_after,
-                # pst_loss_after,
-                # pst_loss_after,  # Duplicate for clarity
-                pre_loss_after,    # Duplicate for clarity
+                pst_loss_after,
+                pst_loss_after,    # Duplicate for clarity
                 grad_norm,
                 param_norm,
                 update_norm,
@@ -555,6 +569,7 @@ class OverfitTrainingParamsExecutor(TrainingParamsExecutor):
             self.out_coef_record.write(data=[f"c{i}" for i in range(self.degree+1)])
             for l in coef_preds:
                 self.out_coef_record.append(model.post(l))
+
 
 def _get_param_norm(model, norm_type=2.0):
     vals = []

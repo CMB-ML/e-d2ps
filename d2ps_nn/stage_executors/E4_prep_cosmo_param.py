@@ -105,9 +105,6 @@ class PreprocessPrepParamsExecutor(BaseStageExecutor):
         in_params_handler: NumpyPowerSpectrum
         in_params_stats_handler: NumpyPowerSpectrum
 
-        # if cfg.scale_params is None:
-            
-
         self.scaler = make_processor(cfg.scale_params, coef_stats_asset=self.in_cosmo_params_stats)
 
     def execute(self) -> None:

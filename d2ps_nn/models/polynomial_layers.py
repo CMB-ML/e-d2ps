@@ -129,63 +129,63 @@ class PolynomialSpectrumLayer(BaseSpectrumLayer):
         )
 
 
-class ParameterSpectrumLayer(BaseSpectrumLayer):
-    """
-    Convert cosmological parameters to TT spectra. Not for use in training loops.
-    """
+# class ParameterSpectrumLayer(BaseSpectrumLayer):
+#     """
+#     Convert cosmological parameters to TT spectra. Not for use in training loops.
+#     """
 
-    def __init__(self, 
-                 param_names: list[str], 
-                 ells: Sequence[int], 
-                 ps_getter) -> None:
-        super().__init__()
+#     def __init__(self, 
+#                  param_names: list[str], 
+#                  ells: Sequence[int], 
+#                  ps_getter) -> None:
+#         super().__init__()
 
-        self.param_names = tuple(param_names)
-        self.n_coefs = len(self.param_names)  # compatibility name. TODO: Change from n_coefs
+#         self.param_names = tuple(param_names)
+#         self.n_coefs = len(self.param_names)  # compatibility name. TODO: Change from n_coefs
 
-        ells = np.asarray(ells, dtype=int)
-        if ells.ndim != 1:
-            raise ValueError(f"ells must be 1D, got shape {ells.shape}")
-        if len(ells) < 1:
-            raise ValueError("ells must contain at least one value")
+#         ells = np.asarray(ells, dtype=int)
+#         if ells.ndim != 1:
+#             raise ValueError(f"ells must be 1D, got shape {ells.shape}")
+#         if len(ells) < 1:
+#             raise ValueError("ells must contain at least one value")
 
-        self.ells = ells
-        self.lmax = int(ells[-1])
-        self.n_ell = len(ells)
-        self.ps_getter = ps_getter
+#         self.ells = ells
+#         self.lmax = int(ells[-1])
+#         self.n_ell = len(ells)
+#         self.ps_getter = ps_getter
 
-    def forward(self, params: torch.Tensor) -> torch.Tensor:
-        if torch.is_grad_enabled():
-            raise RuntimeError(
-                "ParameterSpectrumLayer is not differentiable. "
-                "Use return_mode='coeffs' during training."
-            )
+#     def forward(self, params: torch.Tensor) -> torch.Tensor:
+#         if torch.is_grad_enabled():
+#             raise RuntimeError(
+#                 "ParameterSpectrumLayer is not differentiable. "
+#                 "Use return_mode='coeffs' during training."
+#             )
 
-        if params.ndim != 2:
-            raise ValueError(
-                f"Expected coeffs with shape (B, {self.n_coefs}), "
-                f"got {tuple(params.shape)}"
-            )
+#         if params.ndim != 2:
+#             raise ValueError(
+#                 f"Expected coeffs with shape (B, {self.n_coefs}), "
+#                 f"got {tuple(params.shape)}"
+#             )
 
-        if params.shape[1] != self.n_coefs:
-            raise ValueError(
-                f"Expected coeffs.shape[1] == {self.n_coefs}, "
-                f"got {params.shape[1]}"
-            )
+#         if params.shape[1] != self.n_coefs:
+#             raise ValueError(
+#                 f"Expected coeffs.shape[1] == {self.n_coefs}, "
+#                 f"got {params.shape[1]}"
+#             )
 
-        rows = params.detach().cpu().numpy()
+#         rows = params.detach().cpu().numpy()
 
-        spectra = []
-        for row in rows:
-            cosmo_params = dict(zip(self.param_names, row.tolist()))
-            tt = self.ps_getter(cosmo_params, self.lmax, self.ells)
-            spectra.append(tt)
+#         spectra = []
+#         for row in rows:
+#             cosmo_params = dict(zip(self.param_names, row.tolist()))
+#             tt = self.ps_getter(cosmo_params, self.lmax, self.ells)
+#             spectra.append(tt)
 
-        return torch.as_tensor(
-            np.stack(spectra),
-            dtype=params.dtype,
-            device=params.device,
-        )
+#         return torch.as_tensor(
+#             np.stack(spectra),
+#             dtype=params.dtype,
+#             device=params.device,
+#         )
 
 
 class IdentitySpectrumLayer(BaseSpectrumLayer):
