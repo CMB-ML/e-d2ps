@@ -37,6 +37,8 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
 
+        df = df.dropna()
+
         include_valid = "Validation Loss" in df.columns
 
         if include_valid:
@@ -133,6 +135,8 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
 
 def exp_as_ltx(some_val):
+    if np.isnan(some_val):
+        return np.nan
     val_sci = "{:.1e}".format(some_val)
     base, exp = val_sci.split("e")
     exp = int(exp)
