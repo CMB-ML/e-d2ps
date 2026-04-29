@@ -166,11 +166,11 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
         else:
             loss_record_headers = ['Epoch', 
                                    'Batch Loss',
-                                   'Training Scl Loss',
+                                   'Training Loss',
                                 #    'Training Raw Loss',
                                 #    'Training Mid Loss',
                                 #    'Training Loss',  # train_pst_loss
-                                   'Validation Scl Loss',
+                                   'Validation Loss',
                                 #    'Validation Raw Loss',
                                 #    'Validation Mid Loss',
                                 #    'Validation Loss',  # valid_pst_loss
