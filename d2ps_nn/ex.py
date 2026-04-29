@@ -15,6 +15,7 @@ from .stage_executors.F_train_coefs import TrainingCoefExecutor, OverfitTraining
 from .stage_executors.F_train_params import TrainingParamsExecutor, OverfitTrainingParamsExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.G_predict_coefs import PredictCoefsExecutor
+from .stage_executors.G_predict_params import PredictParamsExecutor
 from .stage_executors.H_ps_analysis import PowerSpectrumAnalysisExecutor
 from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
 from .stage_executors.J_ps_error_analysis import ErrorAnalysisExecutor
