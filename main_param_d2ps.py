@@ -131,8 +131,8 @@ def run_6_train(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor,
-        OverfitTrainingParamsExecutor,
-        # TrainingParamsExecutor,
+        # OverfitTrainingParamsExecutor,
+        TrainingParamsExecutor,
         LossPlotExecutor
     ]
     run(cfg, pipes)
