@@ -12,7 +12,6 @@ from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler, NumpyPowerS
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from d2ps_nn.models import BaseD2PSExecutor
 from d2ps_nn.utils.loss import get_loss
-# from d2ps_nn.dataset_params import TrainDataset
 from d2ps_nn.dataset_coef import TrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.scale_coef import make_coef_processor as make_processor

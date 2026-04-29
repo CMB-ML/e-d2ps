@@ -3,7 +3,6 @@ import logging
 from tqdm import tqdm
 
 import torch
-import numpy as np
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
 
@@ -12,9 +11,6 @@ from cmbml.core.asset_handlers import Config, HealpyMap, NumpyMap
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from d2ps_nn.models import BaseD2PSExecutor
 from d2ps_nn.dataset import TestDataset
-from d2ps_nn.models import SimpleEncDec
-# from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
-from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
 from d2ps_nn.utils.ps_scale import make_ps_processor
