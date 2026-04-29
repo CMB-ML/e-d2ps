@@ -1,0 +1,13 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - config_d2ps_6_run_train_params
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      run_inference_on: train, valid
+
+splits:
+  Train:
+    n_sims: ${n_sims_train_infer}

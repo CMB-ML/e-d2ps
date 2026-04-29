@@ -19,14 +19,13 @@ from d2ps_nn.models import (
 )
 from d2ps_nn.models.polynomial_layers import (
     PolynomialSpectrumLayer,
-    IdentitySpectrumLayer,
-    ParameterSpectrumLayer
+    IdentitySpectrumLayer
 )
+from d2ps_nn.models.cosmo_param_layer import ParameterSpectrumLayer
 from d2ps_nn.models.wrapped_models import WrappedSpectrumModel
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
-from d2ps_nn.utils.param_to_spectra import get_tt_spectrum_at_ells
 
 
 logger = logging.getLogger(__name__)
@@ -253,8 +252,7 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             layer_dict = dict(
                 param_names = self.param_names,
                 ells = self.ells,
-                ps_getter = partial(get_tt_spectrum_at_ells, 
-                                    pivot_scalar=self.pivot_scalar),
+                pivot_scalar=self.pivot_scalar
             )
             layer = ParameterSpectrumLayer(**layer_dict)
 

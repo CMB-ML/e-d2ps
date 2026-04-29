@@ -53,3 +53,8 @@ train: # F_train_params.py / TrainingParamsExecutor
   assets_in:
     cosmo_params: {stage: prep_scale_params, working: "${prep_working_dir}"}
     params_stats: {stage: prep_stat_params, working: "${prep_working_dir}"}
+    cmb_ps_thry: {stage: bundle_true, orig_name: ps_bundle}
+
+predict: &final_inference # G_predict_params.py / PredictExecutor
+  assets_in:
+    params_stats: {stage: prep_stat_params, working: "${prep_working_dir}"}
