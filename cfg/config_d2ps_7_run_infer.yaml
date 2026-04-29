@@ -7,3 +7,7 @@ hydra:
   sweeper:
     params:
       run_inference_on: train, valid
+
+splits:
+  Train:
+    n_sims: ${n_sims_train_infer}

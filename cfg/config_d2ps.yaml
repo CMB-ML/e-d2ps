@@ -36,6 +36,7 @@ n_sims_train_full: 20000  # 128
 
 # Normal training scheme
 n_sims_train: 2000
+n_sims_train_infer: 200
 num_epochs: 200
 
 spectrum_layer_kind: cosmo_param  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
@@ -47,7 +48,7 @@ degree: ???
 degree_sweep: 18
 out_range: [-1, 1]
 scale_coef: local_meanstdv
-scale_params: ???
+scale_params: local_meanstdv
 scale_params_sweep: local_meanstdv
 # scale_params_sweep: local_meanstdv, none
 
@@ -76,7 +77,8 @@ adamw_wd_sweep: 0.0
 
 learning_rate: ???
 # learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
-learning_rate_sweep: 5e-5, 1e-4, 2e-4
+learning_rate_sweep: 5e-5
+# learning_rate_sweep: 5e-5, 1e-4, 2e-4
 
 ### Models: Either 
 nn_model: SimpleEncDec
@@ -86,7 +88,8 @@ norm_kind: ???
 down_reductions: ???
 # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: Xm, mX
+# down_reductions_sweep: Xm, mX
+down_reductions_sweep: Xm
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
