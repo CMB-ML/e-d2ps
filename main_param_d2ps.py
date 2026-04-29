@@ -42,7 +42,7 @@ from d2ps_nn.ex import (
     # PredictCoefsExecutor,
     TrainingParamsExecutor,
     OverfitTrainingParamsExecutor,
-    # PredictParamsExecutor,
+    PredictParamsExecutor,
     LossPlotExecutor,
     ShowPredictionsPeaksExecutor,
     # # PowerSpectrumAnalysisExecutor,
@@ -137,12 +137,12 @@ def run_6_train(cfg):
     ]
     run(cfg, pipes)
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_7_run_infer")
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_7_run_infer_params")
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # PredictCoefsExecutor,
-        # ShowPredictionsPeaksExecutor,
+        PredictParamsExecutor,
+        ShowPredictionsPeaksExecutor,
         # BundlePredExecutor,
         # ShowTrebleEll
     ]
@@ -194,9 +194,9 @@ if __name__ == "__main__":
     # run_2_prelim_ps()
     # run_3_prep_px()
     # run_4_prep_ps_coefs()
-    # run_4_prep_params()
-    # run_5_make_models()
+    run_4_prep_params()
+    run_5_make_models()
     run_6_train()
-    # run_7_infer()
+    run_7_infer()
     # run_8_prep_planck()
     # run_9_run_planck()
