@@ -166,14 +166,14 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
         else:
             loss_record_headers = ['Epoch', 
                                    'Batch Loss',
-                                   'Training Loss',
-                                #    'Training Raw Loss',
+                                   'Training Raw Loss',
                                 #    'Training Mid Loss',
-                                #    'Training Loss',  # train_pst_loss
-                                   'Validation Loss',
-                                #    'Validation Raw Loss',
+                                #    'Training Loss',
+                                   'Training Loss',  # train_pst_loss
+                                   'Validation Raw Loss',
                                 #    'Validation Mid Loss',
-                                #    'Validation Loss',  # valid_pst_loss
+                                #    'Validation Loss',
+                                   'Validation Loss',  # valid_pst_loss
                                    ]
             self.out_loss_record.write(data=loss_record_headers)
 
@@ -288,6 +288,7 @@ class TrainingParamsExecutor(BaseD2PSExecutor):
                                          epoch + 1,
                                          batch_loss,
                                          train_scl_loss,
+                                         train_pst_loss,
                                          valid_scl_loss,
                                          valid_pst_loss
                                          ])
