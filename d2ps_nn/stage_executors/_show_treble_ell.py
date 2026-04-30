@@ -111,7 +111,7 @@ def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler, n_show=None,
 
     # Bottom plot: relative error
     if n_show is None:
-        n_show = thry.shape[0]
+        n_show = pred.shape[0]
     # Individual "shadows"
     for i in range(n_show):
         use_thry = 0 if thry.shape[0] == 1 else i
@@ -156,10 +156,18 @@ def treble_ell(ells, thry_dl, pred_dl, fsky):
 
 
 def treble_rms(ells, trues, preds, fsky):
+    # If the number of spectra and the ells match
     if trues.shape == preds.shape:
         pass
+    # If there's just one true spectrum (fixed test splits) and the ells match
     elif trues.shape[0] == 1 and trues.shape[1] == preds.shape[1]:
         pass
+    # If the number of spectra don't match
+    elif trues.shape[0] != preds.shape[0]:
+        # Assume (safely) that a limited number of predictions were made
+        #    If there were more preds than trues, what are the predictions based upon?
+        n_preds = preds.shape[0]
+        trues = trues[:n_preds].copy()
     else:
         raise NotImplementedError("Mismatch between shapes of true spectra and predictions")
     n_instances = preds.shape[0]
