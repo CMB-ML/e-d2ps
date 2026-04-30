@@ -2,7 +2,7 @@ import logging
 import time
 
 from tqdm import tqdm
-
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
@@ -52,6 +52,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         # How model is evaluated
         self.loss_key      = cfg.model.train.loss
+        self.n_sims_train_infer = cfg.get("n_sims_train_infer", np.inf)
 
         # How model is updated
         self.learning_rate = cfg.model.train.learning_rate
@@ -194,14 +195,21 @@ class TrainingExecutor(BaseD2PSExecutor):
             train_pst_loss = 0
             valid_pst_loss = 0
             with torch.no_grad():
-                for train_features, train_label in tqdm(train_dataloader, leave=False):
+                for i, (train_features, train_label) in enumerate(tqdm(train_dataloader, leave=False)):
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
                     output = model(train_features)
                     train_pre_loss += loss_function(output, train_label).item()
                     train_pst_loss += loss_function(post(output), post(train_label)).item()
-                train_pre_loss /= len(train_dataloader)
-                train_pst_loss /= len(train_dataloader)
+                    n_instances_seen = (i+1) * self.batch_size
+                    if n_instances_seen > self.n_sims_train_infer:
+                        break
+                if self.n_sims_train_infer < np.inf:
+                    train_pre_loss /= n_instances_seen
+                    train_pst_loss /= n_instances_seen
+                else:
+                    train_pre_loss /= len(train_dataloader)
+                    train_pst_loss /= len(train_dataloader)
                 all_train_pre_loss.append(train_pre_loss)
                 all_train_pst_loss.append(train_pst_loss)
                 logger.info(
