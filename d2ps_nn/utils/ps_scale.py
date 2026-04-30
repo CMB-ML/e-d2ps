@@ -230,6 +230,7 @@ class MeanStdvProcessor(SpectrumProcessor):
 def make_ps_processor(
     mode: Optional[DictConfig],
     cfg: Optional[DictConfig] = None,
+    stage_str="train"
 ) -> SpectrumProcessor:
     """
     Helper for selecting PS pre/post-processing.
@@ -266,7 +267,6 @@ def make_ps_processor(
 
     if mode == "meanstdv":
         # Mind sep_prep considerations: need to use train's input
-        stage_str = "train"
         ch = ConfigHelper(cfg, stage_str=stage_str)
         n = Namer(cfg)
         mean_path = ch.get_assets_in(n, stage_str)['mean_ps'].path

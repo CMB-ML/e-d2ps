@@ -34,7 +34,7 @@ class PreprocessSpectraExecutor(BaseStageExecutor):
         in_cmb_ps_handler: CambPowerSpectrum
 
         self.ells = parse_ells(cfg.model.use_ells)
-        self.scale_ps = make_ps_processor(cfg.model.scale_ps, cfg)
+        self.scale_ps = make_ps_processor(cfg.model.scale_ps, cfg, stage_str="preprocess_spectra")
 
         # If using Wishart, we need to skip the monopole and dipole
         # self.skip_mono_dipole = cfg.model.train.loss == "wishart"
