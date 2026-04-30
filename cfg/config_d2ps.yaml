@@ -21,7 +21,7 @@ fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_r
 # fig_model_name     : "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, {face_reduction}, Model Init ${model_num}"
 
 trained_wd         : *wd
-prep_working_dir   : "d2ps-prep/"
+prep_working_dir   : "d2ps-prep-rerun/"
 pl_fig_model_name  : "${features_type} to PS, On Planck"
 
 ################################################################
@@ -39,17 +39,19 @@ n_sims_train: 2000
 n_sims_train_infer: 200
 num_epochs: 200
 
-spectrum_layer_kind: cosmo_param  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
-return_mode: coefs  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs # TODO: Change name
-basis_kind: ???
-# basis_kind_sweep: chebyshev, legendre, monomial
-basis_kind_sweep: chebyshev
-degree: ???
-degree_sweep: 18
-out_range: [-1, 1]
-scale_coef: local_meanstdv
-scale_params: local_meanstdv
-scale_params_sweep: local_meanstdv
+spectrum_layer_kind: identity  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
+
+# N/A
+# return_mode: coefs  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs # TODO: Change name
+# basis_kind: ???
+# # basis_kind_sweep: chebyshev, legendre, monomial
+# basis_kind_sweep: chebyshev
+# degree: ???
+# degree_sweep: 18
+# out_range: [-1, 1]
+# scale_coef: local_meanstdv
+# scale_params: local_meanstdv
+# scale_params_sweep: local_meanstdv
 # scale_params_sweep: local_meanstdv, none
 
 model_num: ???
@@ -61,7 +63,8 @@ scale_px: ???
 # scale_px_sweep: local_minmax
 scale_px_sweep: local_meanstdv
 
-scale_ps: None
+scale_ps: ???
+scale_ps_sweep: meanstdv
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
@@ -77,22 +80,26 @@ adamw_wd_sweep: 0.0
 
 learning_rate: ???
 # learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
-learning_rate_sweep: 5e-5, 1e-4, 2e-4
+learning_rate_sweep: 2e-4
 
 ### Models: Either 
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
 norm_kind: ???
 # norm_sweep: none, bn, gn
+norm_sweep: gn
+# Down reductions use X/m strings: X is max, m is avg; 
+#   order starts with first/top layer and fills down 
+#   XmX would be Max, Avg, Max, and the rest Avg
 down_reductions: ???
-# for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: Xm, mX
+down_reductions_sweep: Xm
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
 activation: ???
 # activation_sweep: relu, gelu
+activation_sweep: gelu
 
 ### Or
 # # nn_model: TLPEncAggDec
@@ -172,7 +179,7 @@ log_As             : false  # This should match the source distribution
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : ["final"]
+use_epochs           : ["best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:

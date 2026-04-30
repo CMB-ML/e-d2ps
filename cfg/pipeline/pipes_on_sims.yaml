@@ -89,6 +89,8 @@ preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
     cmb_ps:
       stage: make_theory_ps
       working: Simulation_Working/
+    mean_ps: {stage: get_spectra_stats}
+    stdv_ps: {stage: get_spectra_stats}
   dir_name: E_Prep_Spectra
   splits:
     - train
@@ -98,7 +100,7 @@ model_init:
   assets_out:
     model:
       handler: PyTorchModel
-      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_init_{model_num}_pe-{pos_enc}_d${degree}.pth"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_init_{model_num}_pe-{pos_enc}.pth"
   dir_name: F_Model_Init
 
 train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor

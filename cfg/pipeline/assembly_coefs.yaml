@@ -40,6 +40,11 @@ prep_scale_polycoef: # E3_prep_coef_process.py / PreprocessPrepSpectraCoefExecut
     - train
     - valid
 
+model_init:
+  assets_out:
+    model:
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_init_{model_num}_pe-{pos_enc}_d${degree}.pth"
+
 train: # F_train_coefs.py / TrainingCoefExecutor
   # assets_out:
   #   model: 

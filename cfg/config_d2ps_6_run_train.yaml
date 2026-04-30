@@ -15,38 +15,15 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # n_sims: ${n_sims_sweep}
       n_sims: ${n_sims_train}
-
-      # learning_rate: ${learning_rate_sweep}
-      learning_rate: 2e-5
-
+      learning_rate: ${learning_rate_sweep}
       scale_px: ${scale_px_sweep}
-      # scale_px: global_minmax
-
-      # scale_ps: ${scale_ps_sweep}
-      scale_ps: 4000
-
+      scale_ps: ${scale_ps_sweep}
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
-      # use_pos_enc_lut: false
-
-      # norm_kind: ${norm_sweep}
-      norm_kind: none
-
-      # activation: ${activation_sweep}
-      activation: gelu
-
+      norm_kind: ${norm_sweep}
+      activation: ${activation_sweep}
       down_reductions: ${down_reductions_sweep}
-
       spatial_reduction: ${spatial_reduction_sweep}
-
       # face_reduction: ${face_reduction_sweep}
-
-      # model_num: ${model_num_sweep}
-      model_num: 1
-
-      # adamw_wd: ${adamw_wd_sweep}
-      adamw_wd: 0.0
-
-      basis_kind: ${basis_kind_sweep}
-      degree: 18
+      model_num: ${model_num_sweep}
+      adamw_wd: ${adamw_wd_sweep}
