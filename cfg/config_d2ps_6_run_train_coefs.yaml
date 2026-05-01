@@ -37,7 +37,7 @@ hydra:
       spatial_reduction: ${spatial_reduction_sweep}
 
       # For TLP models only
-      face_reduction: ${face_reduction_sweep}
+      # face_reduction: ${face_reduction_sweep}
 
       # model_num: ${model_num_sweep}
       model_num: 1
