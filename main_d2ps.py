@@ -106,6 +106,8 @@ def run_5_make_models(cfg):
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_6_run_train")
 def run_6_train(cfg):
+    if cfg.model.n_levels == 7 and cfg.nside == 512:
+        raise ValueError("Don't make this mistake again, please.")
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor,
