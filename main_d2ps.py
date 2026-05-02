@@ -124,7 +124,7 @@ def run_7_infer(cfg):
     pipes = [
         PredictExecutor,
         ShowPredictionsPeaksExecutor,
-        # BundlePredExecutor,
+        BundlePredExecutor,
         ShowTrebleEll
     ]
     run(cfg, pipes)
