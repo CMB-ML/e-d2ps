@@ -85,7 +85,7 @@ def get_fsky(mask_asset: Asset):
     mask = mask_asset.read()
     return np.mean(mask**2)
 
-def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler, n_show=None, example=0):
+def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler, split_name=None, n_show=None, example=0):
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=(8, 6), dpi=300, sharex=True,
         gridspec_kw={"height_ratios": [2, 1]}
@@ -135,7 +135,10 @@ def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler, n_show=None,
     ax1.set_ylim(0, 7000)
     ax2.set_ylim(0, 4)
 
-    fig.suptitle(f"{fig_label}", fontsize=14)
+    if split_name is not None:
+        fig.suptitle(f"On {split_name}, {fig_label}", fontsize=14)
+    else:
+        fig.suptitle(f"{fig_label}", fontsize=14)
 
     plt.tight_layout()
     fig_handler.write(fig=fig)

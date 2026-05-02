@@ -13,3 +13,9 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
       working: ${working_dir}
     dataset_stats:
       working: ${working_dir}
+
+show_predictions_peaks: # _show_predictions_peaks.py / ShowPredictionsPeaksExecutor
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_D_predictions_{split}_ep_{epoch}_peaks_PLANCK.{fig_type}"

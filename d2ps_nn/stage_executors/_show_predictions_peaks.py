@@ -192,7 +192,7 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                 ax.set_xlim([0, show_max_l])
                 # ax2.set_ylim([0, 1.5])
 
-                ax.set_title(f"Predictions and Targets, {self.fig_label}")
+                ax.set_title(f"Predictions and Targets on {split.name}, {self.fig_label}")
 
                 # if report_data is not None:
                 #     key = ('mse', 'mean')
