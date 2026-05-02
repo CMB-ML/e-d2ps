@@ -122,7 +122,7 @@ def run_6_train(cfg):
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # PredictExecutor,
+        PredictExecutor,
         ShowPredictionsPeaksExecutor,
         # BundlePredExecutor,
         ShowTrebleEll

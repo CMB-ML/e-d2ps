@@ -78,12 +78,12 @@ optimizer: AdamW
 # adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
-# adamw_wd_sweep: 0.0, 1e-4, 1e-2
-adamw_wd_sweep: 0.0
+adamw_wd_sweep: 0.0, 1e-4, 1e-2
+# adamw_wd_sweep: 0.0
 
 learning_rate: ???
-# learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
-learning_rate_sweep: 1e-6
+learning_rate_sweep: 1e-6, 1e-5, 1e-4, 1e-3
+# learning_rate_sweep: 1e-6
 # learning_rate_sweep: 1e-5
 # learning_rate_sweep: 1e-4
 # learning_rate_sweep: 1e-3
@@ -100,7 +100,7 @@ norm_sweep: gn
 #   XmX would be Max, Avg, Max, and the rest Avg
 down_reductions: ???
 # down_reductions_sweep: avg, max, X, XXm, mXX
-down_reductions_sweep: Xm #, XXm, mXX, max, avg
+down_reductions_sweep: Xm, XXm, mXX, max, avg
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
