@@ -208,6 +208,7 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                 #         mse_str = float_to_latex(mse)
                 #     ax.text(20, 100, f"{split.name} MSE: ${mse_str}$")
 
+                fig.tight_layout()
                 self.out_fig.write(fig=fig)  # Make directory only
 
 
