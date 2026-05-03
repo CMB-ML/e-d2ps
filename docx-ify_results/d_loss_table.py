@@ -9,6 +9,8 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter1d
 
 from docx import Document
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 from docx_helper import (
     extract_run_template,
@@ -297,6 +299,56 @@ def build_loss_lookup(
     return lookup
 
 
+def compute_log_loss_range(
+    loss_lookup: dict[tuple[tuple[str, ...], tuple[str, ...]], float | None],
+) -> tuple[float | None, float | None]:
+    vals = [
+        np.log10(v)
+        for v in loss_lookup.values()
+        if v is not None and np.isfinite(v) and v > 0
+    ]
+
+    if not vals:
+        return None, None
+
+    return min(vals), max(vals)
+
+
+def log_loss_to_hex_color(
+    loss: float,
+    log_min: float,
+    log_max: float,
+) -> str:
+    log_val = np.log10(loss)
+
+    if log_min == log_max:
+        t = 0.5
+    else:
+        t = (log_val - log_min) / (log_max - log_min)
+
+    t = max(0.0, min(1.0, t))
+
+    # Perceptual-ish scaling: spread out differences near the best losses.
+    t = t**0.5
+
+    # Low loss = green, high loss = red.
+    r = int(255 * t)
+    g = int(255 * (1.0 - t))
+    b = 0
+
+    return f"{r:02X}{g:02X}{b:02X}"
+
+
+def set_cell_background(cell, hex_color: str) -> None:
+    tc = cell._tc
+    tcPr = tc.get_or_add_tcPr()
+
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:fill"), hex_color)
+
+    tcPr.append(shd)
+
+
 def add_loss_table(
     doc: Document,
     records: list[RunRecord],
@@ -313,6 +365,8 @@ def add_loss_table(
     col_tuples = get_unique_axis_tuples(records, col_keys)
     loss_lookup = build_loss_lookup(records, row_keys, col_keys)
 
+    log_min, log_max = compute_log_loss_range(loss_lookup)
+
     n_row_header_rows = max(1, len(col_keys))
     n_row_label_cols = max(1, len(row_keys))
 
@@ -322,9 +376,15 @@ def add_loss_table(
     table = doc.add_table(rows=n_rows, cols=n_cols)
     table.style = "Table Grid"
 
+    # ----------------------------
+    # Top-left row label headers
+    # ----------------------------
     for i, key in enumerate(row_keys):
         table.cell(n_row_header_rows - 1, i).text = key
 
+    # ----------------------------
+    # Column header rows
+    # ----------------------------
     for level, col_key in enumerate(col_keys):
         spans = value_repeats_every(col_tuples, level)
 
@@ -336,6 +396,9 @@ def add_loss_table(
             if end - start > 1:
                 cell.merge(table.cell(level, n_row_label_cols + end - 1))
 
+    # ----------------------------
+    # Left row-label columns
+    # ----------------------------
     for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
         for j, value in enumerate(row_t):
             row_key = row_keys[j]
@@ -345,10 +408,25 @@ def add_loss_table(
                 value_formatters,
             )
 
+    # ----------------------------
+    # Interior cells: loss values
+    # ----------------------------
     for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
         for j, col_t in enumerate(col_tuples, start=n_row_label_cols):
             loss = loss_lookup.get((row_t, col_t))
-            table.cell(i, j).text = format_loss_value(loss)
+
+            cell = table.cell(i, j)
+            cell.text = format_loss_value(loss)
+
+            if (
+                loss is not None
+                and np.isfinite(loss)
+                and loss > 0
+                and log_min is not None
+                and log_max is not None
+            ):
+                color = log_loss_to_hex_color(loss, log_min, log_max)
+                set_cell_background(cell, color)
 
     doc.add_paragraph("")
 
