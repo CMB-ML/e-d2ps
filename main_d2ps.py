@@ -112,9 +112,9 @@ def run_6_train(cfg):
     pipes = [
         # CheckGPULoadExecutor,
         # OverfitTrainingExecutor,
-        TrainingExecutor,
+        # TrainingExecutor,
         LossPlotExecutor,
-        BundleTrueExecutor
+        # BundleTrueExecutor
     ]
     run(cfg, pipes)
 
@@ -122,10 +122,10 @@ def run_6_train(cfg):
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        PredictExecutor,
+        # PredictExecutor,
         ShowPredictionsPeaksExecutor,
-        BundlePredExecutor,
-        ShowTrebleEll
+        # BundlePredExecutor,
+        # ShowTrebleEll
     ]
     run(cfg, pipes)
 
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     # run_3_prep_px()
     # run_4_prep_ps()
     # run_5_make_models()
-    # run_6_train()
+    run_6_train()
     run_7_infer()
     # run_8_prep_planck()
     run_9_run_planck()
