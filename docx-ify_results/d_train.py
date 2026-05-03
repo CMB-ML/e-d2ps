@@ -15,11 +15,10 @@ from docx_helper import (
 
 
 ROOT = Path(
-    "/CMB_Data/Datasets/I_128_20850/working_directory"
+    "/CMB_Data/Datasets/I_128_20850/some_working_directory"
 )
 
 DIRNAME_SPEC = (
-    "${features_type}2ps_${nn_model}_polyfit_train_sweep3/"
     "Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}"
     "_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}"
     "_en-${norm_kind}_${activation}_r1-${down_reductions}"
@@ -28,22 +27,34 @@ DIRNAME_SPEC = (
 
 COLUMN_PRIORITY = [
     "down_reductions",
-    "spatial_reduction",
-    "basis_kind_degree",
+    "adamw_wd",
+    "learning_rate",
 ]
+
+FIELD_VALUE_ORDER = {
+    "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
+}
 
 FIG_SUBDIR = "Analysis_Figures"
 
 FIG_FILES = {
     "loss": "loss_plot.png",
-    "train_predictions": "fig_D_predictions_Train_ep_final_peaks.png",
-    "valid_predictions": "fig_D_predictions_Valid_ep_final_peaks.png",
+    "train_predictions": "fig_D_predictions_Train_ep_best_peaks.png",
+    "valid_predictions": "fig_D_predictions_Valid_ep_best_peaks.png",
+    "test_predictions": "fig_D_predictions_Test_ep_best_peaks.png",
+    "testFFN_predictions": "fig_D_predictions_TestFFN_ep_best_peaks.png",
+    "testFP_predictions": "fig_D_predictions_TestFP_ep_best_peaks.png",
+    "planck_predictions": "fig_D_predictions_Test_ep_best_peaks_PLANCK.png",
 }
 
 IMAGE_SPECS = [
     ("Loss", "loss"),
     ("Train predictions", "train_predictions"),
     ("Valid predictions", "valid_predictions"),
+    ("Test predictions", "test_predictions"),
+    ("TestFFN predictions", "testFFN_predictions"),
+    ("TestFP predictions", "testFP_predictions"),
+    ("Predictions on Planck", "planck_predictions"),
 ]
 
 RUN_TEMPLATE = extract_run_template(DIRNAME_SPEC)
@@ -100,10 +111,100 @@ def order_varying_keys(
 
     return unmentioned_varying + ordered_prioritized
 
+def parse_number_string(s: str) -> float | None:
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return None
+
+
+def is_exp_notation(s: str) -> bool:
+    return "e" in str(s).lower()
+
+
+def all_values_are_number_strings(values: list[str]) -> bool:
+    return all(parse_number_string(v) is not None for v in values)
+
+
+def format_exp_no_padded_zero(x: float) -> str:
+    s = f"{x:.15g}"
+
+    if "e" not in s.lower():
+        s = f"{x:.15e}"
+
+    mant, exp = s.lower().split("e")
+    mant = mant.rstrip("0").rstrip(".")
+    exp_i = int(exp)
+
+    return f"{mant}e{exp_i}"
+
+
+def should_force_exp(values: list[str]) -> bool:
+    return (
+        all_values_are_number_strings(values)
+        and any(is_exp_notation(v) for v in values)
+    )
+
+
+def build_field_value_formatter(
+    records: list[RunRecord],
+    keys: list[str],
+) -> dict[str, dict[str, str]]:
+    formatters = {}
+
+    for key in keys:
+        raw_values = [str(rec.params.get(key, "")) for rec in records]
+        unique_values = sorted(set(raw_values), key=str)
+
+        if should_force_exp(unique_values):
+            formatters[key] = {
+                v: format_exp_no_padded_zero(float(v))
+                for v in unique_values
+            }
+        else:
+            formatters[key] = {v: v for v in unique_values}
+
+    return formatters
+
+
+def field_value_sort_key(key: str, value: str):
+    value = "" if value is None else str(value)
+
+    explicit_order = FIELD_VALUE_ORDER.get(key)
+    if explicit_order is not None:
+        if value in explicit_order:
+            return (0, explicit_order.index(value))
+        return (1, value)
+
+    numeric_value = parse_number_string(value)
+    if numeric_value is not None:
+        return (0, numeric_value)
+
+    return (1, value)
+
+
+def record_sort_key(rec: RunRecord, keys: list[str]):
+    return tuple(
+        field_value_sort_key(key, str(rec.params.get(key, "")))
+        for key in keys
+    )
+
+
+def format_field_value(
+    key: str,
+    value: str,
+    value_formatters: dict[str, dict[str, str]],
+) -> str:
+    value = str(value)
+    return value_formatters.get(key, {}).get(value, value)
+
 
 def build_docx(records: list[RunRecord], varying_keys: list[str], image_specs, out_path: Path):
     doc = Document()
     doc.add_heading("Training run report", level=1)
+
+    value_formatters = build_field_value_formatter(records, varying_keys)
+    records = sorted(records, key=lambda rec: record_sort_key(rec, varying_keys))
 
     n_cols = len(varying_keys) + len(image_specs)
 
@@ -125,7 +226,8 @@ def build_docx(records: list[RunRecord], varying_keys: list[str], image_specs, o
 
         # parameter values
         for j, key in enumerate(varying_keys):
-            row_cells[j].text = str(rec.params.get(key, ""))
+            raw_value = str(rec.params.get(key, ""))
+            row_cells[j].text = format_field_value(key, raw_value, value_formatters)
 
         # images
         for j, (_, fig_key) in enumerate(image_specs, start=len(varying_keys)):
@@ -167,10 +269,15 @@ def main() -> None:
         raise RuntimeError("No parseable run directories found.")
 
     varying_keys = find_varying_keys(records, PARAM_KEYS)
-    varying_keys = order_varying_keys(varying_keys, COLUMN_PRIORITY)
+    value_formatters = build_field_value_formatter(records, varying_keys)
+
     print("\nVarying keys:")
     for k in varying_keys:
-        vals = sorted({getattr(r, k) for r in records}, key=str)
+        vals = sorted(
+            {str(r.params.get(k, "")) for r in records},
+            key=lambda v: field_value_sort_key(k, v),
+        )
+        vals = [format_field_value(k, v, value_formatters) for v in vals]
         print(f"  {k}: {vals}")
 
     combo_dict = build_combo_dict(records, varying_keys)

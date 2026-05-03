@@ -15,11 +15,10 @@ from docx_helper import (
 
 
 ROOT = Path(
-    "/CMB_Data/Datasets/I_128_20850/working_directory"
+    "/CMB_Data/Datasets/I_128_20850/some_working_directory"
 )
 
 DIRNAME_SPEC = (
-    "${features_type}2ps_${nn_model}_polyfit_overfit_sweep1/"
     "Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}"
     "_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}"
     "_en-${norm_kind}_${activation}_r1-${down_reductions}"
@@ -31,8 +30,17 @@ ROW_PRIORITY = [
 ]
 
 COLUMN_PRIORITY = [
-    "learning_rate",
+    "down_reductions",
 ]
+
+ROW_PRIORITY = [
+    "adamw_wd",
+    "learning_rate"
+]
+
+FIELD_VALUE_ORDER = {
+    "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
+}
 
 FIG_SUBDIR = "Analysis_Figures"
 FIG_FILES = {
@@ -110,8 +118,103 @@ def get_key_tuple(rec: RunRecord, keys: list[str]) -> tuple[str, ...]:
     return tuple(str(rec.params.get(k, "")) for k in keys)
 
 
-def tuple_sort_key(t: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple("" if x is None else str(x) for x in t)
+def parse_number_string(s: str) -> float | None:
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return None
+
+
+def is_exp_notation(s: str) -> bool:
+    return "e" in str(s).lower()
+
+
+def all_values_are_number_strings(values: list[str]) -> bool:
+    return all(parse_number_string(v) is not None for v in values)
+
+
+def format_exp_no_padded_zero(x: float) -> str:
+    # Use general format first (removes trailing zeros)
+    s = f"{x:.15g}"
+
+    # If it didn’t choose scientific notation, force it
+    if "e" not in s.lower():
+        s = f"{x:.15g}".lower()
+        s = f"{float(s):.15e}"
+
+    mant, exp = s.lower().split("e")
+
+    # Clean mantissa (strip trailing zeros and dot)
+    mant = mant.rstrip("0").rstrip(".")
+
+    # Normalize exponent (remove leading zeros)
+    exp_i = int(exp)
+
+    return f"{mant}e{exp_i}"
+
+
+def should_force_exp(values: list[str]) -> bool:
+    return (
+        all_values_are_number_strings(values)
+        and any(is_exp_notation(v) for v in values)
+    )
+
+
+def build_field_value_formatter(
+    records: list[RunRecord],
+    keys: list[str],
+) -> dict[str, dict[str, str]]:
+    formatters = {}
+
+    for key in keys:
+        raw_values = [str(rec.params.get(key, "")) for rec in records]
+        unique_values = sorted(set(raw_values), key=str)
+
+        if should_force_exp(unique_values):
+            formatters[key] = {
+                v: format_exp_no_padded_zero(float(v))
+                for v in unique_values
+            }
+        else:
+            formatters[key] = {v: v for v in unique_values}
+
+    return formatters
+
+
+def field_value_sort_key(key: str, value: str):
+    value = "" if value is None else str(value)
+
+    explicit_order = FIELD_VALUE_ORDER.get(key)
+    if explicit_order is not None:
+        if value in explicit_order:
+            return (0, explicit_order.index(value))
+        return (1, value)
+
+    numeric_value = parse_number_string(value)
+    if numeric_value is not None:
+        return (0, numeric_value)
+
+    return (1, value)
+
+
+def axis_tuple_sort_key(keys: list[str], t: tuple[str, ...]):
+    return tuple(
+        field_value_sort_key(key, value)
+        for key, value in zip(keys, t)
+    )
+
+
+def format_axis_value(
+    key: str,
+    value: str,
+    value_formatters: dict[str, dict[str, str]],
+) -> str:
+    value = str(value)
+    return value_formatters.get(key, {}).get(value, value)
+
+
+# def tuple_sort_key(t: tuple[str, ...]) -> tuple[str, ...]:
+#     return tuple("" if x is None else str(x) for x in t)
 
 
 # def format_tuple_label(keys: list[str], values: tuple[str, ...]) -> str:
@@ -131,15 +234,23 @@ def put_image_or_blank(cell, path: Path | None, img_width_in: float = 10.0) -> N
         cell.text = ""
 
 
+# def get_unique_axis_tuples(
+#     records: list[RunRecord],
+#     keys: list[str],
+# ) -> list[tuple[str, ...]]:
+#     return sorted(
+#         {get_key_tuple(rec, keys) for rec in records},
+#         key=tuple_sort_key,
+#     )
+
 def get_unique_axis_tuples(
     records: list[RunRecord],
     keys: list[str],
 ) -> list[tuple[str, ...]]:
     return sorted(
         {get_key_tuple(rec, keys) for rec in records},
-        key=tuple_sort_key,
+        key=lambda t: axis_tuple_sort_key(keys, t),
     )
-
 
 def value_repeats_every(col_tuples: list[tuple[str, ...]], level: int) -> list[tuple[int, int, str]]:
     """
@@ -215,6 +326,7 @@ def build_docx_grid(
         )
 
     fig_key = IMAGE_SPECS[0][1]
+    value_formatters = build_field_value_formatter(records, row_keys + col_keys)
 
     doc = Document()
     doc.add_heading("Overfit run report", level=1)
@@ -249,7 +361,8 @@ def build_docx_grid(
 
         for start, end, val in spans:
             cell = table.cell(level, n_row_label_cols + start)
-            cell.text = f"{col_key}={val}"
+            # cell.text = f"{col_key}={val}"
+            cell.text = f"{col_key}={format_axis_value(col_key, val, value_formatters)}"
 
             # Merge horizontally if the same value spans multiple columns
             if end - start > 1:
@@ -260,7 +373,9 @@ def build_docx_grid(
     # ----------------------------
     for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
         for j, value in enumerate(row_t):
-            table.cell(i, j).text = str(value)
+            # table.cell(i, j).text = str(value)
+            row_key = row_keys[j]
+            table.cell(i, j).text = format_axis_value(row_key, value, value_formatters)
 
     # ----------------------------
     # Interior cells: figures
@@ -310,7 +425,15 @@ def main() -> None:
 
     print("\nVarying keys:")
     for k in varying_keys:
-        vals = sorted({getattr(r, k) for r in records}, key=str)
+        # vals = sorted({getattr(r, k) for r in records}, key=str)
+        vals = sorted(
+            {str(r.params.get(k, "")) for r in records},
+            key=lambda v: field_value_sort_key(k, v),
+        )
+        vals = [
+            format_axis_value(k, v, build_field_value_formatter(records, [k]))
+            for v in vals
+        ]
         print(f"  {k}: {vals}")
 
     print("\nResolved axes:")
