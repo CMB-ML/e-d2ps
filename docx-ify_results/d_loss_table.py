@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import itertools
 import os
 from pathlib import Path
@@ -36,6 +37,9 @@ LOSS_COLUMN = "Validation Loss"
 LOSS_MODE = "min_smoothed"  # "min_raw" or "min_smoothed"
 SMOOTH_SIGMA = 5
 
+THRESHOLDS = [1e4, 8e3]
+CONSECUTIVE_BELOW = 3
+
 COLUMN_KEYS = [
     "down_reductions",
 ]
@@ -55,6 +59,14 @@ FIG_FILES = {}
 RUN_TEMPLATE = extract_run_template(DIRNAME_SPEC)
 FIELD_CHUNKS = build_field_chunks(RUN_TEMPLATE)
 PARAM_KEYS = [chunk.combined_name for chunk in FIELD_CHUNKS]
+
+
+@dataclass
+class LossSummary:
+    first_below: dict[float, int | None]
+    best_loss: float | None
+    best_epoch: int | None
+    final_loss: float | None
 
 
 def parse_number_string(s: str) -> float | None:
@@ -238,6 +250,91 @@ def format_loss_value(x: float | None) -> str:
     s = s.replace("e-0", "e-").replace("e+0", "e+")
     return s
 
+def format_epoch_value(epoch: int | None) -> str:
+    if epoch is None:
+        return "--"
+    return str(epoch)
+
+
+def first_epoch_below_threshold(
+    epochs: np.ndarray,
+    losses: np.ndarray,
+    threshold: float,
+    n_consecutive: int,
+) -> int | None:
+    below = losses < threshold
+
+    if len(below) < n_consecutive:
+        return None
+
+    for i in range(len(below) - n_consecutive + 1):
+        if np.all(below[i : i + n_consecutive]):
+            return int(epochs[i])
+
+    return None
+
+
+def read_validation_loss_summary(run_dir: Path) -> LossSummary:
+    path = run_dir / LOSS_REL_PATH
+
+    empty = LossSummary(
+        first_below={threshold: None for threshold in THRESHOLDS},
+        best_loss=None,
+        best_epoch=None,
+        final_loss=None,
+    )
+
+    if not path.exists():
+        print(f"[warn] missing loss file: {path}")
+        return empty
+
+    df = pd.read_csv(path)
+
+    if LOSS_COLUMN not in df.columns:
+        print(f"[warn] missing column {LOSS_COLUMN!r} in {path}")
+        return empty
+
+    if "Epoch" in df.columns:
+        epochs_raw = pd.to_numeric(df["Epoch"], errors="coerce")
+    else:
+        epochs_raw = pd.Series(np.arange(1, len(df) + 1))
+
+    losses_raw = pd.to_numeric(df[LOSS_COLUMN], errors="coerce")
+
+    valid = (
+        epochs_raw.notna()
+        & losses_raw.notna()
+        & np.isfinite(losses_raw)
+        & (losses_raw > 0)
+    )
+
+    epochs = epochs_raw[valid].to_numpy(dtype=int)
+    losses = losses_raw[valid].to_numpy(dtype=float)
+
+    if len(losses) == 0:
+        print(f"[warn] no finite positive validation losses in {path}")
+        return empty
+
+    smoothed_log = gaussian_filter1d(np.log(losses), sigma=SMOOTH_SIGMA)
+    smoothed = np.exp(smoothed_log)
+
+    best_idx = int(np.argmin(smoothed))
+
+    return LossSummary(
+        first_below={
+            threshold: first_epoch_below_threshold(
+                epochs=epochs,
+                losses=smoothed,
+                threshold=threshold,
+                n_consecutive=CONSECUTIVE_BELOW,
+            )
+            for threshold in THRESHOLDS
+        },
+        best_loss=float(smoothed[best_idx]),
+        best_epoch=int(epochs[best_idx]),
+        final_loss=float(smoothed[-1]),
+    )
+
 
 def read_best_validation_loss(run_dir: Path) -> float | None:
     path = run_dir / LOSS_REL_PATH
@@ -273,11 +370,11 @@ def read_best_validation_loss(run_dir: Path) -> float | None:
     raise ValueError(f"Unknown LOSS_MODE: {LOSS_MODE!r}")
 
 
-def build_loss_lookup(
+def build_summary_lookup(
     records: list[RunRecord],
     row_keys: list[str],
     col_keys: list[str],
-) -> dict[tuple[tuple[str, ...], tuple[str, ...]], float | None]:
+) -> dict[tuple[tuple[str, ...], tuple[str, ...]], LossSummary]:
     lookup = {}
 
     for rec in records:
@@ -294,9 +391,39 @@ def build_loss_lookup(
                 f"  duplicate run={rec.stem}"
             )
 
-        lookup[cell_key] = read_best_validation_loss(rec.run_dir)
+        lookup[cell_key] = read_validation_loss_summary(rec.run_dir)
 
     return lookup
+
+
+def get_summary_metric(summary: LossSummary | None, metric_key: str):
+    if summary is None:
+        return None
+
+    if metric_key.startswith("first_below_"):
+        threshold = float(metric_key.removeprefix("first_below_"))
+        return summary.first_below.get(threshold)
+
+    if metric_key == "best_loss":
+        return summary.best_loss
+
+    if metric_key == "best_epoch":
+        return summary.best_epoch
+
+    if metric_key == "final_loss":
+        return summary.final_loss
+
+    raise ValueError(f"Unknown metric_key: {metric_key!r}")
+
+
+def format_summary_metric(value, metric_kind: str) -> str:
+    if metric_kind == "epoch":
+        return format_epoch_value(value)
+
+    if metric_kind == "loss":
+        return format_loss_value(value)
+
+    raise ValueError(f"Unknown metric_kind: {metric_kind!r}")
 
 
 def compute_log_loss_range(
@@ -349,23 +476,21 @@ def set_cell_background(cell, hex_color: str) -> None:
     tcPr.append(shd)
 
 
-def add_loss_table(
+def add_summary_metric_table(
     doc: Document,
     records: list[RunRecord],
     row_keys: list[str],
     col_keys: list[str],
     value_formatters: dict[str, dict[str, str]],
+    metric_title: str,
+    metric_key: str,
+    metric_kind: str,
+    summary_lookup: dict[tuple[tuple[str, ...], tuple[str, ...]], LossSummary],
 ) -> None:
-    doc.add_heading(
-        f"Rows: {' > '.join(row_keys)} | Columns: {' > '.join(col_keys)}",
-        level=2,
-    )
+    doc.add_heading(metric_title, level=3)
 
     row_tuples = get_unique_axis_tuples(records, row_keys)
     col_tuples = get_unique_axis_tuples(records, col_keys)
-    loss_lookup = build_loss_lookup(records, row_keys, col_keys)
-
-    log_min, log_max = compute_log_loss_range(loss_lookup)
 
     n_row_header_rows = max(1, len(col_keys))
     n_row_label_cols = max(1, len(row_keys))
@@ -376,15 +501,9 @@ def add_loss_table(
     table = doc.add_table(rows=n_rows, cols=n_cols)
     table.style = "Table Grid"
 
-    # ----------------------------
-    # Top-left row label headers
-    # ----------------------------
     for i, key in enumerate(row_keys):
         table.cell(n_row_header_rows - 1, i).text = key
 
-    # ----------------------------
-    # Column header rows
-    # ----------------------------
     for level, col_key in enumerate(col_keys):
         spans = value_repeats_every(col_tuples, level)
 
@@ -396,9 +515,6 @@ def add_loss_table(
             if end - start > 1:
                 cell.merge(table.cell(level, n_row_label_cols + end - 1))
 
-    # ----------------------------
-    # Left row-label columns
-    # ----------------------------
     for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
         for j, value in enumerate(row_t):
             row_key = row_keys[j]
@@ -408,27 +524,69 @@ def add_loss_table(
                 value_formatters,
             )
 
-    # ----------------------------
-    # Interior cells: loss values
-    # ----------------------------
     for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
         for j, col_t in enumerate(col_tuples, start=n_row_label_cols):
-            loss = loss_lookup.get((row_t, col_t))
-
-            cell = table.cell(i, j)
-            cell.text = format_loss_value(loss)
-
-            if (
-                loss is not None
-                and np.isfinite(loss)
-                and loss > 0
-                and log_min is not None
-                and log_max is not None
-            ):
-                color = log_loss_to_hex_color(loss, log_min, log_max)
-                set_cell_background(cell, color)
+            summary = summary_lookup.get((row_t, col_t))
+            value = get_summary_metric(summary, metric_key)
+            table.cell(i, j).text = format_summary_metric(value, metric_kind)
 
     doc.add_paragraph("")
+
+
+def add_summary_tables_for_layout(
+    doc: Document,
+    records: list[RunRecord],
+    row_keys: list[str],
+    col_keys: list[str],
+    value_formatters: dict[str, dict[str, str]],
+) -> None:
+    doc.add_heading(
+        f"Rows: {' > '.join(row_keys)} | Columns: {' > '.join(col_keys)}",
+        level=2,
+    )
+
+    summary_lookup = build_summary_lookup(records, row_keys, col_keys)
+
+    metric_specs = [
+        (
+            "First epoch below 1e4",
+            "first_below_10000.0",
+            "epoch",
+        ),
+        (
+            "First epoch below 8e3",
+            "first_below_8000.0",
+            "epoch",
+        ),
+        (
+            "Best smoothed validation loss",
+            "best_loss",
+            "loss",
+        ),
+        (
+            "Epoch of best smoothed validation loss",
+            "best_epoch",
+            "epoch",
+        ),
+        (
+            "Final smoothed validation loss",
+            "final_loss",
+            "loss",
+        ),
+    ]
+
+    for metric_title, metric_key, metric_kind in metric_specs:
+        add_summary_metric_table(
+            doc=doc,
+            records=records,
+            row_keys=row_keys,
+            col_keys=col_keys,
+            value_formatters=value_formatters,
+            metric_title=metric_title,
+            metric_key=metric_key,
+            metric_kind=metric_kind,
+            summary_lookup=summary_lookup,
+        )
 
 
 def main() -> None:
@@ -477,14 +635,14 @@ def main() -> None:
 
     for col_keys in itertools.permutations(col_keys_base):
         for row_keys in itertools.permutations(row_keys_base):
-            add_loss_table(
+            add_summary_tables_for_layout(
                 doc=doc,
                 records=records,
                 row_keys=list(row_keys),
                 col_keys=list(col_keys),
                 value_formatters=value_formatters,
             )
-            n_tables += 1
+            n_tables += 5
 
     out_docx = ROOT / "report_validation_loss_tables.docx"
     doc.save(out_docx)
