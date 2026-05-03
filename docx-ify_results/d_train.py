@@ -17,7 +17,7 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"]) / 
-    "/Datasets/I_128_20850/some_working_directory"
+    "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns"
 )
 
 DIRNAME_SPEC = (
