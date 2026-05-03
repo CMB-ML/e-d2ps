@@ -268,6 +268,8 @@ def main() -> None:
         raise RuntimeError("No parseable run directories found.")
 
     varying_keys = find_varying_keys(records, PARAM_KEYS)
+    varying_keys = order_varying_keys(varying_keys, COLUMN_PRIORITY)
+
     value_formatters = build_field_value_formatter(records, varying_keys)
 
     print("\nVarying keys:")
