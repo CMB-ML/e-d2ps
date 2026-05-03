@@ -28,11 +28,11 @@ class LossPlotExecutor(BaseStageExecutor):
                                  fig_label=self.fig_label,
                                  ylim=(1e-4,1e7),
                                  xlim=(0,self.n_epochs),
-                                 sm_sigma2=None)
+                                 sm_sigma2=20)
         self.out_fig.write(fig=fig)
 
 
-def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim=None, xlim=None, sm_sigma2=None):
+def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim=None, xlim=None, sm_sigma2=None, show_sigma2=False):
         df = pd.read_csv(some_path)
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
@@ -51,10 +51,10 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        ax.plot(df["Epoch"], df["Training Loss"], label="Training Loss", color="tab:blue", alpha=0.6, linewidth=0.5)
+        ax.plot(df["Epoch"], df["Training Loss"], label="Training Loss", color="tab:blue", alpha=1.0, linewidth=0.5)
 
         if include_valid:
-            ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss", color="tab:orange", alpha=0.8, linewidth=0.5)
+            ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss", color="tab:orange", alpha=1.0, linewidth=0.5)
 
             loss_txt = exp_as_ltx(best_val_loss)
             ax.annotate(
@@ -82,10 +82,11 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         if sm_sigma2 is not None:
             train_smoothed = gaussian_filter1d(train_log, sigma=sm_sigma2)
 
-            ax.plot(df["Epoch"], np.exp(train_smoothed), 
-                    label="Smoothed Training Loss", 
-                    linestyle="--", linewidth=4, alpha=0.5, 
-                    color="tab:blue")
+            if show_sigma2:
+                ax.plot(df["Epoch"], np.exp(train_smoothed), 
+                        label="Smoothed Training Loss", 
+                        linestyle="--", linewidth=4, alpha=0.5, 
+                        color="tab:blue")
 
             ax.annotate(
                 f"Approx Train loss\n${train_end_loss_txt}$",
@@ -98,10 +99,11 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
             if include_valid:
                 val_smoothed   = gaussian_filter1d(val_log, sigma=sm_sigma2)
-                ax.plot(df["Epoch"], np.exp(val_smoothed), 
-                        label="Smoothed Validation Loss", 
-                        linestyle="--", linewidth=4, alpha=0.5, 
-                        color="tab:orange")
+                if show_sigma2:
+                    ax.plot(df["Epoch"], np.exp(val_smoothed), 
+                            label="Smoothed Validation Loss", 
+                            linestyle="--", linewidth=4, alpha=0.5, 
+                            color="tab:orange")
 
                 ax.annotate(
                     f"Approx Valid loss\n${valid_end_loss_txt}$",
@@ -131,6 +133,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
             custom_legend.append(Line2D([0], [0], color="tab:orange", linestyle="-", linewidth=2, label="Validation Loss"))
         ax.legend(handles=custom_legend)
         ax.grid(True)
+        fig.tight_layout()
         return fig, ax
 
 
