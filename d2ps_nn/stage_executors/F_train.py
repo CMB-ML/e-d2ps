@@ -77,6 +77,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.earliest_best = cfg.model.train.earliest_best
         self.random_init   = cfg.model.get("random_init", False)
 
+        self.track_grad_norm = cfg.get("track_grad_norm", False)
+
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
@@ -123,6 +125,8 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         # Initialize for training
         all_batch_loss = []
+        all_avg_grad_norm = []
+        all_max_grad_norm = []
         all_train_pre_loss = []
         all_valid_pre_loss = []
 
@@ -169,13 +173,17 @@ class TrainingExecutor(BaseD2PSExecutor):
                                    'Validation Pre Loss', 
                                    'Training Pre Loss', 
                                    'Validation Loss', 
-                                   'Training Loss', ]
+                                   'Training Loss', 
+                                   'Learning Rate',
+                                   'Mean Grad Norm',
+                                   'Max Grad Norm']
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
+            epoch_grad_norm = []
             with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
                 model.train()
                 batch_loss = 0
@@ -194,12 +202,21 @@ class TrainingExecutor(BaseD2PSExecutor):
 
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
+
+                    if self.track_grad_norm:
+                        epoch_grad_norm.append(_get_global_grad_norm(model))
+
                     optimizer.step()
                     scheduler.step()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     batch_loss += batch_train_loss.item()
-                batch_loss /= len(train_dataloader)
-                all_batch_loss.append(batch_loss)
+            batch_loss /= len(train_dataloader)
+            all_batch_loss.append(batch_loss)
+            if self.track_grad_norm:
+                mean_grad_norm = np.mean(epoch_grad_norm)
+                all_avg_grad_norm.append(mean_grad_norm)
+                max_grad_norm = np.max(epoch_grad_norm)
+                all_max_grad_norm.append(max_grad_norm)
 
             # Validation
             model.eval()
@@ -248,7 +265,19 @@ class TrainingExecutor(BaseD2PSExecutor):
                     f"valid_{self.scale_ps.post_name}: {valid_pst_loss:.02e}"
                     f"{note_min_loss}"
                 )
-            self.out_loss_record.append([epoch + 1, batch_loss, valid_pre_loss, train_pre_loss, valid_pst_loss, train_pst_loss])
+            record_line = [
+                epoch + 1, 
+                batch_loss, 
+                valid_pre_loss, 
+                train_pre_loss, 
+                valid_pst_loss, 
+                train_pst_loss,
+                optimizer.param_groups[0]["lr"]            
+                ]
+            if self.track_grad_norm:
+                record_line.append(mean_grad_norm)
+                record_line.append(max_grad_norm)
+            self.out_loss_record.append(record_line)
 
             is_best_condition_a = valid_pre_loss == min(all_valid_pre_loss)
             is_best_condition_b = epoch >= self.earliest_best
