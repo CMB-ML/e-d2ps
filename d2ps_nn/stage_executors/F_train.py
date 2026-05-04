@@ -55,7 +55,9 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.n_sims_train_infer = cfg.get("n_sims_train_infer", np.inf)
 
         # How model is updated
-        self.learning_rate = cfg.model.train.learning_rate
+        self.lr_start = cfg.model.train.learning_rate_start
+        self.lr_final = cfg.model.train.learning_rate_final
+        self.lr_rmp_e = cfg.model.train.learning_rate_ramp_epochs
         self.optimizer     = cfg.model.train.optimizer
         self.adamw_wd      = cfg.model.train.get("adamw_wd", None)
 
@@ -107,7 +109,17 @@ class TrainingExecutor(BaseD2PSExecutor):
         loss_function = loss_function.to(self.device)
         logger.info(f"Loss: {self.loss_key}")
 
+        steps_per_epoch = len(train_dataloader)
+        total_warmup_steps = self.lr_rmp_e * steps_per_epoch
+
         optimizer = self.get_optimizer(model)
+        scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,
+                                                        start_factor=self.lr_start / self.lr_final,
+                                                        end_factor=1.0,
+                                                        total_iters=total_warmup_steps
+                                                        )
+        # scheduler_1 = torch.optim.lr_scheduler.ConstantLR(optimizer)
+        # scheduler = torch.optim.lr_scheduler.ChainedScheduler([scheduler_0, scheduler_1])
 
         # Initialize for training
         all_batch_loss = []
@@ -128,7 +140,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                 model_record = self.in_resume_model.read(model=model, 
                                                          epoch=self.restart_epoch, 
                                                          optimizer=optimizer, 
-                                                         #  scheduler=scheduler
+                                                         scheduler=scheduler
                                                          )
             start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch']) + 1
             if model_record['best_loss'] is not None:
@@ -183,6 +195,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                     batch_train_loss = loss_function(output, train_label)
                     batch_train_loss.backward()
                     optimizer.step()
+                    scheduler.step()
                     pbar.set_postfix({'Loss': batch_train_loss.item()})
                     batch_loss += batch_train_loss.item()
                 batch_loss /= len(train_dataloader)
@@ -296,7 +309,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
     def get_optimizer(self, model):
         if self.optimizer == "Adam":
-            optim_dict = dict(lr=self.learning_rate)
+            optim_dict = dict(lr=self.lr_final)
             optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
 
         elif self.optimizer == "AdamW":
@@ -316,7 +329,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                     decay.append(p)
 
             optim_dict = dict(
-                lr=self.learning_rate,
+                lr=self.lr_final,
                 weight_decay=self.adamw_wd,
                 n_decay_params=len(decay),
                 n_no_decay_params=len(no_decay),
@@ -327,7 +340,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                     {"params": decay, "weight_decay": self.adamw_wd},
                     {"params": no_decay, "weight_decay": 0.0},
                 ],
-                lr=self.learning_rate,
+                lr=self.lr_final,
             )
 
         else:
@@ -384,7 +397,7 @@ class LRFindingTrainingExecutor(TrainingExecutor):
             with self.name_tracker.set_context("epoch", "init"):
                 self.out_model.write(model=model, epoch="init")
 
-        lr_start = self.learning_rate
+        lr_start = self.lr_start
         lr_end = self.final_lr
         total_steps = self.n_epochs * len(train_dataloader)
         gamma = (lr_end / lr_start) ** (1.0 / max(total_steps - 1, 1))
