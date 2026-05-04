@@ -60,7 +60,9 @@ train:
   batch_size        : 5
   num_loader_workers: 0
   # Training parameters
-  learning_rate     : ${learning_rate}
+  learning_rate_start       : ${learning_rate_start}
+  learning_rate_final       : ${learning_rate_final}
+  learning_rate_ramp_epochs : ${learning_rate_ramp_epochs}
   optimizer         : ${optimizer}
   adamw_wd          : ${adamw_wd}
 
