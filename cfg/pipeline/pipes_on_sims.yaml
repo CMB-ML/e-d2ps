@@ -208,6 +208,16 @@ rel_update_plot: # _rel_update_plot.py / RelativeUpdatePlotExecutor
   dir_name: Analysis_Figures
   make_stage_log: False
 
+lr_plot: # _loss_plot.py / LossPlotExecutor
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/loss_plot_{split}.{fig_type}"
+  assets_in:
+    loss_record: {stage: train, orig_name: loss_record}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
 loss_summary: # _loss_summary.py / LossSummaryExecutor
   assets_out:
     summary:

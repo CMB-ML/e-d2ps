@@ -137,6 +137,75 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         return fig, ax
 
 
+class LearningRatePlotExecutor(BaseStageExecutor):
+    def __init__(self, cfg):
+        super().__init__(cfg, stage_str="lr_plot")
+        self.out_fig: Figure = self.assets_out["fig"]
+        self.in_loss_csv = self.assets_in["loss_record"]
+        # self.skip_n_values = 10
+
+        self.fig_label = cfg.fig_model_name
+        
+        self.fig_type = cfg.get("fig_type", None)
+
+        self.n_epochs = cfg.model.train.n_epochs
+
+    def execute(self):
+        self.out_fig.handler.set_fig_types(self.fig_type)
+        fig, ax = make_learning_rate_plot("Training Loss",
+                                          some_path=self.in_loss_csv.path,
+                                          fig_label=self.fig_label
+                                          )
+        with self.name_tracker.set_context("split", "train"):
+            self.out_fig.write(fig=fig)
+        fig, ax = make_learning_rate_plot("Validation Loss",
+                                          some_path=self.in_loss_csv.path,
+                                          fig_label=self.fig_label
+                                          )
+        with self.name_tracker.set_context("split", "valid"):
+            self.out_fig.write(fig=fig)
+
+
+def make_learning_rate_plot(signal, some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim=None, xlim=None):
+        df = pd.read_csv(some_path)
+
+        df = df.dropna(subset=["Step", "Learning Rate", signal])
+
+        if (fig is None and ax is not None) or (fig is not None and ax is None):
+             raise ValueError("fig and ax must be provided together")
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        ax.plot(df["Learning Rate"], df[signal], label="Validation Loss", color="tab:blue", alpha=1.0, linewidth=0.5)
+
+        valid = df[signal].values
+        valid_log = np.log(valid)
+        valid_smoothed = gaussian_filter1d(valid_log, sigma=5)
+        valid_end_loss_txt = exp_as_ltx(np.exp(valid_smoothed[-1]))
+        ax.plot(df["Learning Rate"], np.exp(valid_smoothed), label="Smoothed Validation Loss", linestyle="--", linewidth=2, alpha=0.5, color="tab:blue")
+
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+
+        ax.set_xlabel("Learning Rate")
+        ax.set_ylabel("Loss")
+        ax.set_title(f"Validation Loss vs Learning Rate, {fig_label}")
+
+        if ylim is not None:
+            ax.set_ylim(*ylim)
+
+        if xlim is not None:
+            ax.set_xlim(*xlim)
+
+        custom_legend = [
+            Line2D([0], [0], color="tab:blue", linestyle="-", linewidth=2, label="Validation Loss")
+        ]
+        ax.legend(handles=custom_legend)
+        ax.grid(True)
+        fig.tight_layout()
+        return fig, ax
+
+
 def exp_as_ltx(some_val):
     if np.isnan(some_val):
         return np.nan

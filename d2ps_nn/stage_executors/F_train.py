@@ -336,6 +336,144 @@ class TrainingExecutor(BaseD2PSExecutor):
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
 
+
+class LRFindingTrainingExecutor(TrainingExecutor):
+    def __init__(self, cfg, stage_str="train"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.final_lr = cfg.model.train.get("final_learning_rate", 1e-3)
+    
+    def execute(self) -> None:
+        logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        model = self.init_model()
+
+        train_split = self.splits.get("train")
+        valid_split = self.splits.get("valid")
+
+        train_dataset = self.set_up_dataset(train_split)
+        train_dataloader = DataLoader(
+            train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+        )
+
+        valid_dataset = self.set_up_dataset(valid_split)
+        valid_dataloader = DataLoader(
+            valid_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+        )
+
+        loss_function = get_loss(self.loss_key, self.ells).to(self.device)
+        post = self.scale_ps.postprocess
+
+        optimizer = self.get_optimizer(model)
+
+        # Load/init model exactly as in normal training.
+        if self.random_init:
+            logger.info("Starting new, randomly initialized model.")
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model, epoch="init")
+        else:
+            logger.info("Loading transfer-initialization model.")
+            context = dict(model_num=self.model_num, pos_enc=self.use_pos_enc_lut)
+            with self.name_tracker.set_contexts(context):
+                self.in_initial_model.read(model=model, strict=False)
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model, epoch="init")
+
+        lr_start = self.learning_rate
+        lr_end = self.final_lr
+        total_steps = self.n_epochs * len(train_dataloader)
+        gamma = (lr_end / lr_start) ** (1.0 / max(total_steps - 1, 1))
+
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer,
+            gamma=gamma,
+        )
+
+        headers = [
+            "Step",
+            "Epoch",
+            "Learning Rate",
+            "Batch Loss",
+            "Validation Pre Loss",
+            "Validation Loss",
+            # "Training Pre Loss",
+            # "Training Loss",
+        ]
+        self.out_loss_record.write(data=headers)
+
+        step = 0
+        n_epoch_digits = len(str(self.n_epochs))
+
+        for epoch in range(self.n_epochs):
+            model.train()
+
+            with tqdm(
+                train_dataloader,
+                desc=f"Ep {epoch + 1:<{n_epoch_digits}}",
+                postfix={"Loss": 0.0, "LR": optimizer.param_groups[0]["lr"]},
+            ) as pbar:
+
+                for train_features, train_label in pbar:
+                    lr = optimizer.param_groups[0]["lr"]
+
+                    train_features = train_features.to(device=self.device, dtype=self.dtype)
+                    train_label = train_label.to(device=self.device, dtype=self.dtype)
+
+                    optimizer.zero_grad()
+
+                    output = model(train_features)
+                    batch_loss = loss_function(output, train_label)
+                    batch_loss.backward()
+                    optimizer.step()
+
+                    # Validate every optimizer step.
+                    model.eval()
+                    valid_pre_loss = 0.0
+                    valid_pst_loss = 0.0
+
+                    with torch.no_grad():
+                        for valid_features, valid_label in valid_dataloader:
+                            valid_features = valid_features.to(device=self.device, dtype=self.dtype)
+                            valid_label = valid_label.to(device=self.device, dtype=self.dtype)
+
+                            valid_output = model(valid_features)
+                            valid_pre_loss += loss_function(valid_output, valid_label).item()
+                            valid_pst_loss += loss_function(
+                                post(valid_output),
+                                post(valid_label),
+                            ).item()
+
+                    valid_pre_loss /= len(valid_dataloader)
+                    valid_pst_loss /= len(valid_dataloader)
+
+                    self.out_loss_record.append([
+                        step + 1,
+                        epoch + 1,
+                        lr,
+                        batch_loss.item(),
+                        valid_pre_loss,
+                        valid_pst_loss,
+                        # train_pre_loss,
+                        # train_pst_loss,
+                    ])
+
+                    pbar.set_postfix({
+                        "Loss": batch_loss.item(),
+                        "Val": valid_pre_loss,
+                        "LR": lr,
+                    })
+
+                    scheduler.step()
+                    step += 1
+
+                    model.train()
+
+
 class OverfitTrainingExecutor(TrainingExecutor):
     def __init__(self, cfg, stage_str="train"):
         super().__init__(cfg, stage_str=stage_str)

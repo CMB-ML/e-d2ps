@@ -33,8 +33,10 @@ from d2ps_nn.ex import (
     ModelInitExecutor,
     TrainingExecutor,
     OverfitTrainingExecutor,
+    LRFindingTrainingExecutor,
     PredictExecutor,
     LossPlotExecutor,
+    LearningRatePlotExecutor,
     RelativeUpdatePlotExecutor,
     ShowPredictionsPeaksExecutor,
     # # PowerSpectrumAnalysisExecutor,
@@ -112,10 +114,13 @@ def run_6_train(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor,
-        OverfitTrainingExecutor,
-        # TrainingExecutor,
+        # OverfitTrainingExecutor,
         # LossPlotExecutor,
-        RelativeUpdatePlotExecutor,
+        # RelativeUpdatePlotExecutor,
+        # LRFindingTrainingExecutor,
+        # LearningRatePlotExecutor,
+        TrainingExecutor,
+        LossPlotExecutor,
         # BundleTrueExecutor
     ]
     run(cfg, pipes)
