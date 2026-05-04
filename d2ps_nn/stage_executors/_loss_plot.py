@@ -28,7 +28,7 @@ class LossPlotExecutor(BaseStageExecutor):
                                  fig_label=self.fig_label,
                                  ylim=(1e-4,1e7),
                                  xlim=(0,self.n_epochs),
-                                 sm_sigma2=20)
+                                 sm_sigma2=None)
         self.out_fig.write(fig=fig)
 
 
@@ -60,7 +60,9 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
             ax.annotate(
                 f"Best validation loss\n${loss_txt}$ at epoch {best_epoch}",
                 xy=(best_epoch, best_val_loss),
-                xytext=(20, 1e6),
+                # xytext=(10, 1e6),
+                xytext=(0.65, 0.65),
+                textcoords="axes fraction",
                 arrowprops=dict(arrowstyle="->", color="black"),
                 fontsize=10,
                 bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
@@ -91,7 +93,8 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
             ax.annotate(
                 f"Approx Train loss\n${train_end_loss_txt}$",
                 xy=(df["Epoch"].iloc[-1], np.exp(train_smoothed[-1])),
-                xytext=(40, 1e-2),
+                xytext=(0.8, 0.3),
+                textcoords="axes fraction",
                 arrowprops=dict(arrowstyle="->", color="black"),
                 fontsize=10,
                 bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
@@ -108,7 +111,8 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
                 ax.annotate(
                     f"Approx Valid loss\n${valid_end_loss_txt}$",
                     xy=(df["Epoch"].iloc[-1], np.exp(val_smoothed[-1])),
-                    xytext=(40, 1e0),
+                    xytext=(0.8, 0.5),
+                    textcoords="axes fraction",
                     arrowprops=dict(arrowstyle="->", color="black"),
                     fontsize=10,
                     bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
