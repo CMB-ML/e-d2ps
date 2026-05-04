@@ -38,8 +38,11 @@ n_sims_train_full: 20000  # 128
 # # Normal training scheme
 n_sims_train: 2000
 # n_sims_train_infer: 200
-# num_epochs: 50
-num_epochs: 3
+num_epochs: 50
+
+# # LR finder scheme
+# n_sims_train: 2000
+# # num_epochs: 3 
 
 spectrum_layer_kind: identity  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
 
