@@ -17,11 +17,11 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"]) / 
-    "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns"
+    "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns_find_lr1"
 )
 
 DIRNAME_SPEC = (
-    "Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+    "${features_type}2ps_${nn_model}_train_reruns_find_lr1/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
 )
 
 ROW_PRIORITY = [
@@ -42,8 +42,11 @@ FIELD_VALUE_ORDER = {
 }
 
 FIG_SUBDIR = "Analysis_Figures"
+# FIG_FILES = {
+#     "loss": "loss_plot.png",
+# }
 FIG_FILES = {
-    "loss": "loss_plot.png",
+    "loss": "rel_update_plot.png",
 }
 
 IMAGE_SPECS = [

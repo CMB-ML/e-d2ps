@@ -35,6 +35,7 @@ from d2ps_nn.ex import (
     OverfitTrainingExecutor,
     PredictExecutor,
     LossPlotExecutor,
+    RelativeUpdatePlotExecutor,
     ShowPredictionsPeaksExecutor,
     # # PowerSpectrumAnalysisExecutor,
     # # PerSplitAnalysis,
@@ -111,9 +112,10 @@ def run_6_train(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # CheckGPULoadExecutor,
-        # OverfitTrainingExecutor,
+        OverfitTrainingExecutor,
         # TrainingExecutor,
-        LossPlotExecutor,
+        # LossPlotExecutor,
+        RelativeUpdatePlotExecutor,
         # BundleTrueExecutor
     ]
     run(cfg, pipes)
@@ -177,6 +179,6 @@ if __name__ == "__main__":
     # run_4_prep_ps()
     # run_5_make_models()
     run_6_train()
-    run_7_infer()
+    # run_7_infer()
     # run_8_prep_planck()
-    run_9_run_planck()
+    # run_9_run_planck()

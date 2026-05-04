@@ -25,6 +25,7 @@ from .stage_executors._check_model_size import CheckGPULoadExecutor
 from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
 from .stage_executors._loss_summary import LossSummaryExecutor
 from .stage_executors._loss_plot import LossPlotExecutor
+from .stage_executors._rel_update_plot import RelativeUpdatePlotExecutor
 from .stage_executors._show_predictions import ShowPredictionsExecutor
 from .stage_executors._show_predictions_peaks import ShowPredictionsPeaksExecutor
 from .stage_executors._show_predictions_bw import ShowBWPredictionsExecutor

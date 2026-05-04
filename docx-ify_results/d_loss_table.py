@@ -425,15 +425,25 @@ def format_summary_metric(value, metric_kind: str) -> str:
 
     raise ValueError(f"Unknown metric_kind: {metric_kind!r}")
 
-
-def compute_log_loss_range(
-    loss_lookup: dict[tuple[tuple[str, ...], tuple[str, ...]], float | None],
+def compute_metric_range(
+    summary_lookup: dict[tuple[tuple[str, ...], tuple[str, ...]], LossSummary],
+    metric_key: str,
+    metric_kind: str,
 ) -> tuple[float | None, float | None]:
-    vals = [
-        np.log10(v)
-        for v in loss_lookup.values()
-        if v is not None and np.isfinite(v) and v > 0
-    ]
+    vals = []
+
+    for summary in summary_lookup.values():
+        value = get_summary_metric(summary, metric_key)
+
+        if value is None or not np.isfinite(value) or value <= 0:
+            continue
+
+        if metric_kind == "loss":
+            vals.append(np.log10(value))
+        elif metric_kind == "epoch":
+            vals.append(float(value))
+        else:
+            raise ValueError(f"Unknown metric_kind: {metric_kind!r}")
 
     if not vals:
         return None, None
@@ -441,24 +451,31 @@ def compute_log_loss_range(
     return min(vals), max(vals)
 
 
-def log_loss_to_hex_color(
-    loss: float,
-    log_min: float,
-    log_max: float,
+def metric_to_hex_color(
+    value: float,
+    metric_min: float,
+    metric_max: float,
+    metric_kind: str,
 ) -> str:
-    log_val = np.log10(loss)
+    if metric_kind == "loss":
+        color_value = np.log10(value)
+    elif metric_kind == "epoch":
+        color_value = float(value)
+    else:
+        raise ValueError(f"Unknown metric_kind: {metric_kind!r}")
 
-    if log_min == log_max:
+    if metric_min == metric_max:
         t = 0.5
     else:
-        t = (log_val - log_min) / (log_max - log_min)
+        t = (color_value - metric_min) / (metric_max - metric_min)
 
     t = max(0.0, min(1.0, t))
 
-    # Perceptual-ish scaling: spread out differences near the best losses.
-    t = t**0.5
+    if metric_kind == "loss":
+        # Perceptual-ish scaling for loss tables only.
+        t = t**0.5
 
-    # Low loss = green, high loss = red.
+    # Low value = green, high value = red.
     r = int(255 * t)
     g = int(255 * (1.0 - t))
     b = 0
@@ -491,6 +508,12 @@ def add_summary_metric_table(
 
     row_tuples = get_unique_axis_tuples(records, row_keys)
     col_tuples = get_unique_axis_tuples(records, col_keys)
+
+    metric_min, metric_max = compute_metric_range(
+        summary_lookup=summary_lookup,
+        metric_key=metric_key,
+        metric_kind=metric_kind,
+    )
 
     n_row_header_rows = max(1, len(col_keys))
     n_row_label_cols = max(1, len(row_keys))
@@ -528,7 +551,24 @@ def add_summary_metric_table(
         for j, col_t in enumerate(col_tuples, start=n_row_label_cols):
             summary = summary_lookup.get((row_t, col_t))
             value = get_summary_metric(summary, metric_key)
-            table.cell(i, j).text = format_summary_metric(value, metric_kind)
+
+            cell = table.cell(i, j)
+            cell.text = format_summary_metric(value, metric_kind)
+
+            if (
+                value is not None
+                and np.isfinite(value)
+                and value > 0
+                and metric_min is not None
+                and metric_max is not None
+            ):
+                color = metric_to_hex_color(
+                    value=value,
+                    metric_min=metric_min,
+                    metric_max=metric_max,
+                    metric_kind=metric_kind,
+                )
+                set_cell_background(cell, color)
 
     doc.add_paragraph("")
 
