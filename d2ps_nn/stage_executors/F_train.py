@@ -115,11 +115,16 @@ class TrainingExecutor(BaseD2PSExecutor):
         total_warmup_steps = self.lr_rmp_e * steps_per_epoch
 
         optimizer = self.get_optimizer(model)
-        scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,
+        if self.lr_rmp_e > 0:
+            scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,
                                                         start_factor=self.lr_start / self.lr_final,
                                                         end_factor=1.0,
                                                         total_iters=total_warmup_steps
                                                         )
+        else:
+            scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer,
+                                                            factor=1,
+                                                            total_iters=1)
         # scheduler_1 = torch.optim.lr_scheduler.ConstantLR(optimizer)
         # scheduler = torch.optim.lr_scheduler.ChainedScheduler([scheduler_0, scheduler_1])
 
