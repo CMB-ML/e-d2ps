@@ -52,7 +52,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         # How model is evaluated
         self.loss_key      = cfg.model.train.loss
-        self.n_sims_train_infer = cfg.get("n_sims_train_infer", np.inf)
+        self.n_sims_train_infer = cfg.get("n_sims_train_infer", None)
 
         # How model is updated
         self.lr_start = cfg.model.train.learning_rate_start
@@ -86,6 +86,15 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         train_split = self.splits.get("train")
         valid_split = self.splits.get("valid")
+
+        train_infer_dataset = self.set_up_dataset(train_split, early_stop=self.n_sims_train_infer)
+        train_infer_dataloader_params = dict(
+            batch_size=self.batch_size, 
+            shuffle=True,
+            num_workers=self.num_workers
+        )
+        logger.info(f"Train dataloader: {train_infer_dataloader_params}")
+        train_infer_dataloader = DataLoader(train_infer_dataset, **train_infer_dataloader_params)
 
         train_dataset = self.set_up_dataset(train_split)
         train_dataloader_params = dict(
@@ -230,21 +239,14 @@ class TrainingExecutor(BaseD2PSExecutor):
             train_pst_loss = 0
             valid_pst_loss = 0
             with torch.no_grad():
-                for i, (train_features, train_label) in enumerate(tqdm(train_dataloader, leave=False)):
+                for i, (train_features, train_label) in enumerate(tqdm(train_infer_dataloader, leave=False)):
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
                     output = model(train_features)
                     train_pre_loss += loss_function(output, train_label).item()
                     train_pst_loss += loss_function(post(output), post(train_label)).item()
-                    n_batches_seen = (i+1)
-                    if n_batches_seen * self.batch_size > self.n_sims_train_infer:
-                        break
-                if self.n_sims_train_infer < np.inf:
-                    train_pre_loss /= n_batches_seen
-                    train_pst_loss /= n_batches_seen
-                else:
-                    train_pre_loss /= len(train_dataloader)
-                    train_pst_loss /= len(train_dataloader)
+                train_pre_loss /= len(train_infer_dataloader)
+                train_pst_loss /= len(train_infer_dataloader)
                 all_train_pre_loss.append(train_pre_loss)
                 all_train_pst_loss.append(train_pst_loss)
                 logger.info(
@@ -305,7 +307,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
 
-    def set_up_dataset(self, split: Split) -> None:
+    def set_up_dataset(self, split: Split, early_stop: int=None) -> None:
         context = dict(px_arrange=self.px_arrange, scale=self.scale_px)
         with self.name_tracker.set_contexts(context):
             trgt_path_template = self.make_fn_template(split, self.in_trgt_asset)
@@ -319,7 +321,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         dataset_class = PreloadTrainDataset if self.use_preload else TrainDataset
 
         dataset_params = dict(
-            n_sims = split.n_sims,
+            n_sims = split.n_sims if early_stop is None else early_stop,
             freqs = freqs,
             map_fields=self.map_fields,
             label_path_template=trgt_path_template,
