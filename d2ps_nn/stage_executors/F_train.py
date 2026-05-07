@@ -236,12 +236,12 @@ class TrainingExecutor(BaseD2PSExecutor):
                     output = model(train_features)
                     train_pre_loss += loss_function(output, train_label).item()
                     train_pst_loss += loss_function(post(output), post(train_label)).item()
-                    n_instances_seen = (i+1) * self.batch_size
-                    if n_instances_seen > self.n_sims_train_infer:
+                    n_batches_seen = (i+1)
+                    if n_batches_seen * self.batch_size > self.n_sims_train_infer:
                         break
                 if self.n_sims_train_infer < np.inf:
-                    train_pre_loss /= n_instances_seen
-                    train_pst_loss /= n_instances_seen
+                    train_pre_loss /= n_batches_seen
+                    train_pst_loss /= n_batches_seen
                 else:
                     train_pre_loss /= len(train_dataloader)
                     train_pst_loss /= len(train_dataloader)
