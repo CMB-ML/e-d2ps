@@ -82,6 +82,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_A_real()
-    # run_B_prep()
+    run_A_real()
+    run_B_prep()
     run_C_fcn()
