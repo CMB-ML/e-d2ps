@@ -24,11 +24,11 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"])
-    / "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns_find_lr5"
+    / "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns_find_down"
 )
 
 DIRNAME_SPEC = (
-    "${features_type}2ps_${nn_model}_train_reruns_find_lr1/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+    "Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
 )
 
 LOSS_REL_PATH = Path("F_Model/loss_record.csv")
@@ -41,7 +41,7 @@ THRESHOLDS = [1e4, 8e3]
 CONSECUTIVE_BELOW = 3
 
 COLUMN_KEYS = [
-    "learning_rate",
+    "model_num",
 ]
 
 ROW_KEYS = [
@@ -49,7 +49,7 @@ ROW_KEYS = [
 ]
 
 FIELD_VALUE_ORDER = {
-    "down_reductions": ["XmmmX", "mXmmX", "mmXmX", "mmmXX", "Xmmmm", "mXmmm", "mmXmm", "mmmXm", "mmmmX"],
+    "down_reductions": ["mmmmmmm", "Xmmmmmm", "mXmmmmm", "mmXmmmm", "mmmXmmm", "mmmmXmm", "mmmmmXm", "mmmmmmX", "XmmmmmX", "mXmmmmX", "mmXmmmX", "mmmXmmX", "mmmmXmX", "mmmmmXX", "XmmmmXm", "mXmmmXm", "mmXmmXm", "mmmXmXm", "mmmmXXm", "XmmmXmm", "mXmmXmm", "mmXmXmm", "mmmXXmm", "XmmXmmm", "mXmXmmm", "mmXXmmm", "XmXmmmm", "mXXmmmm", "XXmmmmm"],
 }
 
 FIG_SUBDIR = "Analysis_Figures"
