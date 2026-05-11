@@ -180,19 +180,19 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
         for epoch in range(start_epoch, self.n_epochs):
             # Training
             epoch_grad_norm = []
-            with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
-                model.train()
-                batch_loss = 0
-                for train_features, train_label in pbar:
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    train_label = train_label.to(device=self.device, dtype=self.dtype)
-                    optimizer.zero_grad()
-                    output = model(train_features)
-                    batch_train_loss = loss_function(output, train_label)
-                    batch_train_loss.backward()
-                    optimizer.step()
-                    pbar.set_postfix({'Loss': batch_train_loss.item()})
-                    batch_loss += batch_train_loss.item()
+            # with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
+            model.train()
+            batch_loss = 0
+            for train_features, train_label in train_dataloader:
+                train_features = train_features.to(device=self.device, dtype=self.dtype)
+                train_label = train_label.to(device=self.device, dtype=self.dtype)
+                optimizer.zero_grad()
+                output = model(train_features)
+                batch_train_loss = loss_function(output, train_label)
+                batch_train_loss.backward()
+                optimizer.step()
+                # pbar.set_postfix({'Loss': batch_train_loss.item()})
+                batch_loss += batch_train_loss.item()
             batch_loss /= len(train_dataloader)
             all_batch_loss.append(batch_loss)
 
@@ -204,7 +204,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
             valid_pst_loss = 0
 
             with torch.no_grad():
-                for train_features, train_label in tqdm(train_infer_dataloader, leave=False):
+                for train_features, train_label in train_infer_dataloader:
                     train_features = train_features.to(device=self.device, dtype=self.dtype)
                     train_label = train_label.to(device=self.device, dtype=self.dtype)
 
@@ -228,7 +228,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
                     f"train_pst: {train_pst_loss:.02e}"
                 )
 
-                for valid_features, valid_label in tqdm(valid_dataloader, leave=False):
+                for valid_features, valid_label in valid_dataloader:
                     valid_features = valid_features.to(device=self.device, dtype=self.dtype)
                     valid_label = valid_label.to(device=self.device, dtype=self.dtype)
 
