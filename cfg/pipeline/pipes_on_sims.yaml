@@ -437,29 +437,52 @@ show_predictions_error_analysis: # _show_predictions_error_analysis.py / ShowPre
   make_stage_log: False
 
 # Bundling
+bundle_maps: # Z_bundle_maps.py / BundleMapsExecutor
+  assets_out:
+    map_bundle:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{stage}/cmb_maps_{split}.npy"
+  assets_in:
+    cmb_map: {stage: make_cmb_only, orig_name: cmb_map, working: Simulation_Working/}
+  splits: [train, valid, test]
+  dir_name: &bundle_path Raw_Bundle
+  make_stage_log: False
+
+bundle_true: # Z_bundle.py / BundleTrueExecutor
+  assets_out:
+    ps_bundle:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{stage}/true_{split}.npy"
+  assets_in:
+    ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  dir_name: *bundle_path
+  make_stage_log: False
+
+bundle_real: # Z_bundle.py / BundleRealExecutor
+  assets_out:
+    ps_bundle:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{stage}/real_{split}.npy"
+  assets_in:
+    ps: {stage: make_real_ps, orig_name: auto_real, working: Real_PS/}
+  splits:
+    - ${splits.run_inference_on}
+  dir_name: *bundle_path
+  make_stage_log: False
+
 bundle_pred: # Z_bundle.py / BundlePredExecutor
   assets_out:
     ps_bundle:
-      handler: NumpyPowerSpectrum
+      handler: NpyHandler
       path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}.npy"
   assets_in:
     ps: {stage: predict, orig_name: cmb_ps}
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
-  dir_name: &bundle_path Analysis_Bundle
-  make_stage_log: False
-
-bundle_true: # Z_bundle.py / BundleTrueExecutor
-  assets_out:
-    ps_bundle:
-      handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/True/{stage}/true_{split}.npy"
-  assets_in:
-    ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
-  splits:
-    - ${splits.run_inference_on}
-  dir_name: *bundle_path
+  dir_name: Analysis_Bundle
   make_stage_log: False
 
 show_treble_ell: # _show_treble_ell.py / ShowTrebleEll
