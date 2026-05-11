@@ -16,4 +16,9 @@ hydra:
     params:
       model_init: ${model_init_sweep}
       n_hidden_features: ${n_hid_feat_sweep}
-      out_power: 1
+      out_power: 1           # placeholder
+      spectrum_type: theory  # placeholder
+      learning_rate: 1e-3    # placeholder
+      prep_label: none       # placeholder
+      prep_feature: none     # placeholder
+
