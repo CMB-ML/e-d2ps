@@ -1,0 +1,84 @@
+import logging
+
+import numpy as np
+from omegaconf import DictConfig
+import random
+import torch
+
+from cmbml.core import Asset
+from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
+from cmbml.torch.pytorch_model_handler import PyTorchModel
+from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
+from cmbml.sims.random_seed_manager import SeedFactory
+
+from d2ps_nn.utils.parse_ell_list import parse_ells
+from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.utils.select_ps import SpectrumAsset
+
+from d2ps_fcn.models.fcn import FCNDouble, FCNSingle
+
+
+logger = logging.getLogger(__name__)
+
+
+class ModelInitExecutor(BasePyTorchModelExecutor):
+    def __init__(self, cfg: DictConfig, stage_str="model_init") -> None:
+        super().__init__(cfg, stage_str=stage_str)
+
+        # Output shape
+        self.ells = parse_ells(cfg.model.use_ells)
+
+        self.out_model: Asset = self.assets_out["model"]
+        out_model_handler: PyTorchModel
+
+        self.out_power          = cfg.out_power
+        self.hidden_features    = cfg.n_hidden_features
+        self.dtype              = self.dtype_mapping[cfg.model.dtype]
+
+        self.model_init = cfg.model_init
+        self.model_seed_template = cfg.model.model_seed
+        self.seed_factory = SeedFactory(self.model_seed_template)
+
+    def execute(self):
+        logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        seed = self.seed_factory.get_seed(**dict(model_init=self.model_init))
+
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+        model = self.init_model()
+
+        with torch.no_grad():
+            dummy_x = torch.zeros(
+                1,
+                12 * (self.nside ** 2),
+                dtype=self.dtype,
+            )
+            _ = model(dummy_x)
+
+        context = dict(model_num=self.model_init)
+        with self.name_tracker.set_contexts(context):
+            self.out_model.write(model=model, epoch="init")
+
+    def init_model(self):
+        if self.hidden_features == 0:
+            model_dict = dict(
+                out_channels=len(self.ells),
+                out_power = self.out_power
+            )
+            model = FCNSingle(**model_dict)
+            model_dict["model"] = "FCNSingle"
+        else:
+            model_dict = dict(
+                mid_channels=self.hidden_features,
+                out_channels=len(self.ells),
+                out_power = self.out_power
+            )
+            model = FCNDouble(**model_dict)
+            model_dict["model"] = "FCNDouble"
+        logger.info(f"Model dict: {model_dict}")
+        return model

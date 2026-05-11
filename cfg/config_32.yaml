@@ -1,0 +1,103 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - local_system   : generic_lab
+  - file_system    : common_fs
+  - pipeline       : assembly_on_sims_fcn
+  - scenario       : scenario
+  - splits         : all_2000
+  - model          : fcn_d2ps
+  # - model/analysis : simple_apo
+  # - model/analysis/metrics    : metrics
+  - override hydra/job_logging: custom_log
+  - _self_
+
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  verbose          : false
+
+dataset_name       : "${map_fields}_${scenario.nside}_2850_CMB_only"
+working_dir        : &wd "fcn2ps/"
+# working_dir        : &wd "fcn2ps/Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+# fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
+
+trained_wd         : *wd
+bundle_working_dir : "bundles"
+prep_working_dir   : "d2ps-prep/"
+# pl_fig_model_name  : "${features_type} to PS, On Planck, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with ${down_reductions}, ${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate}, wd: ${adamw_wd}"
+
+################################################################
+#                                                              #
+################################################################
+n_sims_train_full  : 2000  # 32
+
+n_sims_train       : 2000
+num_epochs         : 200
+
+spectrum_type      : ???
+prep_label         : ???
+prep_feature       : ???
+
+# spectrum_type_sweep: realization
+# prep_label_sweep   : none
+# prep_feature_sweep : none
+
+spectrum_type_sweep: realization, theory
+prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
+prep_feature_sweep : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
+
+
+n_hidden_features  : ???
+n_hid_feat_sweep   : 200
+model_init         : ???
+model_init_sweep   : 1
+
+learning_rate      : ???
+learning_rate_sweep: 1e-7
+# learning_rate_sweep: 1e-7, 1e-6, 1e-5, 1e-4, 1e-3
+
+out_power          : ???
+out_power_sweep    : 1, 2
+
+################################################################
+#   Lesser-used set-up
+###############################################################
+# n_sims: ???
+
+# splits:
+#   Train:
+#     n_sims: ${n_sims}
+
+fig_type: ['pdf', 'png']
+
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 5
+n_show_treble_ell    : null
+
+# Settings below this point are used for interpolation.
+# These are not to be used directly in the python
+# They are picked up from here and MAY be used elsewhere in the yamls.
+# In the scenario yaml
+nside              : 32
+lmax               : 80
+
+# Features type should be either "cmb" or "obs"
+features_type      : cmb
+map_fields         : "I"
+no_instrument         : true
+
+# # In the pipeline yamls
+# # For prediction, postprocessing, power spectra generation:
+# use_epochs           : ["best"]
+# # For single simulation figures (maps & ps figures):
+# use_epochs_imgs      : ${use_epochs}
+# # For summary statistics:
+# use_epochs_map_stats : ${use_epochs}
+# # For summary statistics:
+# use_epochs_ps_stats  : ${use_epochs}
+
+# # Limit the number of simulations on which to do inference and postprocessing
+# # In the splits yaml; null to run on all
+# n_infer_cap           : null
+# run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)

@@ -1,0 +1,20 @@
+defaults:
+  - config_32
+  - model/sim         : sim
+  - override pipeline : assembly_surr_real_ps
+  - _self_
+
+pipeline:
+  make_real_ps:
+    splits: [train, valid, test]
+  bundle_real:
+    splits: [train, valid, test]
+
+working_dir : "Real_PS/"
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  verbose          : false
+
+nside          : 32
+lmax           : 80

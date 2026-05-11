@@ -40,5 +40,6 @@ from .stage_executors.__show_petroff_like import ShowPetroffSingle
 from .stage_executors.__show_petroff_like import ShowPetroffSet
 from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
 
-from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor
+from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor, BundleRealExecutor
+from .stage_executors.Z_bundle_maps import BundleMapsExecutor
 from .stage_executors._show_treble_ell import ShowTrebleEll

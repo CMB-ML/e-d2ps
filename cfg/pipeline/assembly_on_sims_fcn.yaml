@@ -1,0 +1,40 @@
+defaults:
+  - assembly_sim_cmb_only
+  - pipes_on_sims
+  - _self_
+
+bundle_true:
+  splits: [train, valid, test]
+bundle_real:
+  splits: [train, valid, test]
+bundle_maps:
+  splits: [train, valid, test]
+
+model_init:
+  assets_out:
+    model:
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/init_${model_init}_${n_hidden_features}.pth"
+  dir_name: F_Model_Init
+train:
+  assets_out:
+    model: 
+      handler: PyTorchModel
+      path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+    loss_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+    other_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
+  assets_in:
+    cmb_ps_thry: {stage: bundle_true, orig_name: ps_bundle}
+    cmb_ps_real: {stage: bundle_real, orig_name: ps_bundle}
+    cmb_map: {stage: bundle_maps, orig_name: map_bundle}
+    resume_model: {stage: train, orig_name: model}
+    initial_model: {stage: model_init, orig_name: model}
+  splits:
+    - train
+    - valid
+  dir_name: F_Model
+  make_stage_log: True

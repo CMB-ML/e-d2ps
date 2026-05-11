@@ -1,0 +1,51 @@
+# # Consistent properties for all stages:
+# model_seed: "model_seed_{iter}"
+dtype     : float   # "float" is 32-bit; "double" is 64-bit. Conversions used in preprocess map, train, predict
+lmax      : ${lmax}  # lmax for prediction of power spectra
+# Use ells follows numpy format [ell_min:ell_max:step] with multiple
+#   ranges separated by commas; e.g. "[2:11],[20:201:10]"
+#   Remember that the max is not included in the range!
+use_ells  : "[2:${lmax}+1:1]"
+# use_ells  : "[2:31],[40:${lmax}:10]"
+
+model_seed   : "fcn_model_seed_{model_init}"
+model_init   : ${model_init}
+prep_label   : ${prep_label}
+prep_feature : ${prep_feature}
+
+train:
+  # Operate on CPU or CUDA; null for auto selection.
+  device            : null
+
+  # Data loading
+  batch_size        : 5
+  num_loader_workers: 0
+  # Training parameters
+  learning_rate       : ${learning_rate}
+  # learning_rate_final       : ${learning_rate_final}
+  # learning_rate_ramp_epochs : ${learning_rate_ramp_epochs}
+  # optimizer         : ${optimizer}
+  # adamw_wd          : ${adamw_wd}
+
+  # Epochs
+  n_epochs          : ${num_epochs}
+  restart_epoch     : null  # Set to null to create a new model, or give a checkpoint number
+
+  # Checkpointing
+  earliest_best     : 0  # Earliest epoch to save the best model
+                         #   when debugging with small datasets and low total epochs, 
+                         #   set to 0 to allow finding a best model at the very start
+  checkpoint_every  : 100     # checkpoint every this number of epochs
+  extra_check       : []  # Extra checkpoints to save
+  # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
+
+test:
+  batch_size: 20
+  device    : null
+analysis:  # TODO: implement local settings for analysis procedures in models
+  top_n:  5
+  bottom_n: 5
+  first_n: 0
+#   fig_model_name : PatchNN
+#   fig_model_dir  : PatchNN/
+#   fig_model_color: "#2D1C24"
