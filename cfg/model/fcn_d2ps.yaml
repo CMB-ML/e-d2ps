@@ -10,6 +10,9 @@ use_ells  : "[2:${lmax}+1:1]"
 
 model_seed   : "fcn_model_seed_{model_init}"
 model_init   : ${model_init}
+
+activation   : ${activation}
+
 prep_label   : ${prep_label}
 prep_feature : ${prep_feature}
 

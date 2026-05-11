@@ -50,6 +50,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
 
         self.n_sims_train_infer = cfg.get("n_sims_train_infer", None)
         self.out_power          = cfg.out_power
+        self.activation         = cfg.model.activation
         self.hidden_features    = cfg.n_hidden_features
         self.batch_size         = cfg.model.train.batch_size
         self.learning_rate      = cfg.model.train.learning_rate
@@ -122,6 +123,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
 
         optim_dict = dict(lr=self.learning_rate)
         optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
+        logger.info(f"Optimizer: {optimizer.__class__.__name__}, {optim_dict}")
 
         do_loss_record = "new"
         start_epoch = 0
@@ -157,6 +159,14 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))
+
+        # print(model)
+
+        # print("Configured activation:", self.cfg.model.activation)
+        # print("Actual activation modules:")
+        # for name, module in model.named_modules():
+        #     if isinstance(module, (torch.nn.ReLU, torch.nn.GELU)):
+        #         print(name, module)
 
         for epoch in range(start_epoch, self.n_epochs):
             # Training
@@ -276,7 +286,8 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
             model_dict = dict(
                 mid_channels=self.hidden_features,
                 out_channels=len(self.ells),
-                out_power = self.out_power
+                out_power = self.out_power,
+                activation = self.activation
             )
             model = FCNDouble(**model_dict)
             model_dict["model"] = "FCNDouble"

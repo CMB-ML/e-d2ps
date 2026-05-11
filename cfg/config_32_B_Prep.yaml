@@ -21,4 +21,4 @@ hydra:
       learning_rate: 1e-3    # placeholder
       prep_label: none       # placeholder
       prep_feature: none     # placeholder
-
+      activation: relu       # placeholder

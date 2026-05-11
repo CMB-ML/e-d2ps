@@ -17,7 +17,7 @@ hydra:
   verbose          : false
 
 dataset_name       : "${map_fields}_${scenario.nside}_2850_CMB_only/scale_1"
-working_dir        : &wd "fcn2ps/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-op_${out_power}"
+working_dir        : &wd "fcn2ps/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-op_${out_power}-act_${activation}/"
 # working_dir        : &wd "fcn2ps/Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
 # fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
@@ -48,18 +48,21 @@ prep_feature_sweep : none, meanstdv_global, meanstdv_local, minmax_global, minma
 
 
 n_hidden_features  : ???
-n_hid_feat_sweep   : 200
+n_hid_feat_sweep   : 0
 model_init         : ???
 model_init_sweep   : 1
 
 learning_rate      : ???
 # learning_rate_sweep: 1e-7
-# learning_rate_sweep: 1e-5, 1e-4, 1e-3
-learning_rate_sweep: 1e-7, 1e-6, 1e-5, 1e-4, 1e-3
+learning_rate_sweep: 1e-5, 1e-3
+# learning_rate_sweep: 1e-7, 1e-6, 1e-5, 1e-4, 1e-3
 
 out_power          : ???
 # out_power_sweep    : 1 #, 2
 out_power_sweep    : 1, 2
+
+activation         : ???
+activation_sweep   : gelu, relu
 
 ################################################################
 #   Lesser-used set-up

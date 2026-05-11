@@ -2,19 +2,21 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from d2ps_nn.models.layer_factories import get_activation
 
 
 class FCNDouble(nn.Module):
     def __init__(self,
                  mid_channels,
                  out_channels,
-                 out_power=1
+                 out_power=1, 
+                 activation="relu"
                  ):
         super().__init__()
         if out_power not in [1,2,1.0,2.0]:
             raise NotImplementedError("Out pow must be either 1 or 2.")
         self.lin1 = nn.LazyLinear(out_features=mid_channels)
-        self.act1 = nn.ReLU()
+        self.act1 = get_activation(activation)
         self.lin2 = nn.LazyLinear(out_features=out_channels)
         self.out_pow = out_power
     
