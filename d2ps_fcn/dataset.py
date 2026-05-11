@@ -23,6 +23,7 @@ class TrainDataset(Dataset):
         label_scaler: Optional[ArrayScaler] = None,
         dtype=torch.float32,
         fit_scalers: bool = True,
+        device: Optional[torch.device] = None
     ):
         self.n_sims = n_sims
         self.feature_scaler = feature_scaler or ArrayScaler()
@@ -42,8 +43,8 @@ class TrainDataset(Dataset):
         feats = self.feature_scaler.transform(feats)
         labels = self.label_scaler.transform(labels)
 
-        self.all_feats = torch.as_tensor(feats, dtype=dtype)
-        self.all_labels = torch.as_tensor(labels, dtype=dtype)
+        self.all_feats = torch.as_tensor(feats, dtype=dtype, device=device)
+        self.all_labels = torch.as_tensor(labels, dtype=dtype, device=device)
 
     def __len__(self):
         return self.n_sims

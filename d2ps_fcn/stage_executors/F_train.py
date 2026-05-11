@@ -1,6 +1,7 @@
 import logging
 
 from tqdm import tqdm
+import time
 
 import torch
 from torch.utils.data import DataLoader
@@ -124,26 +125,6 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
 
         do_loss_record = "new"
         start_epoch = 0
-        # if self.restart_epoch is not None:
-        #     logger.info(f"Restarting training at epoch {self.restart_epoch}")
-        #     # The following returns the epoch number stored in the checkpoint
-        #     #     as well as loading the model and optimizer with checkpoint information
-        #     with self.name_tracker.set_context("epoch", self.restart_epoch):
-        #         model_record = self.in_resume_model.read(model=model, 
-        #                                                  epoch=self.restart_epoch, 
-        #                                                  optimizer=optimizer, 
-        #                                                 #  scheduler=scheduler
-        #                                                  )
-        #     start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch']) + 1
-        #     if model_record['best_loss'] is not None:
-        #         all_valid_pre_loss.append(model_record['best_loss'])
-        #     do_loss_record = "continue"
-        #     logger.warning("Restarting training without finding previous best loss!")
-        # elif self.random_init:
-        #     logger.info(f"Starting new, randomly initialized model.")
-        #     with self.name_tracker.set_context("epoch", "init"):
-        #         self.out_model.write(model=model, epoch="init")
-        # else:
         if True:
             logger.info(f"Loading transfer-initialization model.")
             context = dict(model_num=self.model_init)
@@ -184,8 +165,8 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
             model.train()
             batch_loss = 0
             for train_features, train_label in train_dataloader:
-                train_features = train_features.to(device=self.device, dtype=self.dtype)
-                train_label = train_label.to(device=self.device, dtype=self.dtype)
+                # train_features = train_features.to(device=self.device, dtype=self.dtype)
+                # train_label = train_label.to(device=self.device, dtype=self.dtype)
                 optimizer.zero_grad()
                 output = model(train_features)
                 batch_train_loss = loss_function(output, train_label)
@@ -205,8 +186,8 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
 
             with torch.no_grad():
                 for train_features, train_label in train_infer_dataloader:
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    train_label = train_label.to(device=self.device, dtype=self.dtype)
+                    # train_features = train_features.to(device=self.device, dtype=self.dtype)
+                    # train_label = train_label.to(device=self.device, dtype=self.dtype)
 
                     output = model(train_features)
 
@@ -222,15 +203,9 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
                 all_train_pre_loss.append(train_pre_loss)
                 all_train_pst_loss.append(train_pst_loss)
 
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"train_pre: {train_pre_loss:.02e} "
-                    f"train_pst: {train_pst_loss:.02e}"
-                )
-
                 for valid_features, valid_label in valid_dataloader:
-                    valid_features = valid_features.to(device=self.device, dtype=self.dtype)
-                    valid_label = valid_label.to(device=self.device, dtype=self.dtype)
+                    # valid_features = valid_features.to(device=self.device, dtype=self.dtype)
+                    # valid_label = valid_label.to(device=self.device, dtype=self.dtype)
 
                     output = model(valid_features)
 
@@ -248,12 +223,15 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
 
                 note_min_loss = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
 
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"valid_pre: {valid_pre_loss:.02e} "
-                    f"valid_pst: {valid_pst_loss:.02e}"
-                    f"{note_min_loss}"
-                )
+                if epoch % 20 == 0:
+                    logger.info(
+                        f"Epoch {epoch + 1:<{n_epoch_digits}} | "
+                        f"train_pre: {train_pre_loss:.02e} | "
+                        f"train_pst: {train_pst_loss:.02e} | "
+                        f"valid_pre: {valid_pre_loss:.02e} | "
+                        f"valid_pst: {valid_pst_loss:.02e}"
+                        f"{note_min_loss}"
+                    )
 
             record_line = [
                 epoch + 1,
@@ -282,7 +260,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
                                          optimizer=optimizer,
                                          best_loss=min(all_valid_pst_loss),
                                          epoch=epoch + 1)
-
+            
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
 
@@ -326,6 +304,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
             label_scaler=self.label_scaler,
             dtype=self.dtype,
             fit_scalers=fit_scalers,
+            device=self.device
         )
 
         logger.info(f"Dataset: {dataset_params}")
