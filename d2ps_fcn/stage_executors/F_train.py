@@ -136,6 +136,12 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
                 self.out_model.write(model=model, epoch="init")
         model = model.to(self.device)
 
+        with torch.no_grad():
+            torch.manual_seed(0)
+            random_tensor = torch.rand((1, (self.nside**2) * 12)).to(self.device)
+            logger.info(f"Consistency check, 'map': {random_tensor[0, :5]}")
+            logger.info(f"Consistency check, 'pred': {model(random_tensor)[0, :5]}")
+
         all_batch_loss = []
         all_train_pre_loss = []
         all_valid_pre_loss = []
