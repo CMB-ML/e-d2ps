@@ -19,8 +19,8 @@ class TrainDataset(Dataset):
         label_handler,
         feature_path,
         feature_handler,
-        feature_scaler: ArrayScaler | None = None,
-        label_scaler: ArrayScaler | None = None,
+        feature_scaler: Optional[ArrayScaler] = None,
+        label_scaler: Optional[ArrayScaler] = None,
         dtype=torch.float32,
         fit_scalers: bool = True,
     ):
