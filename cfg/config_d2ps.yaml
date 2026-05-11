@@ -60,11 +60,11 @@ return_mode: spectrum  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs 
 # scale_params_sweep: local_meanstdv, none
 
 model_num: ???
-# model_num_sweep: 1, 2, 3, 4
-model_num_sweep: 1
-model_num_sweep: 2
-model_num_sweep: 3
-model_num_sweep: 4
+# model_num_sweep: 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+# model_num_sweep: 5,6,7,8
+# model_num_sweep: 9,10,11,12
+# model_num_sweep: 13,14,15,16
+# model_num_sweep: 17,18,19,20
 
 scale_px: ???
 # scale_px_sweep: global_minmax, local_minmax, local_meanstdv, null
@@ -106,7 +106,7 @@ norm_sweep: gn
 #   order starts with first/top layer and fills down 
 #   XmX would be Max, Avg, Max, and the rest Avg
 down_reductions: ???
-down_reductions_sweep: mmmmmmm, Xmmmmmm, mXmmmmm, mmXmmmm, mmmXmmm, mmmmXmm, mmmmmXm, mmmmmmX, XmmmmmX, mXmmmmX, mmXmmmX, mmmXmmX, mmmmXmX, mmmmmXX, XmmmmXm, mXmmmXm, mmXmmXm, mmmXmXm, mmmmXXm, XmmmXmm, mXmmXmm, mmXmXmm, mmmXXmm, XmmXmmm, mXmXmmm, mmXXmmm, XmXmmmm, mXXmmmm, XXmmmmm
+down_reductions_sweep: mmmmmmm, Xmmmmmm, mXmmmmm, mmXmmmm, mmmXmmm, mmmmXmm, mmmmmXm, mmmmmmX  #, XmmmmmX, mXmmmmX, mmXmmmX, mmmXmmX, mmmmXmX, mmmmmXX, XmmmmXm, mXmmmXm, mmXmmXm, mmmXmXm, mmmmXXm, XmmmXmm, mXmmXmm, mmXmXmm, mmmXXmm, XmmXmmm, mXmXmmm, mmXXmmm, XmXmmmm, mXXmmmm, XXmmmmm
 spatial_reduction: ???
 # # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
