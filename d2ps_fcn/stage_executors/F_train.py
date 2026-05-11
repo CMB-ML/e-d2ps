@@ -223,7 +223,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
 
                 note_min_loss = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
 
-                if epoch % 20 == 0:
+                if (epoch+1) % 20 == 0:
                     logger.info(
                         f"Epoch {epoch + 1:<{n_epoch_digits}} | "
                         f"train_pre: {train_pre_loss:.02e} | "
