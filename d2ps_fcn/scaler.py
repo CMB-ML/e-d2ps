@@ -116,3 +116,32 @@ class ArrayScaler:
     def _check_fitted(self) -> None:
         if not self.fitted:
             raise RuntimeError("Scaler has not been fitted yet.")
+
+    def __repr__(self):
+        return (
+            f"ArrayScaler("
+            f"kind={self.kind!r}, "
+            f"scope={self.scope!r}, "
+            f"fitted={self.fitted}, "
+            f"a={self._summarize_array(self.a)}, "
+            f"b={self._summarize_array(self.b)}"
+            f")"
+        )
+
+    @staticmethod
+    def _summarize_array(arr, max_items=3):
+        if arr is None:
+            return None
+
+        flat = arr.ravel()
+
+        preview = flat[:max_items].tolist()
+
+        if flat.size > max_items:
+            preview.append("...")
+
+        return (
+            f"shape={arr.shape}, "
+            f"dtype={arr.dtype}, "
+            f"preview={preview}"
+        )
