@@ -26,6 +26,8 @@ hydra:
       activation: ${activation_sweep}
       down_reductions: ${down_reductions_sweep}
       spatial_reduction: ${spatial_reduction_sweep}
-      # face_reduction: ${face_reduction_sweep}
       model_num: ${model_num_sweep}
       adamw_wd: ${adamw_wd_sweep}
+      
+      # For TLP
+      face_reduction: ${face_reduction_sweep}
