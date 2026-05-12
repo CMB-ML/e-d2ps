@@ -60,7 +60,9 @@ return_mode: spectrum  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs 
 # scale_params_sweep: local_meanstdv, none
 
 model_num: ???
-model_num_sweep: 1 #, 2, 3
+# model_num_sweep: 1
+# model_num_sweep: 2
+# model_num_sweep: 3
 
 scale_px: ???
 # scale_px_sweep: global_minmax, local_minmax, local_meanstdv, null
@@ -74,8 +76,8 @@ scale_ps_sweep: meanstdv
 
 use_pos_enc_lut: ???
 # use_pos_enc_lut: false
-use_pos_enc_lut_sweep: false
-# use_pos_enc_lut_sweep: false, true
+# use_pos_enc_lut_sweep: false
+use_pos_enc_lut_sweep: false, true
 
 # optimizer: Adam
 optimizer: AdamW
@@ -83,56 +85,52 @@ optimizer: AdamW
 adamw_wd : ???  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
 # adamw_wd_sweep: 0.0, 1e-4, 1e-2
-adamw_wd_sweep: 0.01
+adamw_wd_sweep: 0.0, 0.01
 
 learning_rate_start: 1e-8
 
 learning_rate_final: ???
-# learning_rate_final_sweep: 1e-5, 3e-5, 1e-4, 3e-4
-learning_rate_final_sweep: 1e-6
-learning_rate_final_sweep: 1e-5
-learning_rate_final_sweep: 3e-5
-learning_rate_final_sweep: 1e-4
+learning_rate_final_sweep: 1e-6, 1e-4
 
 learning_rate_ramp_epochs: ???
-learning_rate_ramp_epochs_sweep: 0, 3, 10
+learning_rate_ramp_epochs_sweep: 0  #, 3, 10
 
 ### Models: Either 
-nn_model: SimpleEncDec
-px_arrange: cmbNNCS
-norm_kind: ???
-# norm_sweep: none, bn, gn
-norm_sweep: gn
-# Down reductions use X/m strings: X is max, m is avg; 
-#   order starts with first/top layer and fills down 
-#   XmX would be Max, Avg, Max, and the rest Avg
-down_reductions: ???
-down_reductions_sweep: avg, max, Xm, XXm, mXX
-spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
-spatial_reduction_sweep: avg
-activation: ???
-# activation_sweep: relu, gelu
-activation_sweep: gelu
-
-### Or
-# # nn_model: TLPEncAggDec
-# nn_model: TLPEnc2AggDec
-# px_arrange: channel
+# nn_model: SimpleEncDec
+# px_arrange: cmbNNCS
 # norm_kind: ???
 # # norm_sweep: none, bn, gn
+# norm_sweep: gn
+# # Down reductions use X/m strings: X is max, m is avg; 
+# #   order starts with first/top layer and fills down 
+# #   XmX would be Max, Avg, Max, and the rest Avg
 # down_reductions: ???
-# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-# down_reductions_sweep: Xm
+# down_reductions_sweep: avg, max, Xm, XXm, mXX
 # spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
+# # # spatial_reduction_sweep: avg, max
 # spatial_reduction_sweep: avg
-# face_reduction: ???
-# # face_reduction_sweep: avg, max, weighted, softmax
-# face_reduction_sweep: avg
 # activation: ???
 # # activation_sweep: relu, gelu
+# activation_sweep: gelu
+
+### Or
+# nn_model: TLPEncAggDec
+nn_model: TLPEnc2AggDec
+px_arrange: channel
+norm_kind: ???
+# norm_sweep: none, bn, gn
+down_reductions: ???
+# for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
+# down_reductions_sweep: max, avg, X, Xm, XXm, mXX
+down_reductions_sweep: avg
+spatial_reduction: ???
+# spatial_reduction_sweep: avg, max
+spatial_reduction_sweep: avg
+face_reduction: ???
+# face_reduction_sweep: avg, max, weighted, softmax
+face_reduction_sweep: avg
+activation: ???
+# activation_sweep: relu, gelu
 
 ### Or
 # nn_model: MobileViTCMBRegressor
