@@ -1,5 +1,6 @@
 import logging
 
+import healpy as hp
 import numpy as np
 from omegaconf import DictConfig
 import random
@@ -38,6 +39,10 @@ class ModelInitExecutor(BasePyTorchModelExecutor):
         self.model_init = cfg.model_init
         self.model_seed_template = cfg.model.model_seed
         self.seed_factory = SeedFactory(self.model_seed_template)
+        self.input_kind = cfg.input_kind
+        self.lmax = self.ells[-1]
+        if self.input_kind not in ["alms", "maps"]:
+            raise NotImplementedError("Must use input_kind of either 'alms' or 'maps'")
 
     def execute(self):
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -52,12 +57,15 @@ class ModelInitExecutor(BasePyTorchModelExecutor):
 
         model = self.init_model()
 
+        if self.input_kind in ["alms", "alm"]:
+            n_input = hp.Alm.getsize(self.lmax)
+        elif self.input_kind == ["maps", "map"]:
+            n_input = hp.nside2npix(self.nside)
+        else:
+            raise NotImplementedError("Must use input_kind of either 'alms' or 'maps'")
+
         with torch.no_grad():
-            dummy_x = torch.zeros(
-                1,
-                12 * (self.nside ** 2),
-                dtype=self.dtype,
-            )
+            dummy_x = torch.zeros(1, n_input, dtype=self.dtype)
             _ = model(dummy_x)
 
         context = dict(model_num=self.model_init)

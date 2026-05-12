@@ -18,6 +18,7 @@ from d2ps_nn.ex import (
 )
 from d2ps_fcn.ex import (
     CheapMakeRealPowerSpectrumExecutor,
+    CheapMakeRealAlmsExecutor,
     ModelInitExecutor,
     TrainFCNModelExecutor
 )
@@ -46,13 +47,24 @@ def run_B_prep(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundleMapsExecutor,
-        ModelInitExecutor
+        CheapMakeRealAlmsExecutor
     ]
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_32_C_Train")
-def run_C_fcn(cfg):
+@hydra.main(version_base=None, config_path="cfg", config_name="config_32_C_Prep_model")
+def run_C_prep_model(cfg):
+    # print(OmegaConf.to_yaml(cfg))
+    logger.info(f"Running run_B_prep in {__file__}")
+
+    pipes = [
+        ModelInitExecutor,
+    ]
+    run(cfg, pipes)
+
+
+@hydra.main(version_base=None, config_path="cfg", config_name="config_32_D_Train")
+def run_D_fcn(cfg):
     # print(OmegaConf.to_yaml(cfg))
     logger.info(f"Running run_C_fcn in {__file__}")
 
@@ -83,5 +95,6 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     # run_A_real()
-    # run_B_prep()
-    run_C_fcn()
+    run_B_prep()
+    run_C_prep_model()
+    run_D_fcn()

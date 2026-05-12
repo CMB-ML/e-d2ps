@@ -14,8 +14,8 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      model_init: ${model_init_sweep}
-      n_hidden_features: ${n_hid_feat_sweep}
+      model_init: 1          # placeholder
+      n_hidden_features: 0   # placeholder
       out_power: 1           # placeholder
       spectrum_type: theory  # placeholder
       learning_rate: 1e-3    # placeholder

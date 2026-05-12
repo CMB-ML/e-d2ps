@@ -3,6 +3,7 @@ import logging
 from tqdm import tqdm
 import time
 
+import healpy as hp
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
@@ -39,14 +40,19 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
         # self.in_trgt_asset = self.assets_in["cmb_ps"]
         self.in_trgt_asset = SpectrumAsset.select(self.assets_in,
                                                   cfg.spectrum_type)
-        self.in_feat_asset = FeatureAsset.select(self.assets_in, 
-                                                 cfg.features_type)
+        # TODO: Fix this for cross-compatibility
+        # self.in_feat_asset = FeatureAsset.select(self.assets_in, 
+        #                                          cfg.features_type)
+        self.in_feat_asset = self.assets_in["cmb_alms"]
         self.in_resume_model: Asset = self.assets_in["resume_model"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         in_trgt_handler: NumpyMap
         in_feat_handler: NumpyMap
         in_pos_enc_lut_handler: NumpyMap
         in_model_handler: PyTorchModel
+
+        self.input_kind = cfg.input_kind
+        self.lmax = self.ells[-1]
 
         self.n_sims_train_infer = cfg.get("n_sims_train_infer", None)
         self.out_power          = cfg.out_power
@@ -137,8 +143,15 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
         model = model.to(self.device)
 
         with torch.no_grad():
+            if self.input_kind in ["alms", "alm"]:
+                n_input = hp.Alm.getsize(self.lmax)
+            elif self.input_kind == ["maps", "map"]:
+                n_input = hp.nside2npix(self.nside)
+            else:
+                raise NotImplementedError("Must use input_kind of either 'alms' or 'maps'")
+
             torch.manual_seed(0)
-            random_tensor = torch.rand((1, (self.nside**2) * 12)).to(self.device)
+            random_tensor = torch.rand((1, n_input)).to(self.device)
             logger.info(f"Consistency check, 'map': {random_tensor[0, :5]}")
             logger.info(f"Consistency check, 'pred': {model(random_tensor)[0, :5]}")
 

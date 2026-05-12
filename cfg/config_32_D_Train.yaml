@@ -31,4 +31,4 @@ hydra:
 # prep_feature : minmax_global
 # learning_rate: 1e-3
 # out_power    : 1
-# activation   : gelu
+# # activation   : gelu
