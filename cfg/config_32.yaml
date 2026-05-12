@@ -46,23 +46,23 @@ spectrum_type_sweep: realization, theory
 prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
 prep_feature_sweep : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
 
-
 n_hidden_features  : ???
-n_hid_feat_sweep   : 0
+n_hid_feat_sweep   : 200
 model_init         : ???
-model_init_sweep   : 1
+# model_init_sweep   : 2, 3, 4, 5
 
 learning_rate      : ???
 # learning_rate_sweep: 1e-7
-learning_rate_sweep: 1e-5, 1e-3
-# learning_rate_sweep: 1e-7, 1e-6, 1e-5, 1e-4, 1e-3
+# learning_rate_sweep: 1e-5, 1e-3
+learning_rate_sweep: 1e-7, 1e-6, 1e-5, 1e-4, 1e-3
 
 out_power          : ???
 # out_power_sweep    : 1 #, 2
-out_power_sweep    : 1, 2
+# out_power_sweep    : 1, 2
 
 activation         : ???
-activation_sweep   : gelu, relu
+activation_sweep   : relu
+# activation_sweep   : gelu, relu
 
 ################################################################
 #   Lesser-used set-up

@@ -24,11 +24,11 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"])
-    / "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns"
+    / "Datasets/I_32_2850_CMB_only/scale_1/fcn2ps"
 )
 
 DIRNAME_SPEC = (
-    "Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+    "pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-op_${out_power}/"
 )
 
 LOSS_REL_PATH = Path("F_Model/loss_record.csv")
@@ -41,16 +41,18 @@ THRESHOLDS = [1e4, 8e3]
 CONSECUTIVE_BELOW = 3
 
 COLUMN_KEYS = [
-    "down_reductions",
-]
-
-ROW_KEYS = [
-    "adamw_wd",
     "learning_rate",
 ]
 
+ROW_KEYS = [
+    "spectrum_type",
+    "out_power",
+    "prep_label",
+    "prep_feature",
+]
+
 FIELD_VALUE_ORDER = {
-    "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
+    # "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
 }
 
 FIG_SUBDIR = "Analysis_Figures"
@@ -593,26 +595,26 @@ def add_summary_tables_for_layout(
             "first_below_10000.0",
             "epoch",
         ),
-        (
-            "First epoch below 8e3",
-            "first_below_8000.0",
-            "epoch",
-        ),
+        # (
+        #     "First epoch below 8e3",
+        #     "first_below_8000.0",
+        #     "epoch",
+        # ),
         (
             "Best smoothed validation loss",
             "best_loss",
             "loss",
         ),
-        (
-            "Epoch of best smoothed validation loss",
-            "best_epoch",
-            "epoch",
-        ),
-        (
-            "Final smoothed validation loss",
-            "final_loss",
-            "loss",
-        ),
+        # (
+        #     "Epoch of best smoothed validation loss",
+        #     "best_epoch",
+        #     "epoch",
+        # ),
+        # (
+        #     "Final smoothed validation loss",
+        #     "final_loss",
+        #     "loss",
+        # ),
     ]
 
     for metric_title, metric_key, metric_kind in metric_specs:
@@ -673,16 +675,30 @@ def main() -> None:
 
     n_tables = 0
 
-    for col_keys in itertools.permutations(col_keys_base):
-        for row_keys in itertools.permutations(row_keys_base):
-            add_summary_tables_for_layout(
-                doc=doc,
-                records=records,
-                row_keys=list(row_keys),
-                col_keys=list(col_keys),
-                value_formatters=value_formatters,
-            )
-            n_tables += 5
+    # Old: generates every row/column ordering
+    # for col_keys in itertools.permutations(col_keys_base):
+    #     for row_keys in itertools.permutations(row_keys_base):
+    #         add_summary_tables_for_layout(
+    #             doc=doc,
+    #             records=records,
+    #             row_keys=list(row_keys),
+    #             col_keys=list(col_keys),
+    #             value_formatters=value_formatters,
+    #         )
+    #         n_tables += 5
+
+    row_keys = row_keys_base
+    col_keys = col_keys_base
+
+    add_summary_tables_for_layout(
+        doc=doc,
+        records=records,
+        row_keys=row_keys,
+        col_keys=col_keys,
+        value_formatters=value_formatters,
+    )
+
+    n_tables += 5
 
     out_docx = ROOT / "report_validation_loss_tables.docx"
     doc.save(out_docx)
