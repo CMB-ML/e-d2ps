@@ -14,7 +14,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # model_init         : ${model_init_sweep}
+      model_init         : ${model_init_sweep}
       n_hidden_features  : ${n_hid_feat_sweep}
       learning_rate      : ${learning_rate_sweep}
       spectrum_type      : ${spectrum_type_sweep}
@@ -22,7 +22,8 @@ hydra:
       prep_feature       : ${prep_feature_sweep}
       # out_power          : ${out_power_sweep}
       activation         : ${activation_sweep}
-      sigma_scale        : ${sigma_scale_sweep}
+      # sigma_scale        : ${sigma_scale_sweep}
+      lmax: ${lmax_Sweep}
 
 
 # model_init   : 1

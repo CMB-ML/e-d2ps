@@ -22,8 +22,8 @@ class BundleMapsExecutor(BaseStageExecutor):
         self.in_map: Asset = self.assets_in["cmb_map"]
         in_map_handler: HealpyMap
 
-        if cfg.scenario.nside > 32:
-            raise ValueError("This method was developed for use with 2000 Nside=32 maps.")
+        # if cfg.scenario.nside > 32:
+        #     raise ValueError("This method was developed for use with 2000 Nside=32 maps.")
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")

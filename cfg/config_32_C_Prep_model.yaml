@@ -14,7 +14,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # model_init: ${model_init_sweep}
+      model_init: ${model_init_sweep}
       n_hidden_features: ${n_hid_feat_sweep}
       out_power: 1           # placeholder
       spectrum_type: theory  # placeholder
@@ -22,4 +22,5 @@ hydra:
       prep_label: none       # placeholder
       prep_feature: none     # placeholder
       activation: relu       # placeholder
-      sigma_scale: ${sigma_scale_sweep}
+      # sigma_scale: ${sigma_scale_sweep}
+      lmax: ${lmax_Sweep}
