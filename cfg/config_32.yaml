@@ -26,6 +26,12 @@ bundle_working_dir : "bundles"
 prep_working_dir   : "d2ps-prep-fcn/"
 # pl_fig_model_name  : "${features_type} to PS, On Planck, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with ${down_reductions}, ${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate}, wd: ${adamw_wd}"
 
+pipeline:
+  bundle_true: # Z_bundle.py / BundleTrueExecutor
+    assets_out:
+      ps_bundle:
+        path_template: "{root}/{dataset}/{stage}/true_{split}_{lmax}.npy"
+
 ################################################################
 #                                                              #
 ################################################################
