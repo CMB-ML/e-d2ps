@@ -23,7 +23,7 @@ hydra:
       # out_power          : ${out_power_sweep}
       activation         : ${activation_sweep}
       # sigma_scale        : ${sigma_scale_sweep}
-      lmax: ${lmax_Sweep}
+      lmax: ${lmax_sweep}
 
 
 # model_init   : 1
