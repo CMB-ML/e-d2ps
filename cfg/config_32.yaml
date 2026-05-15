@@ -31,6 +31,10 @@ pipeline:
     assets_out:
       ps_bundle:
         path_template: "{root}/{dataset}/{stage}/true_{split}_${lmax}.npy"
+  model_init:
+    assets_out:
+      model:
+        path_template: "{root}/{dataset}/${prep_working_dir}{stage}/init_${model_init}_${n_hidden_features}_${input_kind}_${lmax}.pth"
 
 ################################################################
 #                                                              #
