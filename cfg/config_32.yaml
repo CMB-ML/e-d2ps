@@ -30,7 +30,7 @@ pipeline:
   bundle_true: # Z_bundle.py / BundleTrueExecutor
     assets_out:
       ps_bundle:
-        path_template: "{root}/{dataset}/{stage}/true_{split}_{lmax}.npy"
+        path_template: "{root}/{dataset}/{stage}/true_{split}_${lmax}.npy"
 
 ################################################################
 #                                                              #
