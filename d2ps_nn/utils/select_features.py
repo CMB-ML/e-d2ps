@@ -9,14 +9,17 @@ from cmbml.utils.planck_instrument import Instrument
 class FeatureAssetNames:
     cmb: str = "cmb_map"
     obs: str = "obs_maps"
+    alms: str = "cmb_alms"
 
     def get(self, choice: str) -> str:
         if choice == "cmb":
             return self.cmb
         elif choice == "obs":
             return self.obs
+        elif choice == "alms":
+            return self.alms
         raise ValueError(
-            f"Unsupported choice: {choice}. Supported choices are 'cmb' and 'obs'."
+            f"Unsupported choice: {choice}. Supported choices are 'cmb', 'obs', 'alms'."
         )
 
 
@@ -39,13 +42,16 @@ class FeatureAsset(Asset, ABC):
         if choice == "cmb":
             return CMBFeatureAsset.create_from(asset)
 
+        elif choice == "alms":
+            return CMBFeatureAsset.create_from(asset)
+
         elif choice == "obs":
             res = ObsFeatureAsset.create_from(asset)
             res.instrument = instrument
             return res
 
         raise ValueError(
-            f"Unsupported choice: {choice}. Supported choices are 'cmb' and 'obs'."
+            f"Unsupported choice: {choice}. Supported choices are 'cmb', 'obs', 'alms'."
         )
 
     @classmethod

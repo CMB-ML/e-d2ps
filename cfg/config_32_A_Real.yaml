@@ -6,6 +6,9 @@ defaults:
 
 pipeline:
   make_real_ps:
+    assets_out:
+      auto_real:
+        path_template: "{root}/{dataset}/Real_PS/{stage}/{split}/{sim}/ps_real.npy"
     splits: [train, valid, test]
   bundle_real:
     splits: [train, valid, test]
@@ -30,8 +33,3 @@ hydra:
       prep_label: none       # placeholder
       prep_feature: none     # placeholder
       activation: relu       # placeholder
-
-make_real_ps:
-  assets_out:
-    auto_real:
-      path_template: "{root}/{dataset}/Real_PS/{stage}/{split}/{sim}/ps_real.npy"

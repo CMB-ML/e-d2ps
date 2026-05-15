@@ -59,7 +59,7 @@ class ModelInitExecutor(BasePyTorchModelExecutor):
 
         if self.input_kind in ["alms", "alm"]:
             n_input = hp.Alm.getsize(self.lmax)
-        elif self.input_kind == ["maps", "map"]:
+        elif self.input_kind in ["maps", "map"]:
             n_input = hp.nside2npix(self.nside)
         else:
             raise NotImplementedError("Must use input_kind of either 'alms' or 'maps'")

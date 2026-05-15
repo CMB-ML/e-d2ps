@@ -41,9 +41,9 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
         self.in_trgt_asset = SpectrumAsset.select(self.assets_in,
                                                   cfg.spectrum_type)
         # TODO: Fix this for cross-compatibility
-        # self.in_feat_asset = FeatureAsset.select(self.assets_in, 
-        #                                          cfg.features_type)
-        self.in_feat_asset = self.assets_in["cmb_alms"]
+        self.in_feat_asset = FeatureAsset.select(self.assets_in, 
+                                                 cfg.features_type)
+        # self.in_feat_asset = self.assets_in["cmb_alms"]
         self.in_resume_model: Asset = self.assets_in["resume_model"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         in_trgt_handler: NumpyMap
@@ -145,7 +145,7 @@ class TrainFCNModelExecutor(BasePyTorchModelExecutor):
         with torch.no_grad():
             if self.input_kind in ["alms", "alm"]:
                 n_input = hp.Alm.getsize(self.lmax)
-            elif self.input_kind == ["maps", "map"]:
+            elif self.input_kind in ["maps", "map"]:
                 n_input = hp.nside2npix(self.nside)
             else:
                 raise NotImplementedError("Must use input_kind of either 'alms' or 'maps'")
