@@ -22,3 +22,4 @@ hydra:
       prep_label: none       # placeholder
       prep_feature: none     # placeholder
       activation: relu       # placeholder
+      sigma_scale: ${sigma_scale_sweep}

@@ -22,6 +22,7 @@ hydra:
       prep_feature       : ${prep_feature_sweep}
       # out_power          : ${out_power_sweep}
       activation         : ${activation_sweep}
+      sigma_scale        : ${sigma_scale_sweep}
 
 
 # model_init   : 1

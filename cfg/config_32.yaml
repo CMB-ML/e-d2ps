@@ -51,7 +51,7 @@ prep_feature_sweep : meanstdv_global, meanstdv_local
 
 n_hidden_features  : ???
 n_hid_feat_sweep   : 200
-model_init         : ???
+model_init         : 1
 # model_init_sweep   : 1, 2, 3, 4, 5
 
 learning_rate      : ???
@@ -67,8 +67,9 @@ activation         : ???
 activation_sweep   : relu
 # activation_sweep   : gelu, relu
 
-sigma_scale        : ???
-sigma_scale_sweep  : 0.2, 0.5, 1, 2, 5
+sigma_scale          : ???
+sigma_scale_sweep    : 0.2
+# sigma_scale_sweep  : 0.2, 0.5, 1, 2, 5
 
 ################################################################
 #   Lesser-used set-up

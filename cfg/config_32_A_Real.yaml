@@ -10,11 +10,23 @@ pipeline:
   bundle_real:
     splits: [train, valid, test]
 
-working_dir : "Real_PS/"
 hydra:
+  mode: MULTIRUN
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
-  verbose          : false
-
-nside          : 32
-lmax           : 80
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose      : false
+  sweeper:
+    params:
+      sigma_scale: ${sigma_scale_sweep}
+      model_init: 1          # placeholder
+      n_hidden_features: 0   # placeholder
+      out_power: 1           # placeholder
+      spectrum_type: theory  # placeholder
+      learning_rate: 1e-3    # placeholder
+      prep_label: none       # placeholder
+      prep_feature: none     # placeholder
+      activation: relu       # placeholder

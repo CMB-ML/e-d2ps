@@ -45,8 +45,8 @@ def run_B_prep(cfg):
     logger.info(f"Running run_B_prep in {__file__}")
 
     pipes = [
-        # BundleTrueExecutor,
-        # BundleMapsExecutor,
+        BundleTrueExecutor,
+        BundleMapsExecutor,
         CheapMakeRealAlmsExecutor
     ]
     run(cfg, pipes)
@@ -94,7 +94,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_A_real()
+    run_A_real()
     run_B_prep()
     run_C_prep_model()
     run_D_fcn()
