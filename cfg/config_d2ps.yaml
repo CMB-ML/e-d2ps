@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all_big
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/patches  : toppatch
   - model/analysis : simple_apo
@@ -12,9 +12,9 @@ defaults:
   - override hydra/job_logging: custom_log
   - _self_
 
-dataset_name       : "${map_fields}_${scenario.nside}_20850"
+dataset_name       : "${map_fields}_${scenario.nside}_1850"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_train_reruns_compare/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
+working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${face_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
 trained_wd         : *wd
@@ -25,17 +25,17 @@ pl_fig_model_name  : "${features_type} to PS, On Planck, PS Scale:${scale_ps} px
 ################################################################
 #                                                              #
 ################################################################
-n_sims_train_full: 20000  # 128
-# n_sims_train_full: 2000   # 512
+# n_sims_train_full: 20000  # 128
+n_sims_train_full: 1000   # 512
 
 # Overfit scheme
 # n_sims_train: 5
 # num_epochs: 100
 
 # # Normal training scheme
-n_sims_train: 2000
-# n_sims_train_infer: 200
-num_epochs: 50
+n_sims_train: 1000
+n_sims_train_infer: 200
+num_epochs: 500
 
 # # LR finder scheme
 # n_sims_train: 2000
@@ -57,7 +57,8 @@ return_mode: spectrum  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs 
 # scale_params_sweep: local_meanstdv, none
 
 model_num: ???
-model_num_sweep: 21,22,23
+# model_num_sweep: 21,22,23
+model_num_sweep: 1
 # model_num_sweep: 2
 # model_num_sweep: 3
 
@@ -85,29 +86,29 @@ adamw_wd_sweep: 0.01
 learning_rate_start: 1e-8
 
 learning_rate_final: ???
-learning_rate_final_sweep: 1e-6, 3e-6, 1e-5
+learning_rate_final_sweep: 3e-6
 
 learning_rate_ramp_epochs: ???
 learning_rate_ramp_epochs_sweep: 0  #, 3, 10
 
 ## Models: Either 
-# nn_model: SimpleEncDec
-# px_arrange: cmbNNCS
-# norm_kind: ???
-# # norm_sweep: none, bn, gn
-# norm_sweep: gn
-# # Down reductions use X/m strings: X is max, m is avg; 
-# #   order starts with first/top layer and fills down 
-# #   XmX would be Max, Avg, Max, and the rest Avg
-# down_reductions: ???
-# # down_reductions_sweep: mmmmmmm, Xmmmmmm  # CMML0
-# # down_reductions_sweep: mmmXmmm, mmmmmXm  # CMML1
-# spatial_reduction: ???
-# # # spatial_reduction_sweep: avg, max
-# spatial_reduction_sweep: avg
-# activation: ???
-# # activation_sweep: relu, gelu
-# activation_sweep: gelu
+nn_model: SimpleEncDec
+px_arrange: cmbNNCS
+norm_kind: ???
+# norm_sweep: none, bn, gn
+norm_sweep: gn
+# Down reductions use X/m strings: X is max, m is avg; 
+#   order starts with first/top layer and fills down 
+#   XmX would be Max, Avg, Max, and the rest Avg
+down_reductions: ???
+down_reductions_sweep: mmmmmmm  #, Xmmmmmm  # CMML0
+# down_reductions_sweep: mmmXmmm, mmmmmXm  # CMML1
+spatial_reduction: ???
+# # spatial_reduction_sweep: avg, max
+spatial_reduction_sweep: avg
+activation: ???
+# activation_sweep: relu, gelu
+activation_sweep: gelu
 
 # ### Or
 # # nn_model: TLPEncAggDec
@@ -166,13 +167,13 @@ n_show_treble_ell    : null
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 128
+nside              : 512
 lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
-features_type      : cmb
-# features_type      : obs
+# features_type      : cmb
+features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
