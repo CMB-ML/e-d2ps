@@ -1,0 +1,37 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - config_32
+  - override pipeline: assembly_on_sims_dyn_prod
+  - _self_
+
+hydra:
+  mode: MULTIRUN
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose      : false
+  sweeper:
+    params:
+      model_init         : ${model_init_sweep}
+      fcn_string         : ${fcn_str_sweep}
+      learning_rate      : ${learning_rate_sweep}
+      spectrum_type      : ${spectrum_type_sweep}
+      prep_label         : ${prep_label_sweep}
+      prep_feature       : ${prep_feature_sweep}
+      # out_power          : ${out_power_sweep}
+      activation         : ${activation_sweep}
+      # sigma_scale        : ${sigma_scale_sweep}
+      lmax: ${lmax_sweep}
+
+
+# model_init   : 1
+# n_hidden_features: 200
+# spectrum_type: realization
+# prep_label   : minmax_global
+# prep_feature : minmax_global
+# learning_rate: 1e-3
+# out_power    : 1
+# # activation   : gelu

@@ -21,7 +21,9 @@ train:
   device            : null
 
   # Data loading
-  batch_size        : 200
+  train_batch_size  : ${train_batch_size}
+  valid_batch_size  : 5
+  n_batches         : ${n_train_batches}
   num_loader_workers: 0
   # Training parameters
   learning_rate       : ${learning_rate}

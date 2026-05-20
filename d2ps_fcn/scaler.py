@@ -4,6 +4,8 @@ from typing import Literal, Optional
 import numpy as np
 import torch
 
+from d2ps_nn.utils.px_scale import STAT_MIN, STAT_MAX, STAT_MEAN, STAT_STDV
+
 
 ScaleKind = Literal["none", "minmax", "meanstdv"]
 ScaleScope = Literal["global", "local"]
@@ -44,6 +46,22 @@ class ArrayScaler:
         else:
             raise ValueError(f"Unsupported scaler kind: {self.kind}")
 
+        self.fitted = True
+        return self
+
+    def fit_from_stats(self, stats: np.ndarray):
+        """Fit an ArrayScaler directly from a pre-computed stats array (4, ...) ."""
+        if self.kind == "none":
+            self.fitted = True
+            return self
+        if self.kind == "minmax":
+            self.a = stats[STAT_MIN]
+            self.b = stats[STAT_MAX]
+        elif self.kind == "meanstdv":
+            self.a = stats[STAT_MEAN]
+            self.b = stats[STAT_STDV]
+        else:
+            raise ValueError(f"Unsupported scaler kind: {self.kind!r}")
         self.fitted = True
         return self
 

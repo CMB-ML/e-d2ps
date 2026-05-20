@@ -16,7 +16,8 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.select_ps import SpectrumAsset
 
-from d2ps_fcn.models.fcn import FCNDouble, FCNSingle
+# from d2ps_fcn.models.fcn import FCNDouble, FCNSingle
+from d2ps_fcn.models.fcn_from_string import FCNFromString
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class ModelInitExecutor(BasePyTorchModelExecutor):
         out_model_handler: PyTorchModel
 
         self.out_power          = cfg.out_power
-        self.hidden_features    = cfg.n_hidden_features
+        self.fcn_string         = cfg.fcn_string
         self.dtype              = self.dtype_mapping[cfg.model.dtype]
 
         self.model_init = cfg.model_init
@@ -73,20 +74,30 @@ class ModelInitExecutor(BasePyTorchModelExecutor):
             self.out_model.write(model=model, epoch="init")
 
     def init_model(self):
-        if self.hidden_features == 0:
-            model_dict = dict(
-                out_channels=len(self.ells),
-                out_power = self.out_power
-            )
-            model = FCNSingle(**model_dict)
-            model_dict["model"] = "FCNSingle"
-        else:
-            model_dict = dict(
-                mid_channels=self.hidden_features,
-                out_channels=len(self.ells),
-                out_power = self.out_power
-            )
-            model = FCNDouble(**model_dict)
-            model_dict["model"] = "FCNDouble"
+        model_dict = dict(
+            arch_str=self.fcn_string,
+            npix=hp.nside2npix(self.nside),
+            n_ells=len(self.ells))
+        model = FCNFromString(**model_dict)
         logger.info(f"Model dict: {model_dict}")
         return model
+
+
+    # def init_model(self):
+    #     if self.hidden_features == 0:
+    #         model_dict = dict(
+    #             out_channels=len(self.ells),
+    #             out_power = self.out_power
+    #         )
+    #         model = FCNSingle(**model_dict)
+    #         model_dict["model"] = "FCNSingle"
+    #     else:
+    #         model_dict = dict(
+    #             mid_channels=self.hidden_features,
+    #             out_channels=len(self.ells),
+    #             out_power = self.out_power
+    #         )
+    #         model = FCNDouble(**model_dict)
+    #         model_dict["model"] = "FCNDouble"
+    #     logger.info(f"Model dict: {model_dict}")
+    #     return model

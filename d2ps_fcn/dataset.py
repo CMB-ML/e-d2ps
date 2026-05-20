@@ -19,6 +19,7 @@ class TrainDataset(Dataset):
         label_handler,
         feature_path,
         feature_handler,
+        lmax: Optional[int] = None,
         feature_scaler: Optional[ArrayScaler] = None,
         label_scaler: Optional[ArrayScaler] = None,
         dtype=torch.float32,
@@ -35,6 +36,10 @@ class TrainDataset(Dataset):
         if n_sims is not None:
             labels = labels[:n_sims]
             feats = feats[:n_sims]
+
+        if lmax is not None:
+            # Assume it needs ell selection
+            labels = labels[:, 2:lmax+1]
 
         if fit_scalers:
             self.feature_scaler.fit(feats)

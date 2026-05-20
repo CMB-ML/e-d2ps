@@ -1,6 +1,7 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
   - config_32
+  - override pipeline: assembly_on_sims_dyn_prod
   - _self_
 
 hydra:
@@ -15,7 +16,7 @@ hydra:
   sweeper:
     params:
       model_init: ${model_init_sweep}
-      n_hidden_features: ${n_hid_feat_sweep}
+      fcn_string: ${fcn_str_sweep}
       out_power: 1           # placeholder
       spectrum_type: theory  # placeholder
       learning_rate: 1e-3    # placeholder

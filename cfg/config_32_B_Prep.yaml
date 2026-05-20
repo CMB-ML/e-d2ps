@@ -1,6 +1,7 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
   - config_32
+  - override pipeline: assembly_on_sims_dyn_prod
   - _self_
 
 hydra:

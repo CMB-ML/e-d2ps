@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import pysm3.units as u
 import numpy as np
 import torch
+from omegaconf.errors import InterpolationKeyError
 from omegaconf import DictConfig
 
 from cmbml.utils.map_fields_helper import map_field_str2int
@@ -310,6 +311,7 @@ class MeanStDevProcessor(MapProcessor):
 def make_px_processor(
     mode: Optional[str],
     cfg: DictConfig,
+    stage_str="preprocess_maps"
 ) -> MapProcessor:
     """
     Factory for global map scaling.
@@ -319,17 +321,22 @@ def make_px_processor(
     None, "null", "none":
         no preprocessing
 
-    "global_minmax":
+    "minmax_global":
         late-load vmin/vmax from dataset_stats
     """
     if mode is None or mode in {"null", "none"}:
         return IdentityMapProcessor()
 
-    stage_str = "preprocess_maps"
     ch = ConfigHelper(cfg, stage_str=stage_str)
     n = Namer(cfg)
 
-    if mode == "global_minmax":
+    try:
+        cfg.scenario.detector_freqs
+        can_instrument = True
+    except InterpolationKeyError:
+        can_instrument = False
+
+    if mode == "minmax_global":
         dataset_stats_asset = ch.get_assets_in(n, stage_str)['dataset_stats']
         min_ref = LazyDatasetChannelStat(
             stats_asset=dataset_stats_asset,
@@ -344,15 +351,32 @@ def make_px_processor(
             max_ref=max_ref,
         )
 
+    if mode == "meanstdv_global":
+        raise NotImplementedError("No meanstdv_global option for maps currently.")
+        # dataset_stats_asset = ch.get_assets_in(n, stage_str)['dataset_stats']
+        # mean_ref = LazyDatasetChannelStat(
+        #     stats_asset=dataset_stats_asset,
+        #     which="mean",
+        # )
+        # stdv_ref = LazyDatasetChannelStat(
+        #     stats_asset=dataset_stats_asset,
+        #     which="stdv",
+        # )
+        # return MeanStDevProcessor(
+        #     mean_ref=mean_ref,
+        #     stdv_ref=stdv_ref,
+        # )
+
     # map_prep_beam = cfg.map_prep_beam
-    if mode == "local_minmax":
+
+    if mode == "minmax_local":
         assets_in = ch.get_assets_in(n, stage_str)
 
         stat_name_map = FeatureAssetNames(cmb="cmb_stats", obs="obs_stats")
         feature_stats = FeatureAsset.select(
             assets_in,
             cfg.features_type,
-            instrument=make_instrument(cfg=cfg),
+            instrument=make_instrument(cfg=cfg) if can_instrument else None,
             name_map=stat_name_map,
         )
 
@@ -370,14 +394,14 @@ def make_px_processor(
             max_ref=max_ref,
         )
 
-    if mode == "local_meanstdv":
+    if mode == "meanstdv_local":
         assets_in = ch.get_assets_in(n, stage_str)
 
         stat_name_map = FeatureAssetNames(cmb="cmb_stats", obs="obs_stats")
         feature_stats = FeatureAsset.select(
             assets_in,
             cfg.features_type,
-            instrument=make_instrument(cfg=cfg),
+            instrument=make_instrument(cfg=cfg) if can_instrument else None,
             name_map=stat_name_map,
         )
 
