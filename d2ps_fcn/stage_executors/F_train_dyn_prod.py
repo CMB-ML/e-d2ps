@@ -231,24 +231,24 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
                 train_pst_loss, valid_pst_loss,
             ])
 
-            is_best = (
-                valid_pst_loss == min(all_valid_pst_loss)
-                and epoch >= self.earliest_best
-            )
-            if is_best:
-                with self.name_tracker.set_context("epoch", "best"):
-                    self.out_model.write(model=model, epoch="best")
+            # is_best = (
+            #     valid_pst_loss == min(all_valid_pst_loss)
+            #     and epoch >= self.earliest_best
+            # )
+            # if is_best:
+            #     with self.name_tracker.set_context("epoch", "best"):
+            #         self.out_model.write(model=model, epoch="best")
 
-            condition_a = (epoch + 1) in self.extra_check
-            condition_b = (epoch + 1) % self.checkpoint == 0
-            if condition_a or condition_b:
-                with self.name_tracker.set_context("epoch", epoch + 1):
-                    self.out_model.write(
-                        model=model,
-                        optimizer=optimizer,
-                        best_loss=min(all_valid_pst_loss),
-                        epoch=epoch + 1,
-                    )
+            # condition_a = (epoch + 1) in self.extra_check
+            # condition_b = (epoch + 1) % self.checkpoint == 0
+            # if condition_a or condition_b:
+            #     with self.name_tracker.set_context("epoch", epoch + 1):
+            #         self.out_model.write(
+            #             model=model,
+            #             optimizer=optimizer,
+            #             best_loss=min(all_valid_pst_loss),
+            #             epoch=epoch + 1,
+            #         )
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
