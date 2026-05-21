@@ -38,10 +38,6 @@ class FixedDataset(Dataset):
             labels = labels[:n_sims]
             feats = feats[:n_sims]
 
-        if lmax is not None:
-            # Assume it needs ell selection
-            labels = labels[:, 2:lmax+1]
-
         if fit_scalers:
             self.feature_scaler.fit(feats)
             self.label_scaler.fit(labels)

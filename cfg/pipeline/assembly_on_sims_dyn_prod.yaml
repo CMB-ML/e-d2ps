@@ -10,11 +10,11 @@ raw:
       path_template:  "{src_root}/CMB-ML/bulk_theory_dl.npy"
 
 bundle_true:
-  splits: [valid, test]
+  splits: [valid]
 bundle_real:
-  splits: [valid, test]
+  splits: [valid]
 bundle_maps:
-  splits: [valid, test]
+  splits: [valid]
 
 # get_px_map_stats:
 #   assets_out:
@@ -22,6 +22,14 @@ bundle_maps:
 #       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_px_stats.npy"
 #     obs_maps: 
 #       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/obs_px_stats_{freq}.npy"
+
+# make_ps:
+#   assets_out:
+#     ps_bundle:
+#       handler: NpyHandler
+#       path_template: "{root}/{dataset}/Simulation_Working/{stage}/theory_dl.npy"
+#   dir_name: Dyn_Prod_CMB_Spectra
+#   make_stage_log: False
 
 get_dyn_map_stats:
   assets_out:
@@ -35,12 +43,21 @@ get_dyn_map_stats:
     cmb_ps: {stage: raw, orig_name: ps_bundle}
   dir_name: C_PreprocessingPrep
 
-make_ps:
+dyn_bundle:
   assets_out:
-    ps_bundle:
+    ps_thry:
       handler: NpyHandler
-      path_template: "{root}/{dataset}/Simulation_Working/{stage}/theory_dl.npy"
-  dir_name: Dyn_Prod_CMB_Spectra
+      path_template: "{root}/{dataset}/{stage}/true_{split}.npy"
+    ps_real:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{stage}/real_{split}.npy"
+    cmb_map:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{stage}/cmb_maps_{split}.npy"
+  assets_in:
+    cmb_ps: {stage: raw, orig_name: ps_bundle}
+  splits: [valid]
+  dir_name: Raw_Bundle
   make_stage_log: False
 
 model_init:
@@ -60,12 +77,14 @@ train_dyn_prod:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
   assets_in:
-    cmb_ps: {stage: raw, orig_name: ps_bundle}
-    cmb_map: {stage: bundle_maps, orig_name: map_bundle}
-    resume_model: {stage: train_dyn_prod, orig_name: model}
+    train_cmb_ps : {stage: raw, orig_name: ps_bundle}
+    valid_thry_ps: {stage: dyn_bundle, orig_name: ps_thry}
+    valid_real_ps: {stage: dyn_bundle, orig_name: ps_real}
+    valid_map    : {stage: dyn_bundle, orig_name: cmb_map}
+    resume_model : {stage: train_dyn_prod, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
-    pos_enc_lut: {stage: make_pos_enc_lut}
-    cmb_stats: {stage: get_dyn_map_stats, orig_name: cmb_map, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    pos_enc_lut  : {stage: make_pos_enc_lut}
+    cmb_stats    : {stage: get_dyn_map_stats, orig_name: cmb_map, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
   splits:
     - valid
   dir_name: F_Model

@@ -10,7 +10,7 @@ from cmbml.core import Asset
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
-from d2ps_fcn.dyn_prod_dataset import MapSampler
+from d2ps_fcn.dyn_prod_dataset import make_map_sampler
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,7 @@ class GetDynProdMapStatsExecutor(BasePyTorchModelExecutor):
         self.train_batch_size = cfg.model.train.train_batch_size
         self.n_batches        = cfg.model.train.n_batches * 10
         self.dtype            = self.dtype_mapping[cfg.model.dtype]
+        self.sht_engine       = str(cfg.sim_engine).lower()
 
     def execute(self):
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -45,14 +46,15 @@ class GetDynProdMapStatsExecutor(BasePyTorchModelExecutor):
             )
         dl_bank = dl_bank[:, :self.lmax + 1]
 
-        sampler = MapSampler(
+        sampler = make_map_sampler(
+            sim_engine=self.sht_engine,
             dl_bank=dl_bank,
             nside=self.nside,
-            lmax=self.lmax,
             batch_size=self.train_batch_size,
             n_batches=self.n_batches,
+            lmax=self.lmax,
             device=self.device,
-            dtype=self.dtype
+            dtype=self.dtype,
         )
 
         logger.info(f"Producing statistics based on {self.train_batch_size * self.n_batches} maps.")

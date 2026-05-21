@@ -36,13 +36,16 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         self.lmax = self.ells[-1]
 
         # Assets
-        self.in_cmb_map: Asset = self.assets_in["cmb_map"]
-        self.in_cmb_ps: Asset = self.assets_in["cmb_ps"]
+        self.in_train_cmb_ps:  Asset = self.assets_in["train_cmb_ps"]
+        self.in_valid_thry_ps: Asset = self.assets_in["valid_thry_ps"]
+        self.in_valid_real_ps: Asset = self.assets_in["valid_real_ps"]
+        self.in_valid_map:     Asset = self.assets_in["valid_map"]
         self.in_cmb_map_stats: Asset = self.assets_in["cmb_stats"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
-        self.in_resume_model: Asset = self.assets_in["resume_model"]
-        self.out_model: Asset = self.assets_out["model"]
-        self.out_loss_record: Asset = self.assets_out["loss_record"]
+        self.in_resume_model:  Asset = self.assets_in["resume_model"]
+
+        self.out_model:        Asset = self.assets_out["model"]
+        self.out_loss_record:  Asset = self.assets_out["loss_record"]
 
         # Config
         self.train_batch_size = cfg.model.train.train_batch_size
@@ -60,7 +63,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         # self.hidden_features  = cfg.n_hidden_features
         self.fcn_string       = cfg.fcn_string
 
-        self.sim_engine       = str(cfg.sim_engine).lower()
+        self.sht_engine       = str(cfg.sim_engine).lower()
          
         logger.info(f"Producing {self.train_batch_size * self.n_batches} maps per epoch.")
         logger.info(f"Running for {self.n_epochs} epochs.")
@@ -83,7 +86,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
 
         # Load bank and fit scalers
         logger.debug(f"Loading bank of Dls")
-        dl_bank = self.in_cmb_ps.read()           # (n_spectra, some_lmax)
+        dl_bank = self.in_train_cmb_ps.read()           # (n_spectra, some_lmax)
         if dl_bank.shape[1] < self.lmax+1:
             raise ValueError("Dl bank does not have enough ell. Please regenerate it or change lmax.")
         dl_bank = dl_bank[:, :self.lmax+1]
@@ -108,7 +111,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
 
         sampler = TrainingMapSampler(
             inner=make_map_sampler(
-                sim_engine=self.sim_engine,
+                sim_engine=self.sht_engine,
                 dl_bank=dl_bank,
                 nside=self.nside,
                 batch_size=self.train_batch_size,
@@ -260,15 +263,15 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         return model
 
     def set_up_valid_dataset(self, split: Split) -> FixedDataset:
-        feat_path = self.make_fn_template(split, self.in_cmb_map)
-        trgt_path = self.make_fn_template(split, self.in_cmb_ps)  # not used but TrainDataset expects it
+        feat_path = self.make_fn_template(split, self.in_valid_map)
+        trgt_path = self.make_fn_template(split, self.in_valid_thry_ps)
 
         dataset = FixedDataset(
             n_sims=split.n_sims,
             label_path=trgt_path,
-            label_handler=self.in_cmb_ps.handler,
+            label_handler=self.in_valid_thry_ps.handler,
             feature_path=feat_path,
-            feature_handler=self.in_cmb_map.handler,
+            feature_handler=self.in_valid_map.handler,
             lmax=self.lmax,
             feature_scaler=self.map_processor,
             label_scaler=self.label_scaler,

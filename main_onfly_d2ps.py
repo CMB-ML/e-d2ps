@@ -48,9 +48,6 @@ def run_B_prep(cfg):
 
     pipes = [
         GetDynProdMapStatsExecutor,
-        # BundleTrueExecutor,
-        # TODO: This doesn't work, Jim. Gotta have the true PS as well. Keep thinking!
-        # BundleMapsExecutor
         GetDynValidMapsExecutor,
     ]
     run(cfg, pipes)
@@ -98,6 +95,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_B_prep()
+    run_B_prep()
     run_C_prep_model()
     run_D_fcn()

@@ -15,13 +15,14 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      model_init: 1          # placeholder
-      n_hidden_features: 0   # placeholder
-      out_power: 1           # placeholder
-      spectrum_type: theory  # placeholder
-      learning_rate: 1e-3    # placeholder
-      prep_label: none       # placeholder
-      prep_feature: none     # placeholder
-      activation: relu       # placeholder
-      # sigma_scale: ${sigma_scale_sweep}
+      # model_init: 1          # placeholder
+      # out_power: 1           # placeholder
+      # spectrum_type: theory  # placeholder
+      # learning_rate: 1e-3    # placeholder
+      # prep_label: none       # placeholder
+      # prep_feature: none     # placeholder
+      # activation: relu       # placeholder
+      # # sigma_scale: ${sigma_scale_sweep}
       lmax: ${lmax_sweep}
+
+working_dir: ${prep_working_dir}

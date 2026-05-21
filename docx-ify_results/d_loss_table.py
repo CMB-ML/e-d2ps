@@ -24,11 +24,11 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"])
-    / "Datasets/I_32_2850_CMB_only/scale_1/fcn2ps"
+    / "Datasets/I_32_Inf_CMB_only/scale_1/train_otf"
 )
 
 DIRNAME_SPEC = (
-    "pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-op_${out_power}/"
+    "pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-act_${activation}-lmax_${lmax}/"
 )
 
 LOSS_REL_PATH = Path("F_Model/loss_record.csv")
@@ -45,10 +45,7 @@ COLUMN_KEYS = [
 ]
 
 ROW_KEYS = [
-    "spectrum_type",
-    "out_power",
-    "prep_label",
-    "prep_feature",
+    "fcn_string",
 ]
 
 FIELD_VALUE_ORDER = {
