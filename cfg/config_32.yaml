@@ -49,11 +49,11 @@ lmax_sweep         : 16    #, 1280
 
 splits:
   Valid:
-    n_sims: 250
+    n_sims: 256
 
 num_epochs         : 200000
-train_batch_size   : 32
-n_train_batches    : 32
+train_batch_size   : 256
+n_train_batches    : 4
 
 input_kind         : maps
 spectrum_type      : ???
@@ -82,7 +82,7 @@ model_init_sweep   : 1  #, 2, 3, 4, 5
 learning_rate      : ???
 # learning_rate_sweep: 1e-4
 # learning_rate_sweep: 1e-5, 1e-3
-learning_rate_sweep: 1e-2  #, 1e-4, 1e-3
+learning_rate_sweep: 5e-4  #, 1e-4, 1e-3
 
 out_power          : 1
 # out_power_sweep    : 1
