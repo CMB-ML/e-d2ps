@@ -20,7 +20,7 @@ class PixelPairProductLayer(nn.Module):
 class FCNFromString(nn.Module):
     def __init__(self, arch_str: str, npix: int, n_ells: int):
         super().__init__()
-        dims = self._parse(arch_str, npix, n_ells)
+        dims = self._parse(arch_str, npix**2, n_ells)
         layers = [PixelPairProductLayer()]
         for i, (in_d, out_d) in enumerate(zip(dims[:-1], dims[1:])):
             layers.append(nn.Linear(in_d, out_d))
