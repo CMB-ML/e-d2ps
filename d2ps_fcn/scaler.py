@@ -91,22 +91,6 @@ class ArrayScaler:
         self.fitted = True
         return self
 
-    # def fit_from_stats(self, stats: np.ndarray):
-    #     """Fit an ArrayScaler directly from a pre-computed stats array (4, ...) ."""
-    #     if self.kind == "none":
-    #         self.fitted = True
-    #         return self
-    #     if self.kind == "minmax":
-    #         self.a = stats[STAT_MIN]
-    #         self.b = stats[STAT_MAX]
-    #     elif self.kind == "meanstdv":
-    #         self.a = stats[STAT_MEAN]
-    #         self.b = stats[STAT_STDV]
-    #     else:
-    #         raise ValueError(f"Unsupported scaler kind: {self.kind!r}")
-    #     self.fitted = True
-    #     return self
-
     def fit_from_stats(self, stats: np.ndarray):
         """Fit from a (4, n) per-element stats array. For global scope,
         reduce to pooled scalars via global_from_local first.

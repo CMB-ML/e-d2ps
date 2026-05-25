@@ -174,31 +174,6 @@ def make_map_sampler(
         raise NotImplementedError("Only 'synfast' and 'cuhpx' are accepted.")
 
 
-# class TrainingMapSampler:
-#     def __init__(
-#         self,
-#         inner: MapSampler,
-#         map_processor: MapProcessor,
-#         label_scaler: ArrayScaler,
-#     ):
-#         self.inner = inner
-#         self.map_processor = map_processor
-#         self.label_scaler = label_scaler
-
-#     def __len__(self):
-#         return len(self.inner)
-
-#     def __iter__(self):
-#         for _ in range(len(self.inner)):
-#             yield self.sample()
-
-#     def sample(self):
-#         maps, tdl = self.inner.sample()
-#         maps = self.map_processor.preprocess(maps, channel="cmb", field_str="I")
-        
-#         scaled_xdl = self.label_scaler.transform_tensor(tdl[:, 2:])
-#         return maps, scaled_xdl
-
 class TrainingMapSampler:
     """
     Wraps an inner MapSampler to produce (processed_maps, scaled_label) batches

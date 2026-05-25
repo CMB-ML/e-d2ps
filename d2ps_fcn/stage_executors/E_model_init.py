@@ -81,23 +81,3 @@ class ModelInitExecutor(BasePyTorchModelExecutor):
         model = FCNFromString(**model_dict)
         logger.info(f"Model dict: {model_dict}")
         return model
-
-
-    # def init_model(self):
-    #     if self.hidden_features == 0:
-    #         model_dict = dict(
-    #             out_channels=len(self.ells),
-    #             out_power = self.out_power
-    #         )
-    #         model = FCNSingle(**model_dict)
-    #         model_dict["model"] = "FCNSingle"
-    #     else:
-    #         model_dict = dict(
-    #             mid_channels=self.hidden_features,
-    #             out_channels=len(self.ells),
-    #             out_power = self.out_power
-    #         )
-    #         model = FCNDouble(**model_dict)
-    #         model_dict["model"] = "FCNDouble"
-    #     logger.info(f"Model dict: {model_dict}")
-    #     return model

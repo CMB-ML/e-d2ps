@@ -24,8 +24,6 @@ class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
         self.in_thry: Asset              = self.assets_in["cmb_ps"]
         self.out_map_local_stats : Asset = self.assets_out["map_local"]
         self.out_rps_local_stats : Asset = self.assets_out["rps_local"]
-        # self.out_map_global_stats: Asset = self.assets_out["map_global"]
-        # self.out_rps_global_stats: Asset = self.assets_out["rps_global"]
         # Config
         self.train_batch_size = cfg.model.train.train_batch_size
         self.n_batches        = cfg.model.train.n_batches * 10
@@ -128,37 +126,6 @@ class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
         out_rps[STAT_MEAN] = mean_rdl
         out_rps[STAT_STDV] = stdv_rdl
         self.out_rps_local_stats.write(data=out_rps)
-
-        # Global stats are derived from local stats
-
-        # Global stdv via law of total variance: within-element variance
-        # (mean of per-element variances) + between-element variance (variance
-        # of per-element means). RMS of per-element stdvs alone drops the
-        # between term. Exact given equal counts per element (true here).
-        
-        # Turns out, global stats don't depend on M2. 
-        #    This was an artifact of my confusion. Instead 
-        #    I'll use the global stats everywhere and get the local stats from those.
-
-        # map_within  = np.mean(stdv_map ** 2)   # average per-pixel variance
-        # map_between = np.var(mean_map)         # variance of per-pixel means (ddof=0)
-        # map_scalar_stats = dict(
-        #     vmin=float(min_map.min()),
-        #     vmax=float(max_map.max()),
-        #     mean=float(mean_map.mean()),
-        #     stdv=float(np.sqrt(map_within + map_between)),
-        # )
-        # self.out_map_global_stats.write(data=map_scalar_stats)
-
-        # rdl_within  = np.mean(stdv_rdl ** 2)   # average per-ell variance
-        # rdl_between = np.var(mean_rdl)          # variance of per-ell means (ddof=0)
-        # rps_scalar_stats = dict(
-        #     dl_vmin=float(min_rdl.min()),
-        #     dl_vmax=float(max_rdl.max()),
-        #     dl_mean=float(mean_rdl.mean()),
-        #     dl_stdv=float(np.sqrt(rdl_within + rdl_between)),
-        # )
-        # self.out_rps_global_stats.write(data=rps_scalar_stats)
 
         logger.info(
             f"Map stats computed over {count} maps "
