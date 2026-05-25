@@ -19,7 +19,7 @@ from d2ps_nn.ex import (
 from d2ps_fcn.ex import (
     CheapMakeRealPowerSpectrumExecutor,
     CheapMakeRealAlmsExecutor,
-    GetDynProdMapStatsExecutor,
+    GetDynProdStatsExecutor,
     GetDynValidMapsExecutor,
     ModelInitExecutor,
     TrainDynProdExecutor
@@ -29,32 +29,20 @@ from d2ps_fcn.ex import (
 logger = logging.getLogger(__name__)
 
 
-# @hydra.main(version_base=None, config_path="cfg", config_name="config_32_A_Real")
-# def run_A_real(cfg):
-#     # print(OmegaConf.to_yaml(cfg))
-#     logger.info(f"Running run_A_real in {__file__}")
-
-#     pipes = [
-#         CheapMakeRealPowerSpectrumExecutor,
-#         BundleRealExecutor
-#     ]
-#     run(cfg, pipes)
-
-
 @hydra.main(version_base=None, config_path="cfg", config_name="config_32_B_Prep")
-def run_B_prep(cfg):
+def run_A_prep(cfg):
     # print(OmegaConf.to_yaml(cfg))
     logger.info(f"Running run_B_prep in {__file__}")
 
     pipes = [
-        GetDynProdMapStatsExecutor,
+        GetDynProdStatsExecutor,
         GetDynValidMapsExecutor,
     ]
     run(cfg, pipes)
 
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_32_C_Prep_model")
-def run_C_prep_model(cfg):
+def run_B_prep_model(cfg):
     # print(OmegaConf.to_yaml(cfg))
     logger.info(f"Running run_B_prep in {__file__}")
 
@@ -65,7 +53,7 @@ def run_C_prep_model(cfg):
 
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_32_D_Train_onfly")
-def run_D_fcn(cfg):
+def run_C_fcn(cfg):
     # print(OmegaConf.to_yaml(cfg))
     logger.info(f"Running run_C_fcn in {__file__}")
 
@@ -95,6 +83,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_B_prep()
-    run_C_prep_model()
-    run_D_fcn()
+    run_A_prep()
+    run_B_prep_model()
+    run_C_fcn()
