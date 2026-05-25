@@ -1,6 +1,7 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
-  - config_32
+  - config_otf
+  - override pipeline: assembly_on_sims_otf
   - _self_
 
 hydra:
@@ -15,7 +16,7 @@ hydra:
   sweeper:
     params:
       model_init         : ${model_init_sweep}
-      n_hidden_features  : ${n_hid_feat_sweep}
+      fcn_string         : ${fcn_str_sweep}
       learning_rate      : ${learning_rate_sweep}
       spectrum_type      : ${spectrum_type_sweep}
       prep_label         : ${prep_label_sweep}

@@ -1,5 +1,5 @@
 defaults:
-  - assembly_on_sims_fcn
+  - assembly_sim_cmb_only
   - pipes_on_sims
   - _self_
 

@@ -1,17 +1,8 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
-  - config_32
-  - model/sim         : sim
-  - override pipeline : assembly_surr_real_ps
+  - config_otf
+  - override pipeline: assembly_on_sims_otf
   - _self_
-
-pipeline:
-  make_real_ps:
-    assets_out:
-      auto_real:
-        path_template: "{root}/{dataset}/Real_PS/{stage}/{split}/{sim}/ps_real.npy"
-    splits: [train, valid, test]
-  bundle_real:
-    splits: [train, valid, test]
 
 hydra:
   mode: MULTIRUN
@@ -24,13 +15,13 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # sigma_scale: ${sigma_scale_sweep}
-      model_init: 1          # placeholder
-      n_hidden_features: 0   # placeholder
+      model_init: ${model_init_sweep}
+      fcn_string: ${fcn_str_sweep}
       out_power: 1           # placeholder
       spectrum_type: theory  # placeholder
       learning_rate: 1e-3    # placeholder
       prep_label: none       # placeholder
       prep_feature: none     # placeholder
       activation: relu       # placeholder
+      # sigma_scale: ${sigma_scale_sweep}
       lmax: ${lmax_sweep}
