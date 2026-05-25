@@ -74,7 +74,7 @@ prep_feature_sweep : none
 
 fcn_string         : ???
 # fcn_str_sweep      : N_50_N, N_10_N, N_6_N, N_50_10_50_N, N_50_6_10_N
-fcn_str_sweep      : N_10_N
+fcn_str_sweep      : N_10aR_O
 # fcn_str_sweep      : N_6_N, N_10_N, N_15_N, N_50_N, N_50_6_10_N
 model_init         : ???
 model_init_sweep   : 1  #, 2, 3, 4, 5

@@ -256,8 +256,8 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
     def init_model(self):
         model_dict = dict(
             arch_str=self.fcn_string,
-            npix=hp.nside2npix(self.nside),
-            n_ells=len(self.ells))
+            n_in=hp.nside2npix(self.nside),
+            n_out=len(self.ells))
         model = FCNFromString(**model_dict)
         logger.info(f"Model dict: {model_dict}")
         return model
