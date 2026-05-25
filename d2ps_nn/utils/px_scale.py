@@ -347,6 +347,8 @@ def make_px_processor(
 
     if mode == "meanstdv_global":
         raise NotImplementedError("No meanstdv_global option for maps currently.")
+    if mode == "minmax_global":
+        raise NotImplementedError("No minmax_global option for maps currently.")
         # dataset_stats_asset = ch.get_assets_in(n, stage_str)['dataset_stats']
         # mean_ref = LazyDatasetChannelStat(
         #     stats_asset=dataset_stats_asset,
