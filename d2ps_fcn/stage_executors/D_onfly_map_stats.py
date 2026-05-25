@@ -8,7 +8,7 @@ from cmbml.core import Asset
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_fcn.dyn_prod_dataset import make_map_sampler
-from d2ps_fcn.realization_spectra import make_real_spectra_estimator
+from d2ps_fcn.realization_spectra import make_real_spectra_maker
 from d2ps_nn.utils.stat_convention import STAT_MIN, STAT_MAX, STAT_MEAN, STAT_STDV
 
 
@@ -55,7 +55,7 @@ class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
             dtype=self.dtype,
         )
 
-        spectra_estimator = make_real_spectra_estimator(
+        spectra_estimator = make_real_spectra_maker(
             engine=self.sht_engine,
             nside=self.nside,
             lmax=self.lmax,

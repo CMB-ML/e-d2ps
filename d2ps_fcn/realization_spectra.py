@@ -4,10 +4,10 @@ realization_spectra.py
 Estimates realisation power spectra (Cl and/or Dl) from HEALPix maps.
 
 Two engines are provided:
-  - SpectraEstimatorCUHPX  : GPU, uses cuHPX forward SHT (map -> alm -> Cl)
-  - SpectraEstimatorANAFAST: CPU, uses healpy.anafast
+  - RealSpectraMakerCUHPX  : GPU, uses cuHPX forward SHT (map -> alm -> Cl)
+  - RealSpectraMakerANAFAST: CPU, uses healpy.anafast
 
-Use ``make_spectra_estimator(engine='cuhpx'|'anafast', ...)`` as the entry point.
+Use ``make_spectra_maker(engine='cuhpx'|'anafast', ...)`` as the entry point.
 
 Both engines share the same interface:
   estimator(maps) -> dict with keys 'cl' and/or 'dl'
@@ -64,7 +64,7 @@ def dl_to_cl(dl: torch.Tensor) -> torch.Tensor:
 # Abstract base
 # ---------------------------------------------------------------------------
 
-class RealizationSpectraEstimator:
+class RealizationSpectraMaker:
     """
     Base class.  Subclasses implement _estimate_cl_tensor(maps) -> Tensor
     where maps is (B, npix) float32 on compute_device and the return is (B, lmax+1).
@@ -132,7 +132,7 @@ class RealizationSpectraEstimator:
 # cuHPX engine
 # ---------------------------------------------------------------------------
 
-class SpectraEstimatorCUHPX(RealizationSpectraEstimator):
+class RealSpectraMakerCUHPX(RealizationSpectraMaker):
     """
     GPU-accelerated spectra estimator using cuHPX's forward SHT.
 
@@ -181,7 +181,7 @@ class SpectraEstimatorCUHPX(RealizationSpectraEstimator):
 # healpy ANAFAST engine
 # ---------------------------------------------------------------------------
 
-class SpectraEstimatorANAFAST(RealizationSpectraEstimator):
+class RealSpectraMakerANAFAST(RealizationSpectraMaker):
     """
     CPU spectra estimator using healpy.anafast.
 
@@ -202,7 +202,7 @@ class SpectraEstimatorANAFAST(RealizationSpectraEstimator):
 # Factory
 # ---------------------------------------------------------------------------
 
-def make_real_spectra_estimator(
+def make_real_spectra_maker(
     engine: str,
     nside: int,
     lmax: int,
@@ -212,7 +212,7 @@ def make_real_spectra_estimator(
     output_device: str = "cpu",
     dtype: torch.dtype = torch.float32,
     **kwargs,
-) -> RealizationSpectraEstimator:
+) -> RealizationSpectraMaker:
     """
     Factory mirroring ``make_map_sampler``.
 
@@ -246,10 +246,10 @@ def make_real_spectra_estimator(
                 "Use engine='anafast' instead."
             )
         logger.info("cuHPX available — using SpectraEstimatorCUHPX.")
-        return SpectraEstimatorCUHPX(**common, **kwargs)
+        return RealSpectraMakerCUHPX(**common, **kwargs)
 
     elif engine == "anafast":
-        return SpectraEstimatorANAFAST(**common, **kwargs)
+        return RealSpectraMakerANAFAST(**common, **kwargs)
 
     else:
         raise NotImplementedError(f"Unknown engine '{engine}'. Choose 'cuhpx' or 'anafast'.")

@@ -12,7 +12,7 @@ from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_fcn.dyn_prod_dataset import make_map_sampler
-from d2ps_fcn.realization_spectra import make_real_spectra_estimator
+from d2ps_fcn.realization_spectra import make_real_spectra_maker
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class GetDynValidMapsExecutor(BasePyTorchModelExecutor):
             dtype=self.dtype,
         )
 
-        ps_maker = make_real_spectra_estimator(
+        ps_maker = make_real_spectra_maker(
             engine=self.sht_engine,
             nside=self.nside,
             lmax=self.lmax,
