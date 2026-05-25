@@ -40,8 +40,8 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         # Assets
         self.in_train_cmb_ps:  Asset = self.assets_in["train_cmb_ps"]
         self.in_valid_map:     Asset = self.assets_in["valid_map"]
-        self.in_cmb_map_stats: Asset = self.assets_in["cmb_stats"]
-        self.in_rps_stats: Asset = self.assets_in["rps_stats"]
+        self.in_map_stats:     Asset = self.assets_in["map_stats"]
+        self.in_rps_stats:     Asset = self.assets_in["rps_stats"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_resume_model:  Asset = self.assets_in["resume_model"]
 

@@ -18,10 +18,10 @@ bundle_maps:
 
 get_dyn_stats:
   assets_out:
-    map_local:
+    map_stats:
       handler: NumpyMap
       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_px_stats.npy"
-    rps_local:
+    rps_stats:
       handler: NpyHandler
       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_real_ps_stats.npy"
   assets_in:
@@ -71,8 +71,8 @@ train_dyn_prod:
     pos_enc_lut  : {stage: make_pos_enc_lut}
     # TODO: Rename to use next line instead of following
     # map_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    cmb_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    rps_stats    : {stage: get_dyn_stats, orig_name: rps_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
+    map_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    rps_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
   splits:
     - valid
   dir_name: F_Model

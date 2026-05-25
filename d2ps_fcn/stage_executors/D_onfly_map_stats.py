@@ -22,8 +22,8 @@ class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
         self.lmax = self.ells[-1]
         # Assets
         self.in_thry: Asset              = self.assets_in["cmb_ps"]
-        self.out_map_local_stats : Asset = self.assets_out["map_local"]
-        self.out_rps_local_stats : Asset = self.assets_out["rps_local"]
+        self.out_map_stats : Asset = self.assets_out["map_stats"]
+        self.out_rps_stats : Asset = self.assets_out["rps_stats"]
         # Config
         self.train_batch_size = cfg.model.train.train_batch_size
         self.n_batches        = cfg.model.train.n_batches * 10
@@ -117,7 +117,7 @@ class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
         out_maps[STAT_MAX] = max_map
         out_maps[STAT_MEAN] = mean_map
         out_maps[STAT_STDV] = stdv_map
-        self.out_map_local_stats.write(data=out_maps)
+        self.out_map_stats.write(data=out_maps)
 
         # write *local* spectra stats
         out_rps = np.empty((4, self.lmax+1))
@@ -125,7 +125,7 @@ class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
         out_rps[STAT_MAX] = max_rdl
         out_rps[STAT_MEAN] = mean_rdl
         out_rps[STAT_STDV] = stdv_rdl
-        self.out_rps_local_stats.write(data=out_rps)
+        self.out_rps_stats.write(data=out_rps)
 
         logger.info(
             f"Map stats computed over {count} maps "
