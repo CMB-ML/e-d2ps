@@ -4,11 +4,50 @@ from typing import Literal, Optional
 import numpy as np
 import torch
 
-from d2ps_nn.utils.px_scale import STAT_MIN, STAT_MAX, STAT_MEAN, STAT_STDV
+from d2ps_nn.utils.stat_convention import STAT_MIN, STAT_MAX, STAT_MEAN, STAT_STDV
 
 
 ScaleKind = Literal["none", "minmax", "meanstdv"]
 ScaleScope = Literal["global", "local"]
+
+
+def global_from_local(stats: np.ndarray) -> np.ndarray:
+    """
+    Reduce a per-element local stats array to global scalars.
+
+    Parameters
+    ----------
+    stats : (4, n) array, rows ordered [min, max, mean, stdv] over n elements
+            (e.g. n ells or n pixels), each row a per-element statistic.
+
+    Returns
+    -------
+    (4,) array, [min, max, mean, stdv], the equivalent statistics for the
+    pooled population of all elements treated as one flat set.
+
+    Notes
+    -----
+    - min/max: extremes over all elements.
+    - mean: mean of per-element means — exact for the pooled mean when every
+      element saw the same number of samples (true here).
+    - stdv: pooled std via the law of total variance:
+          var_global = mean(var_per_elem) + var(mean_per_elem)
+      i.e. within-element variance plus between-element variance. RMS of the
+      per-element stdvs alone drops the between term, which is large whenever
+      the per-element means vary (e.g. across the CMB Dl spectrum).
+      Exact under equal per-element counts.
+    """
+    g_min, g_max, g_mean_row, g_stdv_row = stats[STAT_MIN], stats[STAT_MAX], stats[STAT_MEAN], stats[STAT_STDV]
+
+    within  = np.mean(g_stdv_row ** 2)   # average per-element variance
+    between = np.var(g_mean_row)         # variance of per-element means (ddof=0)
+
+    return np.array([
+        np.min(g_min),
+        np.max(g_max),
+        np.mean(g_mean_row),
+        np.sqrt(within + between),
+    ])
 
 
 @dataclass
@@ -22,6 +61,9 @@ class ArrayScaler:
     fitted: bool = False
 
     def fit(self, data: np.ndarray) -> "ArrayScaler":
+        """
+        For use with theory spectra.
+        """
         if self.kind == "none":
             self.fitted = True
             return self
@@ -49,11 +91,36 @@ class ArrayScaler:
         self.fitted = True
         return self
 
+    # def fit_from_stats(self, stats: np.ndarray):
+    #     """Fit an ArrayScaler directly from a pre-computed stats array (4, ...) ."""
+    #     if self.kind == "none":
+    #         self.fitted = True
+    #         return self
+    #     if self.kind == "minmax":
+    #         self.a = stats[STAT_MIN]
+    #         self.b = stats[STAT_MAX]
+    #     elif self.kind == "meanstdv":
+    #         self.a = stats[STAT_MEAN]
+    #         self.b = stats[STAT_STDV]
+    #     else:
+    #         raise ValueError(f"Unsupported scaler kind: {self.kind!r}")
+    #     self.fitted = True
+    #     return self
+
     def fit_from_stats(self, stats: np.ndarray):
-        """Fit an ArrayScaler directly from a pre-computed stats array (4, ...) ."""
+        """Fit from a (4, n) per-element stats array. For global scope,
+        reduce to pooled scalars via global_from_local first.
+        
+        Intended for use with realization spectra.
+        """
         if self.kind == "none":
             self.fitted = True
             return self
+
+        if self.scope == "global":
+            stats = global_from_local(stats)   # (4, n) -> (4,)
+        # local scope: use the (4, n) array as-is
+
         if self.kind == "minmax":
             self.a = stats[STAT_MIN]
             self.b = stats[STAT_MAX]

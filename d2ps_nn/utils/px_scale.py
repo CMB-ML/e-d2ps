@@ -14,16 +14,10 @@ from cmbml.core.config_helper import ConfigHelper
 from cmbml.core.namers import Namer
 from cmbml.utils.planck_instrument import Instrument, make_instrument
 from d2ps_nn.utils.select_features import FeatureAsset, FeatureAssetNames
+from d2ps_nn.utils.stat_convention import STAT_MIN, STAT_MAX, STAT_MEAN, STAT_STDV
 
 
 Array = np.ndarray
-
-
-# Map statistics are saved by convention
-STAT_MIN = 0
-STAT_MAX = 1
-STAT_MEAN = 2
-STAT_STDV = 3
 
 
 class MapProcessor(ABC):

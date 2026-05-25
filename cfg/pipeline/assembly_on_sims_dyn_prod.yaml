@@ -39,12 +39,12 @@ get_dyn_stats:
     rps_local:
       handler: NpyHandler
       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_real_ps_stats.npy"
-    map_global:
-      handler: Config
-      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_px_scalar_stats.json"
-    rps_global:
-      handler: Config
-      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_real_ps_scalar_stats.json"
+    # map_global:
+    #   handler: Config
+    #   path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_px_scalar_stats.json"
+    # rps_global:
+    #   handler: Config
+    #   path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_real_ps_scalar_stats.json"
   assets_in:
     cmb_ps: {stage: raw, orig_name: ps_bundle}
   dir_name: C_PreprocessingPrep
@@ -71,6 +71,31 @@ model_init:
     model:
       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_${fcn_string}_init_{model_num}.pth"
 
+# train_dyn_prod:
+#   assets_out:
+#     model: 
+#       handler: PyTorchModel
+#       path_template: "{root}/{dataset}/{working}{stage}/model_{epoch}.pth"
+#     loss_record:
+#       handler: AppendingCsvHandler
+#       path_template: "{root}/{dataset}/{working}{stage}/loss_record.csv"
+#     other_record:
+#       handler: AppendingCsvHandler
+#       path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
+#   assets_in:
+#     train_cmb_ps : {stage: raw, orig_name: ps_bundle}
+#     valid_thry_ps: {stage: dyn_bundle, orig_name: ps_thry}
+#     valid_real_ps: {stage: dyn_bundle, orig_name: ps_real}
+#     valid_map    : {stage: dyn_bundle, orig_name: cmb_map}
+#     resume_model : {stage: train_dyn_prod, orig_name: model}
+#     initial_model: {stage: model_init, orig_name: model}
+#     pos_enc_lut  : {stage: make_pos_enc_lut}
+#     cmb_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+#   splits:
+#     - valid
+#   dir_name: F_Model
+#   make_stage_log: True
+
 train_dyn_prod:
   assets_out:
     model: 
@@ -90,7 +115,10 @@ train_dyn_prod:
     resume_model : {stage: train_dyn_prod, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
     pos_enc_lut  : {stage: make_pos_enc_lut}
+    # TODO: Rename to use next line instead of following
+    # map_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
     cmb_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    rps_stats    : {stage: get_dyn_stats, orig_name: rps_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
   splits:
     - valid
   dir_name: F_Model

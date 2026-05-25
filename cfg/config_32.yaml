@@ -51,7 +51,7 @@ splits:
   Valid:
     n_sims: 256
 
-num_epochs         : 200000
+num_epochs         : 20
 train_batch_size   : 256
 n_train_batches    : 4
 
@@ -60,17 +60,11 @@ spectrum_type      : ???
 prep_label         : ???
 prep_feature       : ???
 
-# spectrum_type_sweep: realization
-# prep_label_sweep   : none
-# prep_feature_sweep : none
-
-spectrum_type_sweep: theory
-# prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
-# prep_feature_sweep : none, meanstdv_local, minmax_global, minmax_local  # no meanstdv_global
-prep_label_sweep   : none
+spectrum_type_sweep: real
+# prep_feature_sweep : none, meanstdv_local, minmax_global, minmax_local, meanstdv_global
 prep_feature_sweep : none
-# prep_label_sweep   : meanstdv_local
-# prep_feature_sweep : meanstdv_local
+# prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
+prep_label_sweep   : minmax_local
 
 fcn_string         : ???
 # fcn_str_sweep      : N_50_N, N_10_N, N_6_N, N_50_10_50_N, N_50_6_10_N

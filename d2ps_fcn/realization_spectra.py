@@ -1,5 +1,5 @@
 """
-spectra_estimator.py
+realization_spectra.py
 --------------------
 Estimates realisation power spectra (Cl and/or Dl) from HEALPix maps.
 
@@ -64,7 +64,7 @@ def dl_to_cl(dl: torch.Tensor) -> torch.Tensor:
 # Abstract base
 # ---------------------------------------------------------------------------
 
-class SpectraEstimator:
+class RealizationSpectraEstimator:
     """
     Base class.  Subclasses implement _estimate_cl_tensor(maps) -> Tensor
     where maps is (B, npix) float32 on compute_device and the return is (B, lmax+1).
@@ -132,7 +132,7 @@ class SpectraEstimator:
 # cuHPX engine
 # ---------------------------------------------------------------------------
 
-class SpectraEstimatorCUHPX(SpectraEstimator):
+class SpectraEstimatorCUHPX(RealizationSpectraEstimator):
     """
     GPU-accelerated spectra estimator using cuHPX's forward SHT.
 
@@ -181,7 +181,7 @@ class SpectraEstimatorCUHPX(SpectraEstimator):
 # healpy ANAFAST engine
 # ---------------------------------------------------------------------------
 
-class SpectraEstimatorANAFAST(SpectraEstimator):
+class SpectraEstimatorANAFAST(RealizationSpectraEstimator):
     """
     CPU spectra estimator using healpy.anafast.
 
@@ -202,7 +202,7 @@ class SpectraEstimatorANAFAST(SpectraEstimator):
 # Factory
 # ---------------------------------------------------------------------------
 
-def make_spectra_estimator(
+def make_real_spectra_estimator(
     engine: str,
     nside: int,
     lmax: int,
@@ -212,7 +212,7 @@ def make_spectra_estimator(
     output_device: str = "cpu",
     dtype: torch.dtype = torch.float32,
     **kwargs,
-) -> SpectraEstimator:
+) -> RealizationSpectraEstimator:
     """
     Factory mirroring ``make_map_sampler``.
 

@@ -5,20 +5,36 @@ from abc import ABC, abstractmethod
 from cmbml.core import Asset
 
 
+# Canonical kinds and their accepted aliases — defined once, used everywhere.
+THEORY = "theory"
+REALIZATION = "realization"
+
+_THEORY_ALIASES = {"theory", "thry"}
+_REALIZATION_ALIASES = {"realization", "real", "realized"}
+
+
+def norm_ps_type(choice: str) -> str:
+    """Map any accepted alias to a canonical kind: 'theory' | 'realization'."""
+    if choice in _THEORY_ALIASES:
+        return THEORY
+    if choice in _REALIZATION_ALIASES:
+        return REALIZATION
+    raise ValueError(
+        f"Unsupported choice: {choice!r}. "
+        f"Supported choices are {sorted(_THEORY_ALIASES | _REALIZATION_ALIASES)}."
+    )
+
+
 @dataclass(frozen=True)
 class SpectrumAssetNames:
     theory: str = "cmb_ps_thry"
     realization: str = "cmb_ps_real"
 
     def get(self, choice: str) -> str:
-        if choice in {"theory", "thry"}:
+        kind = norm_ps_type(choice)
+        if kind == THEORY:
             return self.theory
-        elif choice in {"realization", "real", "realized"}:
-            return self.realization
-        raise ValueError(
-            f"Unsupported choice: {choice}. "
-            "Supported choices are 'theory'/'thry' and 'realization'/'real'."
-        )
+        return self.realization  # kind == REALIZATION (normalize guarantees one of the two)
 
 
 DEFAULT_SPECTRUM_NAMES = SpectrumAssetNames()
@@ -31,18 +47,12 @@ class SpectrumAsset(Asset, ABC):
         choice: str,
         name_map: SpectrumAssetNames = DEFAULT_SPECTRUM_NAMES,
     ) -> "SpectrumAsset":
+        kind = norm_ps_type(choice)
         asset = assets[name_map.get(choice)]
 
-        if choice in {"theory", "thry"}:
+        if kind == THEORY:
             return TheorySpectrumAsset.create_from(asset)
-
-        elif choice in {"realization", "real", "realized"}:
-            return RealizationSpectrumAsset.create_from(asset)
-
-        raise ValueError(
-            f"Unsupported choice: {choice}. "
-            "Supported choices are 'theory'/'thry' and 'realization'/'real'."
-        )
+        return RealizationSpectrumAsset.create_from(asset)  # kind == REALIZATION
 
     @classmethod
     def create_from(cls, asset):
@@ -59,10 +69,10 @@ class SpectrumAsset(Asset, ABC):
 class TheorySpectrumAsset(SpectrumAsset):
     @property
     def spectrum_kind(self) -> str:
-        return "theory"
+        return THEORY
 
 
 class RealizationSpectrumAsset(SpectrumAsset):
     @property
     def spectrum_kind(self) -> str:
-        return "realization"
+        return REALIZATION
