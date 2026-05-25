@@ -1,4 +1,4 @@
-from d2ps_fcn.dataset import ArrayScaler
+from d2ps_fcn.scaler import ArrayScaler
 
 
 VALID_PREP_SPECS = {

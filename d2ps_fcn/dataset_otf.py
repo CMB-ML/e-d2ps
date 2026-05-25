@@ -4,7 +4,7 @@ import logging
 import healpy as hp
 import numpy as np
 import torch
-from d2ps_fcn.dataset import ArrayScaler
+from d2ps_fcn.dataset_OLD import ArrayScaler
 from d2ps_nn.utils.px_scale import MapProcessor
 
 try:

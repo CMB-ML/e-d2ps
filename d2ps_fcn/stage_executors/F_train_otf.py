@@ -18,11 +18,11 @@ from d2ps_nn.utils.select_ps import (
     norm_ps_type
 )
 
-from d2ps_fcn.fixed_dataset import FixedDataset
 from d2ps_fcn.models.fcn_from_string import FCNFromString
 from d2ps_fcn.scaler_hydra_helper import make_scaler_from_prep_spec
 from d2ps_nn.utils.px_scale import make_px_processor, MapProcessor
-from d2ps_fcn.dyn_prod_dataset import TrainingMapSampler, make_map_sampler
+from d2ps_fcn.dataset_otf import TrainingMapSampler, make_map_sampler
+from d2ps_fcn.dataset_fixed import FixedDataset
 from d2ps_fcn.realization_spectra import make_real_spectra_maker
 
 

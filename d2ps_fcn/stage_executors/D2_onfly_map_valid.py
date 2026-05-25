@@ -11,7 +11,7 @@ from cmbml.core import Asset
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
-from d2ps_fcn.dyn_prod_dataset import make_map_sampler
+from d2ps_fcn.dataset_otf import make_map_sampler
 from d2ps_fcn.realization_spectra import make_real_spectra_maker
 
 
