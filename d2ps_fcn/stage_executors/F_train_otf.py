@@ -177,7 +177,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
             'Epoch', 'Batch Loss',
             'Validation Pre Loss', 'Training Pre Loss',
             'Validation Loss', 'Training Loss',
-            'Learning Rate',
+            # 'Learning Rate',
         ]
         self.out_loss_record.write(data=loss_record_headers)
 

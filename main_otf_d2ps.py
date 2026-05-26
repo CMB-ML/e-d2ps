@@ -11,10 +11,7 @@ from cmbml.analysis import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn.ex import (
-    BundleMapsExecutor,
-    BundlePredExecutor,
-    BundleRealExecutor,
-    BundleTrueExecutor
+    LossPlotExecutor
 )
 from d2ps_fcn.ex import (
     CheapMakeRealPowerSpectrumExecutor,
@@ -58,7 +55,7 @@ def run_C_fcn(cfg):
     logger.info(f"Running run_C_fcn in {__file__}")
 
     pipes = [
-        TrainDynProdExecutor
+        LossPlotExecutor
     ]
     run(cfg, pipes)
 
