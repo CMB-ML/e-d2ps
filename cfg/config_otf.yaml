@@ -68,7 +68,7 @@ prep_label_sweep   : meanstdv_local
 
 fcn_string         : ???
 # fcn_str_sweep      : N_50_N, N_10_N, N_6_N, N_50_10_50_N, N_50_6_10_N
-fcn_str_sweep      : N_10aR_O
+fcn_str_sweep      : N_100aR_80aR_60aR_40aR_10aR_40aR_50aR_O, N_100aR_80aR_60aR_40aR_20aR_40aR_50aR_O, N_100aR_80aR_60aR_40aR_30aR_40aR_50aR_O, N_100aR_80aR_60aR_40aR_40aR_40aR_50aR_O, N_100aR_80aR_60aR_10aR_40aR_50aR_O, N_100aR_80aR_60aR_20aR_40aR_50aR_O, N_100aR_80aR_60aR_30aR_40aR_50aR_O, N_100aR_80aR_60aR_40aR_40aR_50aR_O, N_100aR_80aR_60aR_10aR_50aR_O, N_100aR_80aR_60aR_20aR_50aR_O, N_100aR_80aR_60aR_30aR_50aR_O, N_100aR_80aR_60aR_40aR_50aR_O, N_100aR_80aR_10aR_50aR_O, N_100aR_80aR_20aR_50aR_O, N_100aR_80aR_30aR_50aR_O, N_100aR_80aR_40aR_50aR_O, N_100aR_10aR_O, N_100aR_20aR_O, N_100aR_30aR_O, N_100aR_40aR_O, N_10aR_O, N_20aR_O, N_30aR_O, N_40aR_O
 # fcn_str_sweep      : N_6_N, N_10_N, N_15_N, N_50_N, N_50_6_10_N
 model_init         : ???
 model_init_sweep   : 1  #, 2, 3, 4, 5
