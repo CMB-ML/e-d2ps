@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from omegaconf import DictConfig
 
-from cmbml.core import Asset
+from cmbml.core import Asset, Split
 from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
@@ -34,7 +34,7 @@ class GetDynValidMapsExecutor(BasePyTorchModelExecutor):
         # Config
         self.train_batch_size = cfg.model.train.train_batch_size
         self.dtype            = self.dtype_mapping[cfg.model.dtype]
-        self.n_maps           = cfg.splits.Valid.n_sims
+        # self.n_maps           = cfg.splits.Valid.n_sims
         self.sht_engine       = str(cfg.sim_engine).lower()
 
     def execute(self):
@@ -48,9 +48,13 @@ class GetDynValidMapsExecutor(BasePyTorchModelExecutor):
                 "Please regenerate it or change lmax."
             )
         dl_bank = dl_bank[:, :self.lmax + 1]
+        for split in self.splits:
+            self.run_split(split, dl_bank)
 
-        n_batches = self.n_maps // self.train_batch_size
-        if self.n_maps % self.train_batch_size != 0:
+    def run_split(self, split: Split, dl_bank):
+        n_maps = split.n_sims
+        n_batches = n_maps // self.train_batch_size
+        if n_maps % self.train_batch_size != 0:
             n_batches +=1
 
         sampler = make_map_sampler(
@@ -76,9 +80,9 @@ class GetDynValidMapsExecutor(BasePyTorchModelExecutor):
 
         npix = hp.nside2npix(self.nside)
 
-        bundle_maps = np.zeros((self.n_maps, npix), dtype=np.float32)
-        bundle_thry = np.zeros((self.n_maps, len(self.ells)), dtype=np.float32)
-        bundle_real = np.zeros((self.n_maps, len(self.ells)), dtype=np.float32)
+        bundle_maps = np.zeros((n_maps, npix), dtype=np.float32)
+        bundle_thry = np.zeros((n_maps, len(self.ells)), dtype=np.float32)
+        bundle_real = np.zeros((n_maps, len(self.ells)), dtype=np.float32)
         count = 0
 
         for maps, thrys in tqdm.tqdm(sampler):
@@ -92,10 +96,9 @@ class GetDynValidMapsExecutor(BasePyTorchModelExecutor):
                 bundle_thry[count] = thrys[i, self.ells]
                 bundle_real[count] = reals[i, self.ells]
                 count += 1
-                if count >= self.n_maps:
+                if count >= n_maps:
                     break
 
-        split = self.splits.get("valid")
         with self.name_tracker.set_context("split", split.name):
             self.out_map_bundle.write(data=bundle_maps)
             self.out_thry_bundle.write(data=bundle_thry)

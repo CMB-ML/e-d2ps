@@ -41,7 +41,7 @@ dyn_bundle:
       path_template: "{root}/{dataset}/{stage}/cmb_maps_{split}.npy"
   assets_in:
     cmb_ps: {stage: raw, orig_name: ps_bundle}
-  splits: [valid]
+  splits: [valid, test]
   dir_name: Raw_Bundle
   make_stage_log: False
 
@@ -62,6 +62,32 @@ train_dyn_prod:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
   assets_in:
+    train_cmb_ps : {stage: raw, orig_name: ps_bundle}
+    valid_thry_ps: {stage: dyn_bundle, orig_name: ps_thry}
+    valid_real_ps: {stage: dyn_bundle, orig_name: ps_real}
+    valid_map    : {stage: dyn_bundle, orig_name: cmb_map}
+    resume_model : {stage: train_dyn_prod, orig_name: model}
+    initial_model: {stage: model_init, orig_name: model}
+    pos_enc_lut  : {stage: make_pos_enc_lut}
+    # TODO: Rename to use next line instead of following
+    # map_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    cmb_stats    : {stage: get_dyn_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    rps_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
+  splits:
+    - valid
+  dir_name: F_Model
+  make_stage_log: True
+
+infer_dyn_prod:
+  assets_out:
+
+    cmb_ps: 
+      handler: TextPowerSpectrum
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.txt"
+      # handler: NumpyPowerSpectrum
+      # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
+  assets_in:
+    model: {stage: train_dyn_prod, orig_name: }
     train_cmb_ps : {stage: raw, orig_name: ps_bundle}
     valid_thry_ps: {stage: dyn_bundle, orig_name: ps_thry}
     valid_real_ps: {stage: dyn_bundle, orig_name: ps_real}
