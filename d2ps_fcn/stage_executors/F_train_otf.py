@@ -4,6 +4,7 @@ import logging
 import time
 
 import healpy as hp
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
@@ -40,7 +41,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         # Assets
         self.in_train_cmb_ps:  Asset = self.assets_in["train_cmb_ps"]
         self.in_valid_map:     Asset = self.assets_in["valid_map"]
-        self.in_map_stats:     Asset = self.assets_in["map_stats"]
+        self.in_map_stats:     Asset = self.assets_in["cmb_stats"]
         self.in_rps_stats:     Asset = self.assets_in["rps_stats"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_resume_model:  Asset = self.assets_in["resume_model"]
@@ -187,6 +188,8 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         all_valid_pst_loss = []
 
         n_epoch_digits = len(str(self.n_epochs))
+        best_save_loss = np.inf       # loss at the last "best" write
+        last_best_epoch = -1          # epoch index of the last "best" write
 
         for epoch in range(self.n_epochs):
             time_start = time.time()
@@ -239,19 +242,6 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
                 all_valid_pre_loss.append(valid_pre_loss)
                 all_valid_pst_loss.append(valid_pst_loss)
 
-            if (epoch + 1) % 1 == 0:
-                note_min = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} | "
-                    f"time: {time.time() - time_start:.4f} | "
-                    f"batch: {batch_loss:.02e} | "
-                    f"train_pre: {train_pre_loss:.02e} | "
-                    f"train_pst: {train_pst_loss:.02e} | "
-                    f"valid_pre: {valid_pre_loss:.02e} | "
-                    f"valid_pst: {valid_pst_loss:.02e}"
-                    f"{note_min}"
-                )
-
             self.out_loss_record.append([
                 epoch + 1, batch_loss,
                 train_pre_loss, valid_pre_loss,
@@ -266,16 +256,49 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
             #     with self.name_tracker.set_context("epoch", "best"):
             #         self.out_model.write(model=model, epoch="best")
 
-            # condition_a = (epoch + 1) in self.extra_check
-            # condition_b = (epoch + 1) % self.checkpoint == 0
-            # if condition_a or condition_b:
-            #     with self.name_tracker.set_context("epoch", epoch + 1):
-            #         self.out_model.write(
-            #             model=model,
-            #             optimizer=optimizer,
-            #             best_loss=min(all_valid_pst_loss),
-            #             epoch=epoch + 1,
-            #         )
+            note_save_interval = ""
+            note_save_best = ""
+
+            is_new_best = (
+                valid_pst_loss == min(all_valid_pst_loss)
+                and epoch >= self.earliest_best
+            )
+            if is_new_best:
+                halved = valid_pst_loss <= 0.5 * best_save_loss
+                stale = (epoch - last_best_epoch) >= self.checkpoint
+                if halved or stale:
+                    with self.name_tracker.set_context("epoch", "best"):
+                        self.out_model.write(model=model, epoch="best")
+                    best_save_loss = valid_pst_loss
+                    last_best_epoch = epoch
+                    note_save_best = " B"
+
+            condition_a = (epoch + 1) in self.extra_check
+            condition_b = (epoch + 1) % self.checkpoint == 0
+            if condition_a or condition_b:
+                with self.name_tracker.set_context("epoch", epoch + 1):
+                    self.out_model.write(
+                        model=model,
+                        optimizer=optimizer,
+                        best_loss=min(all_valid_pst_loss),
+                        epoch=epoch + 1,
+                    )
+                note_save_interval = " I"
+
+            if (epoch + 1) % 1 == 0:
+                note_min = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
+                logger.info(
+                    f"Epoch {epoch + 1:<{n_epoch_digits}} | "
+                    f"time: {time.time() - time_start:.4f} | "
+                    f"batch: {batch_loss:.02e} | "
+                    f"train_pre: {train_pre_loss:.02e} | "
+                    f"train_pst: {train_pst_loss:.02e} | "
+                    f"valid_pre: {valid_pre_loss:.02e} | "
+                    f"valid_pst: {valid_pst_loss:.02e}"
+                    f"{note_min}"
+                    f"{note_save_best}"
+                    f"{note_save_interval}"
+                )
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")

@@ -71,7 +71,7 @@ train_dyn_prod:
     pos_enc_lut  : {stage: make_pos_enc_lut}
     # TODO: Rename to use next line instead of following
     # map_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    map_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    cmb_stats    : {stage: get_dyn_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
     rps_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
   splits:
     - valid
