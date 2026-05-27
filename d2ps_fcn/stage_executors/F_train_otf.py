@@ -30,8 +30,8 @@ from d2ps_fcn.realization_spectra import make_real_spectra_maker
 logger = logging.getLogger(__name__)
 
 
-class TrainDynProdExecutor(BasePyTorchModelExecutor):
-    def __init__(self, cfg: DictConfig, stage_str="train_dyn_prod") -> None:
+class TrainOTFExecutor(BasePyTorchModelExecutor):
+    def __init__(self, cfg: DictConfig, stage_str="train_otf") -> None:
         super().__init__(cfg, stage_str=stage_str)
 
         self.ells = parse_ells(cfg.model.use_ells)
@@ -83,7 +83,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         self.feature_prep     = cfg.model.prep_feature
 
         # Processor constructed in __init__ since it only wires asset references
-        self.map_processor = make_px_processor(mode=self.feature_prep, cfg=cfg, stage_str='train_dyn_prod')
+        self.map_processor = make_px_processor(mode=self.feature_prep, cfg=cfg, stage_str=stage_str)
 
         # Scalers constructed here; fitted in execute()
         self.label_scaler   = make_scaler_from_prep_spec(self.label_prep)
@@ -120,9 +120,9 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
     
         # Build generation pipeline
         valid_split = self.splits.get("valid")
-        spectra_estimator = None
+        real_spectra_maker = None
         if self.spectrum_type == "realization":
-            spectra_estimator = make_real_spectra_maker(
+            real_spectra_maker = make_real_spectra_maker(
                 engine=self.sht_engine,
                 nside=self.nside,
                 lmax=self.lmax,
@@ -147,11 +147,11 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
             map_processor=self.map_processor,
             label_scaler=self.label_scaler,
             spectrum_kind=self.spectrum_type,
-            spectra_estimator=spectra_estimator,
+            spectra_estimator=real_spectra_maker,
         )
 
         # Validation dataset (disk-based, existing machinery)
-        valid_dataset = self.set_up_valid_dataset(valid_split)
+        valid_dataset = self.set_up_fixed_dataset(valid_split)
         valid_dataloader = DataLoader(
             valid_dataset,
             batch_size=self.valid_batch_size,
@@ -312,7 +312,7 @@ class TrainDynProdExecutor(BasePyTorchModelExecutor):
         logger.info(f"Model dict: {model_dict}")
         return model
 
-    def set_up_valid_dataset(self, split: Split) -> FixedDataset:
+    def set_up_fixed_dataset(self, split: Split) -> FixedDataset:
         feat_path = self.make_fn_template(split, self.in_valid_map)
         trgt_path = self.make_fn_template(split, self.in_valid_trgt_asset)
 

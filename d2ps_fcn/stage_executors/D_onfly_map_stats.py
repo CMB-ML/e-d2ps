@@ -15,8 +15,8 @@ from d2ps_nn.utils.stat_convention import STAT_MIN, STAT_MAX, STAT_MEAN, STAT_ST
 logger = logging.getLogger(__name__)
 
 
-class GetDynProdStatsExecutor(BasePyTorchModelExecutor):
-    def __init__(self, cfg: DictConfig, stage_str="get_dyn_stats") -> None:
+class GetOTFStatsExecutor(BasePyTorchModelExecutor):
+    def __init__(self, cfg: DictConfig, stage_str="get_otf_stats") -> None:
         super().__init__(cfg, stage_str=stage_str)
         self.ells = parse_ells(cfg.model.use_ells)
         self.lmax = self.ells[-1]

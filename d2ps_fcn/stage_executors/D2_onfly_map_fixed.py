@@ -18,8 +18,8 @@ from d2ps_fcn.realization_spectra import make_real_spectra_maker
 logger = logging.getLogger(__name__)
 
 
-class GetDynValidMapsExecutor(BasePyTorchModelExecutor):
-    def __init__(self, cfg: DictConfig, stage_str="dyn_bundle") -> None:
+class GetOTFFixedMapsExecutor(BasePyTorchModelExecutor):
+    def __init__(self, cfg: DictConfig, stage_str="otf_fixed") -> None:
         super().__init__(cfg, stage_str=stage_str)
 
         self.ells = parse_ells(cfg.model.use_ells)

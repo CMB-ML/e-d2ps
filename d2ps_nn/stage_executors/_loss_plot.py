@@ -37,7 +37,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
 
-        sm_sigma = 5
+        sm_sigma = 2000
 
         df = df.dropna()
 
@@ -82,13 +82,13 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
             best_val_loss = df.loc[best_idx, "Validation Loss"]
             best_epoch = df.loc[best_idx, "Epoch"]
 
-            ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss", color="tab:orange", alpha=1.0, linewidth=0.5)
+            ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss", color="tab:orange", alpha=0.2, linewidth=0.5)
 
             val = df["Validation Loss"].values
             val_log = np.log(val)
             val_smoothed   = gaussian_filter1d(val_log, sigma=sm_sigma)
             valid_end_loss_txt = exp_as_ltx(np.exp(val_smoothed[-1]))
-            ax.plot(df["Epoch"], np.exp(val_smoothed), label="Smoothed Validation Loss", linestyle="--", linewidth=2, color="tab:orange")
+            ax.plot(df["Epoch"], np.exp(val_smoothed), label="Smoothed Validation Loss", linestyle="--", linewidth=2, alpha=0.5, color="tab:orange")
 
             loss_txt = exp_as_ltx(best_val_loss)
             ax.annotate(

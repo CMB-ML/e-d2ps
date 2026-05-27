@@ -16,7 +16,7 @@ bundle_real:
 bundle_maps:
   splits: [valid]
 
-get_dyn_stats:
+get_otf_stats:
   assets_out:
     map_stats:
       handler: NumpyMap
@@ -28,7 +28,7 @@ get_dyn_stats:
     cmb_ps: {stage: raw, orig_name: ps_bundle}
   dir_name: C_PreprocessingPrep
 
-dyn_bundle:
+otf_fixed:
   assets_out:
     ps_thry:
       handler: NpyHandler
@@ -50,7 +50,7 @@ model_init:
     model:
       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_${fcn_string}_init_{model_num}.pth"
 
-train_dyn_prod:
+train_otf:
   assets_out:
     model: 
       handler: PyTorchModel
@@ -63,43 +63,54 @@ train_dyn_prod:
       path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
   assets_in:
     train_cmb_ps : {stage: raw, orig_name: ps_bundle}
-    valid_thry_ps: {stage: dyn_bundle, orig_name: ps_thry}
-    valid_real_ps: {stage: dyn_bundle, orig_name: ps_real}
-    valid_map    : {stage: dyn_bundle, orig_name: cmb_map}
-    resume_model : {stage: train_dyn_prod, orig_name: model}
+    valid_thry_ps: {stage: otf_fixed, orig_name: ps_thry}
+    valid_real_ps: {stage: otf_fixed, orig_name: ps_real}
+    valid_map    : {stage: otf_fixed, orig_name: cmb_map}
+    resume_model : {stage: train_otf, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
     pos_enc_lut  : {stage: make_pos_enc_lut}
     # TODO: Rename to use next line instead of following
-    # map_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    cmb_stats    : {stage: get_dyn_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    rps_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
+    # map_stats    : {stage: get_otf_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    cmb_stats    : {stage: get_otf_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    rps_stats    : {stage: get_otf_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
   splits:
     - valid
   dir_name: F_Model
   make_stage_log: True
 
-infer_dyn_prod:
+infer_otf:
   assets_out:
-
     cmb_ps: 
-      handler: TextPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.txt"
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}.npy"
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
   assets_in:
-    model: {stage: train_dyn_prod, orig_name: }
-    train_cmb_ps : {stage: raw, orig_name: ps_bundle}
-    valid_thry_ps: {stage: dyn_bundle, orig_name: ps_thry}
-    valid_real_ps: {stage: dyn_bundle, orig_name: ps_real}
-    valid_map    : {stage: dyn_bundle, orig_name: cmb_map}
-    resume_model : {stage: train_dyn_prod, orig_name: model}
+    model        : {stage: train_otf}
+    ps_bundle    : {stage: raw, orig_name: ps_bundle}
+    cmb_map      : {stage: otf_fixed}
+    resume_model : {stage: train_otf, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
     pos_enc_lut  : {stage: make_pos_enc_lut}
     # TODO: Rename to use next line instead of following
-    # map_stats    : {stage: get_dyn_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    cmb_stats    : {stage: get_dyn_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
-    rps_stats    : {stage: get_dyn_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
-  splits:
-    - valid
-  dir_name: F_Model
+    # map_stats    : {stage: get_otf_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    cmb_stats    : {stage: get_otf_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
+    rps_stats    : {stage: get_otf_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
+  splits: [valid, test]
+  dir_name: G_Infer
   make_stage_log: True
+
+show_preds_otf: # _show_preds.py / OTFShowPredsExecutor
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_D_predictions_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: infer_otf, orig_name: cmb_ps}
+    ps_thry: {stage: otf_fixed, orig_name: ps_thry}
+    ps_real: {stage: otf_fixed, orig_name: ps_real}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False

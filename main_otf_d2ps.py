@@ -7,19 +7,21 @@ from cmbml.core import (
                       LogMaker
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
-from cmbml.analysis import (
-    MakeRealPowerSpectrumExecutor
-)
+# from cmbml.analysis import (
+#     MakeRealPowerSpectrumExecutor
+# )
 from d2ps_nn.ex import (
     LossPlotExecutor
 )
 from d2ps_fcn.ex import (
     CheapMakeRealPowerSpectrumExecutor,
     CheapMakeRealAlmsExecutor,
-    GetDynProdStatsExecutor,
-    GetDynValidMapsExecutor,
+    GetOTFStatsExecutor,
+    GetOTFFixedMapsExecutor,
     ModelInitExecutor,
-    TrainDynProdExecutor
+    TrainOTFExecutor,
+    InferOTFExecutor,
+    OTFShowPredsExecutor
 )
 
 
@@ -32,8 +34,8 @@ def run_A_prep(cfg):
     logger.info(f"Running run_B_prep in {__file__}")
 
     pipes = [
-        GetDynProdStatsExecutor,
-        GetDynValidMapsExecutor,
+        GetOTFStatsExecutor,
+        GetOTFFixedMapsExecutor,
     ]
     run(cfg, pipes)
 
@@ -55,7 +57,10 @@ def run_C_fcn(cfg):
     logger.info(f"Running run_C_fcn in {__file__}")
 
     pipes = [
-        LossPlotExecutor
+        TrainOTFExecutor,
+        LossPlotExecutor,
+        InferOTFExecutor,
+        OTFShowPredsExecutor
     ]
     run(cfg, pipes)
 
