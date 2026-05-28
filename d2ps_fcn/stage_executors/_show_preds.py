@@ -14,6 +14,11 @@ from cmbml.utils.number_report import float_to_latex
 # from d2ps_nn.utils.ps_scale import get_ps_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
+from d2ps_nn.utils.select_ps import (
+    # SpectrumAsset, 
+    # SpectrumAssetNames,
+    norm_ps_type
+)
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +37,8 @@ class OTFShowPredsExecutor(BaseStageExecutor):
         in_ps_prep_handler: TextPowerSpectrum
         in_ps_thry_handler: CambPowerSpectrum
         in_report_handler: PandasCsvHandler
+
+        self.spectrum_type = norm_ps_type(cfg.spectrum_type)  # "theory" | "realization"
 
         self.units = u.Unit(cfg.scenario.units)
         self.ells = parse_ells(cfg.model.use_ells)
@@ -80,10 +87,24 @@ class OTFShowPredsExecutor(BaseStageExecutor):
                 max_scatter_multipoles = 20
 
                 for i, ps_thry in enumerate(all_thry_ps):
-                    ax.plot(ells, ps_thry, 
-                            alpha=1, linewidth=0.5,
-                            label=f'Theory {i}', 
-                            color=mpl_colors[i % len(mpl_colors)])
+                    if self.spectrum_type == "theory":
+                        ax.plot(ells, ps_thry, 
+                                alpha=1, linewidth=0.5,
+                                label=f'Theory {i}', 
+                                color=mpl_colors[i % len(mpl_colors)])
+                        ax.plot(ells, all_real_ps[i], 
+                                alpha=0.2, linewidth=0.5,
+                                label=f'Realization {i}', 
+                                color=mpl_colors[i % len(mpl_colors)])
+                    else:  # Realization
+                        ax.plot(ells, all_real_ps[i], 
+                                alpha=1, linewidth=0.5,
+                                label=f'Realization {i}', 
+                                color=mpl_colors[i % len(mpl_colors)])
+                        ax.plot(ells, ps_thry, 
+                                alpha=0.5, linewidth=0.5,
+                                label=f'Theory {i}', 
+                                color=mpl_colors[i % len(mpl_colors)])
                 for i, ps_pred in enumerate(all_pred_ps):
                     if len(ells) < max_scatter_multipoles:
                         ax.scatter(ells, ps_pred, 

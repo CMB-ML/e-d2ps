@@ -60,7 +60,7 @@ spectrum_type      : ???
 prep_label         : ???
 prep_feature       : ???
 
-spectrum_type_sweep: real
+spectrum_type_sweep: real, theory
 # prep_feature_sweep : none, meanstdv_local, minmax_global, minmax_local, meanstdv_global
 prep_feature_sweep : meanstdv_local
 # prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
@@ -102,7 +102,7 @@ activation_sweep   : relu
 fig_type: ['pdf', 'png']
 
 # Limit the number of simulations for which to generate figures
-n_show_cap           : 5
+n_show_cap           : 3
 n_show_treble_ell    : null
 
 # Settings below this point are used for interpolation.
