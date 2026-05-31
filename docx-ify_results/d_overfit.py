@@ -17,25 +17,25 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"]) / 
-    "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns_find_lr1"
+    "Datasets/I_512_1850/obs2ps_train"
 )
 
 DIRNAME_SPEC = (
-    "${features_type}2ps_${nn_model}_train_reruns_find_lr1/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+    "${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 )
 
 ROW_PRIORITY = [
-    "basis_kind_degree",
+    "learning_rate_final",
 ]
 
 COLUMN_PRIORITY = [
-    "down_reductions",
+    # "down_reductions",
 ]
 
-ROW_PRIORITY = [
-    "adamw_wd",
-    "learning_rate"
-]
+# ROW_PRIORITY = [
+#     "adamw_wd",
+#     "learning_rate"
+# ]
 
 FIELD_VALUE_ORDER = {
     "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
@@ -46,7 +46,7 @@ FIG_SUBDIR = "Analysis_Figures"
 #     "loss": "loss_plot.png",
 # }
 FIG_FILES = {
-    "loss": "rel_update_plot.png",
+    "loss": "loss_plot.png",
 }
 
 IMAGE_SPECS = [
