@@ -1,7 +1,6 @@
 defaults:
   - config_d2ps
   - override pipeline: assembly_on_planck_sepprep
-  - override splits: "1-1"
   - _self_
 
 working_dir        : ${prep_working_dir}
@@ -18,6 +17,7 @@ hydra:
     params:
       n_sims: ${n_sims_train}
       learning_rate_final: 1e0  # Placeholder
+      learning_rate_ramp_epochs: ${learning_rate_ramp_epochs_sweep}
       scale_px: ${scale_px_sweep}
       scale_ps: ${scale_ps_sweep}
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
@@ -25,6 +25,6 @@ hydra:
       activation: ${activation_sweep}
       down_reductions: ${down_reductions_sweep}
       spatial_reduction: ${spatial_reduction_sweep}
-      # face_reduction: ${face_reduction_sweep}
+      face_reduction: ${face_reduction_sweep}
       model_num: ${model_num_sweep}
       adamw_wd: ${adamw_wd_sweep}

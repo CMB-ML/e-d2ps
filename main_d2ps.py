@@ -138,12 +138,18 @@ def run_7_infer(cfg):
     ]
     run(cfg, pipes)
 
-
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_8_prep_planck")
-def run_8_prep_planck(cfg):
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_8a_prep_planck")
+def run_8a_prep_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
              FindPxSafeMeanExecutor,
+             ]
+    run(cfg, pipes)
+
+@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_8b_prep_planck")
+def run_8b_prep_planck(cfg):
+    logger.debug(f"Running train in {__file__}")
+    pipes = [
              PreprocessPlanckMapsExecutor,
              PreprocessSpectraExecutor,
              ]
@@ -187,5 +193,6 @@ if __name__ == "__main__":
     # run_5_make_models()
     # run_6_train()
     # run_7_infer()
-    run_8_prep_planck()
-    run_9_run_planck()
+    run_8a_prep_planck()
+    run_8b_prep_planck()
+    # run_9_run_planck()
