@@ -82,6 +82,6 @@ class FindPxSafeMeanExecutor(BaseStageExecutor):
         self.out_cfg.write(data = match_temp)
 
     def prep_mask(self):
-        raw_mask = self.in_mask.read(map_fields=7)  # GAL20 mask is in field 0
+        raw_mask = self.in_mask.read(map_fields=0)  # GAL20 mask is in field 0
         proccessed_mask = downgrade_mask(raw_mask, nside_out=self.nside, threshold=0.9)
         return proccessed_mask
