@@ -1,3 +1,9 @@
+raw:
+  assets_out:
+    gal_percent_masks:
+      handler: HealpyMap
+      path_template: "{src_root}/Planck/HFI_Mask_GalPlane-apo0_2048_R2.00.fits"
+
 make_lut:  # B_make_lut.py / MakeLutExecutor
   assets_out:
     lut: 
@@ -43,6 +49,18 @@ get_px_map_stats: # C3_find_map_stats_serial.py / FindPxMapStatsExecutor
     - train
   dir_name: C_PreprocessingPrep
 
+get_px_safe_mean: # C4_find_map_monopole_serial.py / FindPxSafeMeanExecutor
+  assets_out:
+    temp_stat: 
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/cmb_px_stats.yaml"
+  assets_in:
+    obs_maps: {stage: make_sims, working: Simulation_Working/}
+    mask: {stage: raw, orig_name: gal_percent_masks}
+  splits: 
+    - train
+  dir_name: C_PreprocessingPrep
+
 get_spectra_stats: # C2_find_ps_stats_serial / FindSpectraStatsExecutor
   assets_out:
     mean_ps:
@@ -72,6 +90,29 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
     cmb_map: {stage: make_sims}
     obs_stats: {stage: get_px_map_stats, orig_name: obs_maps}
     cmb_stats: {stage: get_px_map_stats, orig_name: cmb_map}
+    dataset_stats: {stage: get_dataset_stats}
+    lut: {stage: make_lut}
+  dir_name: D_Prep_Observs
+  splits:
+    - train
+    - valid
+    - test
+
+preprocess_planck_maps: # D2_preprocess_planck_maps_serial.py / PreprocessMapsExecutor
+  assets_out:
+    obs_maps:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}_{px_arrange}_{scale}.npy"
+    cmb_map:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_prep_{px_arrange}_{scale}.npy"
+  assets_in:
+    obs_maps: {stage: make_sims}
+    cmb_map: {stage: make_sims}
+    obs_stats: {stage: get_px_map_stats, orig_name: obs_maps}
+    cmb_stats: {stage: get_px_map_stats, orig_name: cmb_map}
+    mask: {stage: raw, orig_name: gal_percent_masks}
+    temp_stat: {stage: get_px_safe_mean}
     dataset_stats: {stage: get_dataset_stats}
     lut: {stage: make_lut}
   dir_name: D_Prep_Observs

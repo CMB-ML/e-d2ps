@@ -42,3 +42,6 @@ from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
 
 from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor
 from .stage_executors._show_treble_ell import ShowTrebleEll
+
+from .stage_executors.C4_find_map_monopole_serial import FindPxSafeMeanExecutor
+from .stage_executors.D2_preprocess_Planck_maps_serial import PreprocessPlanckMapsExecutor

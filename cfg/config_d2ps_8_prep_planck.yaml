@@ -17,7 +17,7 @@ hydra:
   sweeper:
     params:
       n_sims: ${n_sims_train}
-      learning_rate: ${learning_rate_sweep}
+      learning_rate_final: 1e0  # Placeholder
       scale_px: ${scale_px_sweep}
       scale_ps: ${scale_ps_sweep}
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}

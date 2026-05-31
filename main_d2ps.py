@@ -52,7 +52,9 @@ from d2ps_nn.ex import (
     # # ShowChiSquare,
     BundlePredExecutor, 
     BundleTrueExecutor,
-    ShowTrebleEll
+    ShowTrebleEll,
+    FindPxSafeMeanExecutor,
+    PreprocessPlanckMapsExecutor
     )
 
 
@@ -141,7 +143,8 @@ def run_7_infer(cfg):
 def run_8_prep_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-             PreprocessMapsExecutor,
+             FindPxSafeMeanExecutor,
+             PreprocessPlanckMapsExecutor,
              PreprocessSpectraExecutor,
              ]
     run(cfg, pipes)
@@ -151,8 +154,7 @@ def run_8_prep_planck(cfg):
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-            #  PredictExecutor,
-            #  PowerSpectrumAnalysisExecutor,
+             PredictExecutor,
              ShowPredictionsPeaksExecutor,
              ]
     run(cfg, pipes)
@@ -178,12 +180,12 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_1_prelim_px()
-    run_2_prelim_ps()
-    run_3_prep_px()
-    run_4_prep_ps()
-    run_5_make_models()
-    run_6_train()
-    run_7_infer()
+    # run_1_prelim_px()
+    # run_2_prelim_ps()
+    # run_3_prep_px()
+    # run_4_prep_ps()
+    # run_5_make_models()
+    # run_6_train()
+    # run_7_infer()
     run_8_prep_planck()
     run_9_run_planck()
