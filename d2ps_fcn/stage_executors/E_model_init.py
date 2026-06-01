@@ -39,11 +39,10 @@ class ModelInitExecutor(BaseFCNExecutor):
 
         model = self.init_model()
 
-        n_input = self._compute_n_input()
-
         with torch.no_grad():
-            dummy_x = torch.zeros(1, n_input, dtype=self.dtype)
-            _ = model(dummy_x)
+            dummy_x = torch.zeros(1, *model.example_in_shape, dtype=self.dtype)
+            d_out = model(dummy_x)
+            logger.info(f"Model function checked. Input shape: {dummy_x.shape}, output shape: {d_out.shape}")
 
         context = dict(model_num=self.model_init)
         with self.name_tracker.set_contexts(context):

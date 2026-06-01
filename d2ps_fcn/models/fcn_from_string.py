@@ -76,6 +76,8 @@ class FCNFromString(nn.Module):
         self.pixel_pair = head == "P"
 
         in_features = n_in ** 2 if self.pixel_pair else n_in
+        self.example_in_shape = {in_features}
+        self.example_out_shape = {n_out}
 
         layers: list[nn.Module] = []
         if self.pixel_pair:

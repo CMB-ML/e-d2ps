@@ -178,9 +178,6 @@ class TrainOTFExecutor(BaseOTFExecutor):
             self.out_model.write(model=model, epoch="init")
         model = model.to(self.device)
 
-        # MODEL DEPENDENT; BUNDLE WITH MODEL
-        self._crosscheck_model_dims(model)
-
         loss_function = torch.nn.MSELoss(reduction='mean').to(self.device)
         optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate)
 
@@ -356,14 +353,6 @@ class TrainOTFExecutor(BaseOTFExecutor):
             if (epoch + 1) % 1 == 0:
                 note_min = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
                 diag_str = ""
-                # if diag_R is not None:
-                #     ell_hdr = " ".join(f"  l{e}" for e in self._diag_ells)
-                #     diag_str = (
-                #         f" | ell:{ell_hdr}"
-                #         f" | R: {_fmt_diag(diag_R)}"
-                #         f" | p: {_fmt_diag(diag_rho)}"
-                #         f" | lk={diag_locked} sc={diag_score:.2f}"
-                #     )
                 if diag_R is not None and self._diag_cols_print:
                     # indices into the record arrays that correspond to print ells
                     print_idx = [self._diag_ells_record.index(e) for e in self._diag_ells_print]
@@ -391,15 +380,6 @@ class TrainOTFExecutor(BaseOTFExecutor):
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
 
-    # def init_model(self):
-    #     model_dict = dict(
-    #         arch_str=self.fcn_string,
-    #         n_in=hp.nside2npix(self.nside),
-    #         n_out=len(self.ells))
-    #     model = FCNFromString(**model_dict)
-    #     logger.info(f"Model dict: {model_dict}")
-    #     return model
-
     def set_up_fixed_dataset(self, split: Split) -> FixedDataset:
         feat_path = self.make_fn_template(split, self.in_valid_map)
         trgt_path = self.make_fn_template(split, self.in_valid_trgt_asset)
@@ -418,33 +398,3 @@ class TrainOTFExecutor(BaseOTFExecutor):
             device=self.device,
         )
         return dataset
-
-    def _crosscheck_model_dims(self, model):
-            expected_npix = hp.nside2npix(self.nside)
-            expected_out  = len(self.ells)
-
-            linears = [m for m in model.modules() if isinstance(m, torch.nn.Linear)]
-            if not linears:
-                logger.warning("No Linear layers found; skipping model dim cross-check.")
-                return
-
-            first_in = linears[0].in_features
-            # In pixel-pair mode the input is expanded to npix**2 before the first
-            # Linear; otherwise it's npix directly.
-            expected_in = expected_npix ** 2 if model.pixel_pair else expected_npix
-            actual_out = linears[-1].out_features
-
-            if first_in != expected_in:
-                mode = "pixel-pair (npix**2)" if model.pixel_pair else "plain (npix)"
-                raise ValueError(
-                    f"Model input dim {first_in} != expected {expected_in} "
-                    f"[{mode}, nside={self.nside}, npix={expected_npix}]."
-                )
-            if actual_out != expected_out:
-                raise ValueError(
-                    f"Model output dim {actual_out} != n_label_ells={expected_out}."
-                )
-            logger.info(
-                f"Model dim cross-check OK: in={first_in}, out={actual_out} "
-                f"(npix={expected_npix}, pixel_pair={model.pixel_pair})."
-            )
