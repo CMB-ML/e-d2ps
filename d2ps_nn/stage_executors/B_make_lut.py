@@ -28,14 +28,17 @@ class MakeLutExecutor(BaseStageExecutor):
         self.lut_style = cfg.model.patches.get("lut_style", None)
         self.lut_method = {
             None: None,
+            "none": None,
+            "null": None,
             "cmbNNCS": cmbNNCS_nest2lut,
             "channel": channel_nest2lut
         }[self.lut_style]
-        if self.lut_method is None:
-            raise ValueError(f"lut style is not defined in the model.patches config")
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        if self.lut_method is None:
+            logger.info("No shape LUT is defined in the configs.")
+            return
 
         lut = self.lut_method(self.nside, self.nside_patch)
 
