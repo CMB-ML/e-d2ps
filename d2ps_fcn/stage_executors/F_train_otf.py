@@ -30,6 +30,28 @@ from d2ps_fcn.realization_spectra import make_real_spectra_maker
 logger = logging.getLogger(__name__)
 
 
+# Diagnostic range (inclusive) for printed R(ell) and rho(ell)
+DIAG_ELL_MIN = 2
+DIAG_ELL_MAX = 7
+
+
+def _fmt_diag(vals):
+    """Format a 1D tensor/array of diagnostic values as compact 4-char fields.
+
+    Produces strings like ' 1.00', ' 0.93', '-0.10', ' nan ' so columns line up.
+    """
+    out = []
+    for v in vals:
+        v = float(v)
+        if not np.isfinite(v):
+            out.append(" nan")
+        elif abs(v) >= 10:
+            out.append(f"{v:+.0f}")  # overflow guard
+        else:
+            out.append(f"{v:+.2f}")
+    return " ".join(out)
+
+
 class TrainOTFExecutor(BasePyTorchModelExecutor):
     def __init__(self, cfg: DictConfig, stage_str="train_otf") -> None:
         super().__init__(cfg, stage_str=stage_str)
@@ -89,6 +111,24 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
         self.label_scaler   = make_scaler_from_prep_spec(self.label_prep)
         logger.info(f"map_processor type: {type(self.map_processor).__name__}")
         logger.info(f"label_scaler: {self.label_scaler}")
+
+        # Build column indices into the model output for ells DIAG_ELL_MIN..DIAG_ELL_MAX.
+        # self.ells corresponds to the model's output channels (labels start at ell=2).
+        ells_arr = np.asarray(self.ells)
+        self._diag_ells = []
+        self._diag_cols = []
+        for ell in range(DIAG_ELL_MIN, DIAG_ELL_MAX + 1):
+            matches = np.where(ells_arr == ell)[0]
+            if len(matches):
+                self._diag_ells.append(ell)
+                self._diag_cols.append(int(matches[0]))
+        if self._diag_cols:
+            logger.info(
+                f"Diagnostics: tracking R(ell), rho(ell) for ell="
+                f"{self._diag_ells} at output cols {self._diag_cols}"
+            )
+        else:
+            logger.warning("Diagnostic ell range not present in model outputs; skipping R/rho prints.")
 
     def execute(self):
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -179,6 +219,15 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
             'Validation Loss', 'Training Loss',
             # 'Learning Rate',
         ]
+        for ell in self._diag_ells:
+            loss_record_headers.append(f'R_ell{ell}')
+        for ell in self._diag_ells:
+            loss_record_headers.append(f'rho_ell{ell}')
+        for ell in self._diag_ells:
+            loss_record_headers.append(f'FVE_ell{ell}')
+        if self._diag_ells:
+            loss_record_headers.append('locked')
+            loss_record_headers.append('score')
         self.out_loss_record.write(data=loss_record_headers)
 
         all_batch_loss = []
@@ -211,6 +260,10 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
             train_pre_loss = train_pst_loss = 0.0
             valid_pre_loss = valid_pst_loss = 0.0
 
+            # Accumulate validation predictions/labels (post-scaler) for R, rho diagnostics
+            diag_pred_chunks = []
+            diag_true_chunks = []
+
             with torch.no_grad():
                 # Train-space estimate: sample n_infer_batches batches from sampler
                 train_pre_loss = 0.0
@@ -236,25 +289,69 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
                     label_pst = self.label_scaler.inverse_transform_tensor(valid_label)
                     valid_pst_loss += loss_function(output_pst, label_pst).item()
 
+                    if self._diag_cols:
+                        diag_pred_chunks.append(output_pst.detach())
+                        diag_true_chunks.append(label_pst.detach())
+
                 valid_pre_loss /= len(valid_dataloader)
                 valid_pst_loss /= len(valid_dataloader)
 
                 all_valid_pre_loss.append(valid_pre_loss)
                 all_valid_pst_loss.append(valid_pst_loss)
 
-            self.out_loss_record.append([
+                # Compute R(ell), rho(ell), FVE(ell) over the full validation set
+                diag_R = diag_rho = diag_fve = None
+                diag_locked = diag_score = None
+                if self._diag_cols and diag_pred_chunks:
+                    pred_all = torch.cat(diag_pred_chunks, dim=0)  # (N_valid, n_ells)
+                    true_all = torch.cat(diag_true_chunks, dim=0)
+                    cols = torch.tensor(self._diag_cols, device=pred_all.device, dtype=torch.long)
+                    p = pred_all.index_select(1, cols).float()
+                    t = true_all.index_select(1, cols).float()
+
+                    # Sample std along realizations (unbiased, matches numpy default)
+                    p_std = p.std(dim=0, unbiased=True)
+                    t_std = t.std(dim=0, unbiased=True)
+                    eps = 1e-12
+                    diag_R = (p_std / (t_std + eps)).cpu().numpy()
+
+                    p_c = p - p.mean(dim=0, keepdim=True)
+                    t_c = t - t.mean(dim=0, keepdim=True)
+                    num = (p_c * t_c).sum(dim=0)
+                    den = torch.sqrt((p_c.pow(2).sum(dim=0) * t_c.pow(2).sum(dim=0)).clamp_min(eps))
+                    diag_rho = (num / den).cpu().numpy()
+
+                    # FVE(ell) = 1 - MSE(ell) / Var_true(ell)
+                    #   per-ell MSE across realizations, divided by per-ell true variance.
+                    # Equals 1 for perfect prediction, 0 for constant-mean predictor,
+                    # negative if worse than the mean. Computed from MSE directly
+                    # (not via 2 R rho - R^2) so it stays exact when pred/true means differ.
+                    mse_ell = (p - t).pow(2).mean(dim=0)
+                    true_var = t_std.pow(2)
+                    diag_fve = (1.0 - mse_ell / (true_var + eps)).cpu().numpy()
+
+                    # Scalar summaries
+                    diag_locked = int((diag_fve > 0.5).sum())          # count of "locked-in" ells
+                    diag_score = float(np.clip(diag_fve, 0.0, None).sum())  # continuous progress
+
+            row = [
                 epoch + 1, batch_loss,
                 train_pre_loss, valid_pre_loss,
                 train_pst_loss, valid_pst_loss,
-            ])
-
-            # is_best = (
-            #     valid_pst_loss == min(all_valid_pst_loss)
-            #     and epoch >= self.earliest_best
-            # )
-            # if is_best:
-            #     with self.name_tracker.set_context("epoch", "best"):
-            #         self.out_model.write(model=model, epoch="best")
+            ]
+            if self._diag_ells:
+                if diag_R is not None:
+                    row.extend(float(v) for v in diag_R)
+                    row.extend(float(v) for v in diag_rho)
+                    row.extend(float(v) for v in diag_fve)
+                    row.append(int(diag_locked))
+                    row.append(float(diag_score))
+                else:
+                    # Pad with NaN so column count stays consistent.
+                    # 3 per-ell columns (R, rho, FVE) + 2 scalars (locked, score).
+                    row.extend([float('nan')] * (3 * len(self._diag_ells)))
+                    row.extend([float('nan'), float('nan')])
+            self.out_loss_record.append(row)
 
             note_save_interval = ""
             note_save_best = ""
@@ -287,14 +384,24 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
 
             if (epoch + 1) % 1 == 0:
                 note_min = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
+                diag_str = ""
+                if diag_R is not None:
+                    ell_hdr = " ".join(f"  l{e}" for e in self._diag_ells)
+                    diag_str = (
+                        f" | ell:{ell_hdr}"
+                        f" | R: {_fmt_diag(diag_R)}"
+                        f" | p: {_fmt_diag(diag_rho)}"
+                        f" | lk={diag_locked} sc={diag_score:.2f}"
+                    )
                 logger.info(
                     f"Epoch {epoch + 1:<{n_epoch_digits}} | "
-                    f"time: {time.time() - time_start:.4f} | "
+                    f"time: {time.time() - time_start:.2f} | "
                     f"batch: {batch_loss:.02e} | "
                     f"train_pre: {train_pre_loss:.02e} | "
                     f"train_pst: {train_pst_loss:.02e} | "
                     f"valid_pre: {valid_pre_loss:.02e} | "
                     f"valid_pst: {valid_pst_loss:.02e}"
+                    f"{diag_str}"
                     f"{note_min}"
                     f"{note_save_best}"
                     f"{note_save_interval}"

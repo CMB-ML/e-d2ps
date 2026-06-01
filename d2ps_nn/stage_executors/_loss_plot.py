@@ -39,7 +39,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
 
         sm_sigma = 2000
 
-        df = df.dropna()
+        # df = df.dropna()
 
         if (fig is None and ax is not None) or (fig is not None and ax is None):
              raise ValueError("fig and ax must be provided together")
