@@ -133,6 +133,7 @@ class InferOTFExecutor(BaseOTFExecutor):
             feature_path=feat_path,
             feature_handler=self.in_features.handler,
             feature_scaler=self.map_processor,
+            map_shaper=self.map_shaper,
             label_scaler=self.label_scaler,
             dtype=self.dtype,
             fit_scalers=False,

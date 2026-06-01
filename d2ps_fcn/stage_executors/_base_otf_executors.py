@@ -28,6 +28,7 @@ from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_ps import norm_ps_type
 from d2ps_nn.utils.px_scale import make_px_processor
+from d2ps_nn.utils.px_shape import make_px_shaper
 from d2ps_fcn.scaler_hydra_helper import make_scaler_from_prep_spec
 from d2ps_fcn.models.fcn_from_string import FCNFromString
 
@@ -106,6 +107,7 @@ class BaseOTFExecutor(BaseFCNExecutor):
 
         # Common asset
         self.in_dl_bank:       Asset = self.assets_in["dl_bank"]
+        self.in_lut:           Asset = self.assets_in["lut"]
 
         # Spectrum + SHT
         self.spectrum_type = norm_ps_type(cfg.spectrum_type)  # "theory" | "realization"
@@ -114,12 +116,12 @@ class BaseOTFExecutor(BaseFCNExecutor):
         # Preprocessing config
         self.label_prep    = cfg.model.prep_label
         self.feature_prep  = cfg.model.prep_feature
+        self.px_arrange    = cfg.px_arrange
 
         # Processor + scaler: constructed here, fitted in execute() via
         # fit_label_scaler() below.
-        self.map_processor = make_px_processor(
-            mode=self.feature_prep, cfg=cfg, stage_str=stage_str,
-        )
+        self.map_processor = make_px_processor(mode=self.feature_prep, cfg=cfg, stage_str=stage_str)
+        self.map_shaper    = make_px_shaper(cfg=cfg, stage_str=stage_str)
         self.label_scaler  = make_scaler_from_prep_spec(self.label_prep)
         logger.info(f"map_processor type: {type(self.map_processor).__name__}")
         logger.info(f"label_scaler: {self.label_scaler}")

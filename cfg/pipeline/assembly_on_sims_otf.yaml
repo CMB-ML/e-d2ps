@@ -69,6 +69,7 @@ train_otf:
     resume_model : {stage: train_otf, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
     pos_enc_lut  : {stage: make_pos_enc_lut}
+    lut          : {stage: make_lut}
     # TODO: Rename to use next line instead of following
     # map_stats    : {stage: get_otf_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
     cmb_stats    : {stage: get_otf_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
@@ -91,7 +92,8 @@ infer_otf:
     cmb_map      : {stage: otf_fixed}
     resume_model : {stage: train_otf, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
-    pos_enc_lut  : {stage: make_pos_enc_lut}
+    pos_enc_lut  : {stage: make_pos_enc_lut, working: "${prep_working_dir}"}
+    lut          : {stage: make_lut, working: "${prep_working_dir}"}
     # TODO: Rename to use next line instead of following
     # map_stats    : {stage: get_otf_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
     cmb_stats    : {stage: get_otf_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps

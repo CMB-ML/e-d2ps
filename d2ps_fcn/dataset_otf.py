@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from d2ps_fcn.scaler import ArrayScaler
 from d2ps_nn.utils.px_scale import MapProcessor
+from d2ps_nn.utils.px_shape import MapShaper
 
 try:
     from cuhpx import iSHTCUDA
@@ -192,12 +193,14 @@ class TrainingMapSampler:
         self,
         inner: MapSampler,
         map_processor: MapProcessor,
+        map_shaper: MapShaper,
         label_scaler: ArrayScaler,
         spectrum_kind: str,
         spectra_estimator=None,
     ):
         self.inner = inner
         self.map_processor = map_processor
+        self.map_shaper = map_shaper
         self.label_scaler = label_scaler
         self.spectrum_kind = spectrum_kind
         self.spectra_estimator = spectra_estimator
@@ -223,6 +226,7 @@ class TrainingMapSampler:
             label = self.spectra_estimator(maps)["dl"]  # (B, lmax+1) realization Dl
 
         maps = self.map_processor.preprocess(maps, channel="cmb", field_str="I")
+        maps = self.map_shaper.forward(maps)
         # NOTE: ell-selection site — must match the stats-fit slice and the
         # validation-label ells. Currently [2:] (ells 2..lmax). See TODO on
         # unifying ell selection via self.ells.

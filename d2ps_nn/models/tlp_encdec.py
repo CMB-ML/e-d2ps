@@ -343,8 +343,10 @@ class TLPEncAggDec(nn.Module):
 
     def forward(self, x: torch.Tensor):
         check_main_input(x)
-        B, F, C, H, W = x.shape           # (B, F, C, H, W)
-        x = x.reshape(B * 12, C, H, W)    # (B * F, C, H, W)
+        # B, F, C, H, W = x.shape           # (B, F, C, H, W)
+        # x = x.reshape(B * 12, C, H, W)    # (B * F, C, H, W)
+        B, C, F, H, W = x.shape           # (B, C, F, H, W)
+        x = x.permute(0,2,1,3,4).reshape(B * 12, C, H, W)    # (B * F, C, H, W)
         z = self.enc(x)
         _, D, H_, W_ = z.shape
         z = z.reshape(B, 12, D, H_, W_)   # (B, F, D, H', W')
@@ -416,7 +418,10 @@ class TLPEnc2AggDec(nn.Module):
 
     def forward(self, x):
         check_main_input(x)
-        B, F, C, H, W = x.shape
+        # B, F, C, H, W = x.shape           # (B, F, C, H, W)
+        # x = x.reshape(B * 12, C, H, W)    # (B * F, C, H, W)
+        B, C, F, H, W = x.shape           # (B, C, F, H, W)
+        x = x.permute(0,2,1,3,4)          # (B, F, C, H, W)
 
         # F = 12 = 8 + 4; (8 polar top-level pixels, 4 equatorial)
         x_polar = x[:, self.polar_faces].reshape(B * 8, C, H, W)

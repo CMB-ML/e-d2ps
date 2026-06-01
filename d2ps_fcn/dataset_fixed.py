@@ -7,6 +7,7 @@ import torch
 from torch.utils.data import Dataset
 from d2ps_fcn.scaler import ArrayScaler
 from d2ps_nn.utils.px_scale import MapProcessor
+from d2ps_nn.utils.px_shape import MapShaper, IdentityShaper
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ class FixedDataset(Dataset):
         feature_handler,
         lmax: Optional[int] = None,
         feature_scaler: Optional[MapProcessor] = None,
+        map_shaper: Optional[MapShaper] = None,
         label_scaler: Optional[ArrayScaler] = None,
         dtype=torch.float32,
         fit_scalers: bool = True,
@@ -29,6 +31,7 @@ class FixedDataset(Dataset):
     ):
         self.n_sims = n_sims
         self.feature_scaler = feature_scaler or MapProcessor()
+        self.map_shaper = map_shaper or IdentityShaper()
         self.label_scaler = label_scaler or ArrayScaler()
 
         labels = label_handler.read(label_path)
@@ -43,6 +46,8 @@ class FixedDataset(Dataset):
             self.label_scaler.fit(labels)
 
         feats = self.feature_scaler.preprocess(feats, channel="cmb", field_str="I")
+        feats = self.map_shaper.forward(feats)
+
         labels = self.label_scaler.transform(labels)
 
         self.all_feats = torch.as_tensor(feats, dtype=dtype, device=device)
@@ -62,6 +67,7 @@ class FixedFeatureDataset(Dataset):
         feature_path,
         feature_handler,
         feature_scaler: Optional[MapProcessor] = None,
+        map_shaper: Optional[MapShaper] = None,
         label_scaler: Optional[ArrayScaler] = None,
         dtype=torch.float32,
         fit_scalers: bool = True,
@@ -69,6 +75,7 @@ class FixedFeatureDataset(Dataset):
     ):
         self.n_sims = n_sims
         self.feature_scaler = feature_scaler or MapProcessor()
+        self.map_shaper = map_shaper or IdentityShaper()
         self.label_scaler = label_scaler or ArrayScaler()
 
         feats = feature_handler.read(feature_path)
@@ -80,6 +87,7 @@ class FixedFeatureDataset(Dataset):
             self.feature_scaler.fit(feats)
 
         feats = self.feature_scaler.preprocess(feats, channel="cmb", field_str="I")
+        feats = self.map_shaper.forward(feats)
 
         self.all_feats = torch.as_tensor(feats, dtype=dtype, device=device)
 

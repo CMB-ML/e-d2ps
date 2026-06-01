@@ -6,6 +6,7 @@ defaults:
   - scenario       : scenario
   - splits         : all_2000
   - model          : fcn_d2ps
+  - model/patches  : toppatch
   # - model/analysis : simple_apo
   # - model/analysis/metrics    : metrics
   - override hydra/job_logging: custom_log
@@ -41,6 +42,7 @@ pipeline:
 #                                                              #
 ################################################################
 nn_model           : fcn
+px_arrange         : none
 sim_engine         : cuhpx  # synfast or cuHPX
 # nside              : 32
 nside              : 8

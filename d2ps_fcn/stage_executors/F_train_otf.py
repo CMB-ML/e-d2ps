@@ -3,25 +3,25 @@ import logging
 # from tqdm import tqdm
 import time
 
-import healpy as hp
+# import healpy as hp
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
-from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
+# from cmbml.torch.pytorch_executor_base import BasePyTorchModelExecutor
 
-from d2ps_nn.utils.parse_ell_list import parse_ells
+# from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_ps import (
     SpectrumAsset, 
     SpectrumAssetNames,
-    norm_ps_type
+    # norm_ps_type
 )
 
-from d2ps_fcn.models.fcn_from_string import FCNFromString
-from d2ps_fcn.scaler_hydra_helper import make_scaler_from_prep_spec
-from d2ps_nn.utils.px_scale import make_px_processor, MapProcessor
+# from d2ps_fcn.models.fcn_from_string import FCNFromString
+# from d2ps_fcn.scaler_hydra_helper import make_scaler_from_prep_spec
+# from d2ps_nn.utils.px_scale import make_px_processor, MapProcessor
 from d2ps_fcn.dataset_otf import TrainingMapSampler, make_map_sampler
 from d2ps_fcn.dataset_fixed import FixedDataset
 from d2ps_fcn.realization_spectra import make_real_spectra_maker
@@ -64,6 +64,7 @@ class TrainOTFExecutor(BaseOTFExecutor):
         # self.in_rps_stats:     Asset = self.assets_in["rps_stats"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_resume_model:  Asset = self.assets_in["resume_model"]
+        self.in_lut:           Asset = self.assets_in["lut"]
 
         self.out_model:        Asset = self.assets_out["model"]
         self.out_loss_record:  Asset = self.assets_out["loss_record"]
@@ -155,6 +156,7 @@ class TrainOTFExecutor(BaseOTFExecutor):
                 dtype=self.dtype,
             ),
             map_processor=self.map_processor,
+            map_shaper=self.map_shaper,
             label_scaler=self.label_scaler,
             spectrum_kind=self.spectrum_type,
             spectra_estimator=real_spectra_maker,
@@ -392,6 +394,7 @@ class TrainOTFExecutor(BaseOTFExecutor):
             feature_handler=self.in_valid_map.handler,
             lmax=self.lmax,
             feature_scaler=self.map_processor,
+            map_shaper=self.map_shaper,
             label_scaler=self.label_scaler,
             dtype=self.dtype,
             fit_scalers=False,
