@@ -26,18 +26,18 @@ hydra:
       # # FCN
       # fcn_string         : ${fcn_str_sweep}
 
-      # SimpleEncDec
-      norm_kind           : ${norm_sweep}
-      activation          : ${activation_sweep}      
-      down_reductions     : ${down_reductions_sweep}
-      spatial_reduction   : ${spatial_reduction_sweep}
-
-      # # TLPEncDec
+      # # SimpleEncDec
       # norm_kind           : ${norm_sweep}
       # activation          : ${activation_sweep}      
       # down_reductions     : ${down_reductions_sweep}
       # spatial_reduction   : ${spatial_reduction_sweep}
-      # face_reduction      : ${face_reduction_sweep}
+
+      # TLPEncDec
+      norm_kind           : ${norm_sweep}
+      activation          : ${activation_sweep}      
+      down_reductions     : ${down_reductions_sweep}
+      spatial_reduction   : ${spatial_reduction_sweep}
+      face_reduction      : ${face_reduction_sweep}
 
       # Other
       # sigma_scale        : ${sigma_scale_sweep}
