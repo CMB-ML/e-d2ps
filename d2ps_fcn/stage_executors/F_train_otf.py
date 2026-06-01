@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 
 # Diagnostic range (inclusive) for printed R(ell) and rho(ell)
 DIAG_ELL_MIN = 2
-DIAG_ELL_MAX = 7
+DIAG_ELL_MAX_PRINT = 7    # ells shown in the logger line
+DIAG_ELL_MAX_RECORD = 16  # ells written to the loss record CSV
 
 
 def _fmt_diag(vals):
@@ -112,23 +113,36 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
         logger.info(f"map_processor type: {type(self.map_processor).__name__}")
         logger.info(f"label_scaler: {self.label_scaler}")
 
-        # Build column indices into the model output for ells DIAG_ELL_MIN..DIAG_ELL_MAX.
-        # self.ells corresponds to the model's output channels (labels start at ell=2).
-        ells_arr = np.asarray(self.ells)
-        self._diag_ells = []
-        self._diag_cols = []
-        for ell in range(DIAG_ELL_MIN, DIAG_ELL_MAX + 1):
-            matches = np.where(ells_arr == ell)[0]
-            if len(matches):
-                self._diag_ells.append(ell)
-                self._diag_cols.append(int(matches[0]))
-        if self._diag_cols:
+        self._diag_ells_print,  self._diag_cols_print  = self._build_diag_indices(DIAG_ELL_MAX_PRINT, np.asarray(self.ells))
+        self._diag_ells_record, self._diag_cols_record  = self._build_diag_indices(DIAG_ELL_MAX_RECORD, np.asarray(self.ells))
+
+        if self._diag_cols_record:
             logger.info(
-                f"Diagnostics: tracking R(ell), rho(ell) for ell="
-                f"{self._diag_ells} at output cols {self._diag_cols}"
+                f"Diagnostics: recording R(ell), rho(ell) for ell="
+                f"{self._diag_ells_record} at output cols {self._diag_cols_record}"
+            )
+            logger.info(
+                f"Diagnostics: printing ell={self._diag_ells_print}"
             )
         else:
             logger.warning("Diagnostic ell range not present in model outputs; skipping R/rho prints.")
+
+        if self._diag_cols_print:
+            logger.info(
+                f"Diagnostics: tracking R(ell), rho(ell) for ell="
+                f"{self._diag_cols_print} at output cols {self._diag_cols_print}"
+            )
+        else:
+            logger.warning("Diagnostic ell range not present in model outputs; skipping R/rho prints.")
+
+    def _build_diag_indices(self, ell_max, ells_arr):
+        ells, cols = [], []
+        for ell in range(DIAG_ELL_MIN, ell_max + 1):
+            matches = np.where(ells_arr == ell)[0]
+            if len(matches):
+                ells.append(ell)
+                cols.append(int(matches[0]))
+        return ells, cols
 
     def execute(self):
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -219,13 +233,13 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
             'Validation Loss', 'Training Loss',
             # 'Learning Rate',
         ]
-        for ell in self._diag_ells:
+        for ell in self._diag_ells_record:
             loss_record_headers.append(f'R_ell{ell}')
-        for ell in self._diag_ells:
+        for ell in self._diag_ells_record:
             loss_record_headers.append(f'rho_ell{ell}')
-        for ell in self._diag_ells:
+        for ell in self._diag_ells_record:
             loss_record_headers.append(f'FVE_ell{ell}')
-        if self._diag_ells:
+        if self._diag_ells_record:
             loss_record_headers.append('locked')
             loss_record_headers.append('score')
         self.out_loss_record.write(data=loss_record_headers)
@@ -289,7 +303,7 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
                     label_pst = self.label_scaler.inverse_transform_tensor(valid_label)
                     valid_pst_loss += loss_function(output_pst, label_pst).item()
 
-                    if self._diag_cols:
+                    if self._diag_cols_record:
                         diag_pred_chunks.append(output_pst.detach())
                         diag_true_chunks.append(label_pst.detach())
 
@@ -302,10 +316,10 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
                 # Compute R(ell), rho(ell), FVE(ell) over the full validation set
                 diag_R = diag_rho = diag_fve = None
                 diag_locked = diag_score = None
-                if self._diag_cols and diag_pred_chunks:
+                if self._diag_cols_record and diag_pred_chunks:
                     pred_all = torch.cat(diag_pred_chunks, dim=0)  # (N_valid, n_ells)
                     true_all = torch.cat(diag_true_chunks, dim=0)
-                    cols = torch.tensor(self._diag_cols, device=pred_all.device, dtype=torch.long)
+                    cols = torch.tensor(self._diag_cols_record, device=pred_all.device, dtype=torch.long)
                     p = pred_all.index_select(1, cols).float()
                     t = true_all.index_select(1, cols).float()
 
@@ -339,7 +353,7 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
                 train_pre_loss, valid_pre_loss,
                 train_pst_loss, valid_pst_loss,
             ]
-            if self._diag_ells:
+            if self._diag_ells_record:
                 if diag_R is not None:
                     row.extend(float(v) for v in diag_R)
                     row.extend(float(v) for v in diag_rho)
@@ -385,12 +399,22 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
             if (epoch + 1) % 1 == 0:
                 note_min = " *" if valid_pst_loss == min(all_valid_pst_loss) else ""
                 diag_str = ""
-                if diag_R is not None:
-                    ell_hdr = " ".join(f"  l{e}" for e in self._diag_ells)
+                # if diag_R is not None:
+                #     ell_hdr = " ".join(f"  l{e}" for e in self._diag_ells)
+                #     diag_str = (
+                #         f" | ell:{ell_hdr}"
+                #         f" | R: {_fmt_diag(diag_R)}"
+                #         f" | p: {_fmt_diag(diag_rho)}"
+                #         f" | lk={diag_locked} sc={diag_score:.2f}"
+                #     )
+                if diag_R is not None and self._diag_cols_print:
+                    # indices into the record arrays that correspond to print ells
+                    print_idx = [self._diag_ells_record.index(e) for e in self._diag_ells_print]
+                    ell_hdr = " ".join(f"  l{e}" for e in self._diag_ells_print)
                     diag_str = (
                         f" | ell:{ell_hdr}"
-                        f" | R: {_fmt_diag(diag_R)}"
-                        f" | p: {_fmt_diag(diag_rho)}"
+                        f" | R: {_fmt_diag(diag_R[print_idx])}"
+                        f" | p: {_fmt_diag(diag_rho[print_idx])}"
                         f" | lk={diag_locked} sc={diag_score:.2f}"
                     )
                 logger.info(
