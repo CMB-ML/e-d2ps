@@ -8,8 +8,8 @@ lmax      : ${lmax}  # lmax for prediction of power spectra
 use_ells  : "[2:${lmax}+1:1]"
 # use_ells  : "[2:31],[40:${lmax}:10]"
 
-model_seed   : "fcn_model_seed_{model_init}"
-model_init   : ${model_init}
+model_seed   : "fcn_model_seed_{model_num}"
+model_num    : ${model_num}
 
 activation   : ${activation}
 

@@ -11,6 +11,7 @@ from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 #     MakeRealPowerSpectrumExecutor
 # )
 from d2ps_nn.ex import (
+    MakeLutExecutor,
     LossPlotExecutor
 )
 from d2ps_fcn.ex import (
@@ -34,6 +35,7 @@ def run_A_prep(cfg):
     logger.info(f"Running run_B_prep in {__file__}")
 
     pipes = [
+        MakeLutExecutor,
         GetOTFStatsExecutor,
         GetOTFFixedMapsExecutor,
     ]
@@ -85,6 +87,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_A_prep()
+    run_A_prep()
     run_B_prep_model()
     run_C_fcn()

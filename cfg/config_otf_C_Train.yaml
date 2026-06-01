@@ -15,23 +15,29 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      model_init         : ${model_init_sweep}
-      fcn_string         : ${fcn_str_sweep}
-      learning_rate      : ${learning_rate_sweep}
+      model_num          : ${model_num_sweep}
+      lmax               : ${lmax_sweep}
+
       spectrum_type      : ${spectrum_type_sweep}
       prep_label         : ${prep_label_sweep}
       prep_feature       : ${prep_feature_sweep}
-      # out_power          : ${out_power_sweep}
-      activation         : ${activation_sweep}
+      learning_rate      : ${learning_rate_sweep}
+
+      # # FCN
+      # fcn_string         : ${fcn_str_sweep}
+
+      # # SimpleEncDec
+      # norm_kind           : ${norm_sweep}
+      # activation          : ${activation_sweep}      
+      # down_reductions     : ${down_reductions_sweep}
+      # spatial_reduction   : ${spatial_reduction_sweep}
+
+      # TLPEncDec
+      norm_kind           : ${norm_sweep}
+      activation          : ${activation_sweep}      
+      down_reductions     : ${down_reductions_sweep}
+      spatial_reduction   : ${spatial_reduction_sweep}
+      face_reduction      : ${face_reduction_sweep}
+
+      # Other
       # sigma_scale        : ${sigma_scale_sweep}
-      lmax: ${lmax_sweep}
-
-
-# model_init   : 1
-# n_hidden_features: 200
-# spectrum_type: realization
-# prep_label   : minmax_global
-# prep_feature : minmax_global
-# learning_rate: 1e-3
-# out_power    : 1
-# # activation   : gelu

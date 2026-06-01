@@ -29,7 +29,7 @@ class ModelInitExecutor(BaseFCNExecutor):
     def execute(self):
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        seed = self.seed_factory.get_seed(**dict(model_init=self.model_init))
+        seed = self.seed_factory.get_seed(model_num=self.model_num)
 
         random.seed(seed)
         np.random.seed(seed)
@@ -44,6 +44,6 @@ class ModelInitExecutor(BaseFCNExecutor):
             d_out = model(dummy_x)
             logger.info(f"Model function checked. Input shape: {dummy_x.shape}, output shape: {d_out.shape}")
 
-        context = dict(model_num=self.model_init)
+        context = dict(model_num=self.model_num)
         with self.name_tracker.set_contexts(context):
             self.out_model.write(model=model, epoch="init")

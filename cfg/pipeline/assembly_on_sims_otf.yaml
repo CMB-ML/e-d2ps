@@ -48,7 +48,7 @@ otf_fixed:
 model_init:
   assets_out:
     model:
-      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${nn_model}_${fcn_string}_init_{model_num}.pth"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${model_fn_template}.pth"
 
 train_otf:
   assets_out:
@@ -68,8 +68,8 @@ train_otf:
     valid_map    : {stage: otf_fixed, orig_name: cmb_map}
     resume_model : {stage: train_otf, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
-    pos_enc_lut  : {stage: make_pos_enc_lut}
-    lut          : {stage: make_lut}
+    pos_enc_lut  : {stage: make_pos_enc_lut, working: "${prep_working_dir}"}
+    lut          : {stage: make_lut, working: "${prep_working_dir}"}
     # TODO: Rename to use next line instead of following
     # map_stats    : {stage: get_otf_stats, orig_name: map_local, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
     cmb_stats    : {stage: get_otf_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps

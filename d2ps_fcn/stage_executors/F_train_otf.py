@@ -173,9 +173,9 @@ class TrainOTFExecutor(BaseOTFExecutor):
 
         # Model init
         model = self.init_model()
-        context = dict(model_num=self.model_init)
+        context = dict(model_num=self.model_num)
         with self.name_tracker.set_contexts(context):
-            self.in_initial_model.read(model=model, strict=True)
+            self.in_initial_model.read(model=model, strict=False)
         with self.name_tracker.set_context("epoch", "init"):
             self.out_model.write(model=model, epoch="init")
         model = model.to(self.device)

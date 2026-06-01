@@ -283,7 +283,7 @@ def check_main_input(x: torch.Tensor):
         raise ValueError(
             f"Expected input shape (B, 12, C, H, W); got {tuple(x.shape)}"
         )
-    B, F, C, H, W = x.shape
+    B, C, F, H, W = x.shape
     if F != 12:
         raise ValueError(
             f"Expected 12 faces; got {x.shape[1]}"
@@ -309,7 +309,6 @@ class TLPEncAggDec(nn.Module):
                  ):
         super().__init__()
         self.nside = nside
-        self.example_in_shape = (12, n_in_channels, nside, nside)
         self.note = note
 
         # No longer the case
@@ -340,6 +339,9 @@ class TLPEncAggDec(nn.Module):
             activation=activation,
             final_activation=final_activation
         )
+        self.example_in_shape = (n_in_channels, 12, nside, nside)
+        self.example_bn_shape = {self.agg.num_agg_out_features}
+        self.example_out_shape = {n_outputs}
 
     def forward(self, x: torch.Tensor):
         check_main_input(x)
@@ -374,7 +376,6 @@ class TLPEnc2AggDec(nn.Module):
                  ):
         super().__init__()
         self.nside = nside
-        self.example_in_shape = (12, n_in_channels, nside, nside)
 
         self.note = note
 
@@ -415,6 +416,9 @@ class TLPEnc2AggDec(nn.Module):
             torch.tensor([4, 5, 6, 7], dtype=torch.long),
             persistent=False,
         )
+        self.example_in_shape = (n_in_channels, 12, nside, nside)
+        self.example_bn_shape = {self.agg.num_agg_out_features}
+        self.example_out_shape = {n_outputs}
 
     def forward(self, x):
         check_main_input(x)

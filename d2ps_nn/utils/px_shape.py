@@ -82,8 +82,10 @@ class LUTShaper(MapShaper):
     def forward(self, x):
         lut = self._get_lut(x)             # also resolves _lut_np
         out = x[..., lut]
-        if self.add_channel_dim:
+        if self.add_channel_dim and isinstance(out, torch.Tensor):
             out = out.unsqueeze(out.ndim - self._lut_np.ndim)
+        elif self.add_channel_dim:
+            out = np.expand_dims(out, out.ndim - self._lut_np.ndim)
         return out
 
 

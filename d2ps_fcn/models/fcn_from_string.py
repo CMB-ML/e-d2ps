@@ -93,6 +93,7 @@ class FCNFromString(nn.Module):
             prev = dim
 
         self.net = nn.Sequential(*layers)
+        self.model_dict = None  # TODO
 
     @staticmethod
     def _parse_token(tok: str, is_last: bool, n_out: int):
