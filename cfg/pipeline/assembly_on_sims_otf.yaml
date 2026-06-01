@@ -62,7 +62,7 @@ train_otf:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
   assets_in:
-    train_cmb_ps : {stage: raw, orig_name: ps_bundle}
+    dl_bank      : {stage: raw, orig_name: ps_bundle}
     valid_thry_ps: {stage: otf_fixed, orig_name: ps_thry}
     valid_real_ps: {stage: otf_fixed, orig_name: ps_real}
     valid_map    : {stage: otf_fixed, orig_name: cmb_map}
@@ -87,7 +87,7 @@ infer_otf:
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_pred_{epoch}.npy"
   assets_in:
     model        : {stage: train_otf}
-    ps_bundle    : {stage: raw, orig_name: ps_bundle}
+    dl_bank      : {stage: raw, orig_name: ps_bundle}
     cmb_map      : {stage: otf_fixed}
     resume_model : {stage: train_otf, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}

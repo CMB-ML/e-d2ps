@@ -25,6 +25,7 @@ from d2ps_nn.utils.px_scale import make_px_processor, MapProcessor
 from d2ps_fcn.dataset_otf import TrainingMapSampler, make_map_sampler
 from d2ps_fcn.dataset_fixed import FixedDataset
 from d2ps_fcn.realization_spectra import make_real_spectra_maker
+from d2ps_fcn.stage_executors._base_otf_executors import BaseOTFExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -53,19 +54,14 @@ def _fmt_diag(vals):
     return " ".join(out)
 
 
-class TrainOTFExecutor(BasePyTorchModelExecutor):
+class TrainOTFExecutor(BaseOTFExecutor):
     def __init__(self, cfg: DictConfig, stage_str="train_otf") -> None:
         super().__init__(cfg, stage_str=stage_str)
 
-        self.ells = parse_ells(cfg.model.use_ells)
-        self.lmax = self.ells[-1]
-        self.spectrum_type = norm_ps_type(cfg.spectrum_type)  # "theory" | "realization"
-
         # Assets
-        self.in_train_cmb_ps:  Asset = self.assets_in["train_cmb_ps"]
         self.in_valid_map:     Asset = self.assets_in["valid_map"]
         self.in_map_stats:     Asset = self.assets_in["cmb_stats"]
-        self.in_rps_stats:     Asset = self.assets_in["rps_stats"]
+        # self.in_rps_stats:     Asset = self.assets_in["rps_stats"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_resume_model:  Asset = self.assets_in["resume_model"]
 
@@ -88,54 +84,18 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
         self.n_batches        = cfg.model.train.n_batches
         self.n_epochs         = cfg.model.train.n_epochs
         self.learning_rate    = cfg.model.train.learning_rate
-        self.dtype            = self.dtype_mapping[cfg.model.dtype]
         self.earliest_best    = cfg.model.train.earliest_best
         self.checkpoint       = cfg.model.train.checkpoint_every
         self.extra_check      = cfg.model.train.extra_check
-        self.model_init       = cfg.model.model_init
-        self.out_power        = cfg.out_power
-        self.activation       = cfg.model.activation
-        self.fcn_string       = cfg.fcn_string
 
-        self.sht_engine       = str(cfg.sim_engine).lower()
-         
-        logger.info(f"Producing {self.train_batch_size * self.n_batches} maps per epoch.")
-        logger.info(f"Running for {self.n_epochs} epochs.")
-
-        self.label_prep       = cfg.model.prep_label
-        self.feature_prep     = cfg.model.prep_feature
-
-        # Processor constructed in __init__ since it only wires asset references
-        self.map_processor = make_px_processor(mode=self.feature_prep, cfg=cfg, stage_str=stage_str)
-
-        # Scalers constructed here; fitted in execute()
-        self.label_scaler   = make_scaler_from_prep_spec(self.label_prep)
         logger.info(f"map_processor type: {type(self.map_processor).__name__}")
         logger.info(f"label_scaler: {self.label_scaler}")
 
-        self._diag_ells_print,  self._diag_cols_print  = self._build_diag_indices(DIAG_ELL_MAX_PRINT, np.asarray(self.ells))
-        self._diag_ells_record, self._diag_cols_record  = self._build_diag_indices(DIAG_ELL_MAX_RECORD, np.asarray(self.ells))
+        self._diag_ells_print,  self._diag_cols_print  = self._build_diag_indices(DIAG_ELL_MAX_PRINT)
+        self._diag_ells_record, self._diag_cols_record  = self._build_diag_indices(DIAG_ELL_MAX_RECORD)
 
-        if self._diag_cols_record:
-            logger.info(
-                f"Diagnostics: recording R(ell), rho(ell) for ell="
-                f"{self._diag_ells_record} at output cols {self._diag_cols_record}"
-            )
-            logger.info(
-                f"Diagnostics: printing ell={self._diag_ells_print}"
-            )
-        else:
-            logger.warning("Diagnostic ell range not present in model outputs; skipping R/rho prints.")
-
-        if self._diag_cols_print:
-            logger.info(
-                f"Diagnostics: tracking R(ell), rho(ell) for ell="
-                f"{self._diag_cols_print} at output cols {self._diag_cols_print}"
-            )
-        else:
-            logger.warning("Diagnostic ell range not present in model outputs; skipping R/rho prints.")
-
-    def _build_diag_indices(self, ell_max, ells_arr):
+    def _build_diag_indices(self, ell_max):
+        ells_arr = np.asarray(self.ells)
         ells, cols = [], []
         for ell in range(DIAG_ELL_MIN, ell_max + 1):
             matches = np.where(ells_arr == ell)[0]
@@ -148,29 +108,25 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
         self.choose_device()
 
+        logger.info(f"Producing {self.train_batch_size * self.n_batches} maps per epoch.")
+        logger.info(f"Running for {self.n_epochs} epochs.")
+
+        if self._diag_cols_record:
+            logger.info(
+                f"Diagnostics: recording R(ell), rho(ell) for ell="
+                f"{self._diag_ells_record} at output cols {self._diag_cols_record}"
+            )
+            logger.info(
+                f"Diagnostics: printing ell={self._diag_ells_print}"
+            )
+        else:
+            logger.warning("Diagnostic ell range not present in model outputs; skipping R/rho prints.")
+
         # Load bank and fit scalers
         logger.debug(f"Loading bank of Dls")
-        dl_bank = self.in_train_cmb_ps.read()           # (n_spectra, some_lmax)
-        if dl_bank.shape[1] < self.lmax+1:
-            raise ValueError("Dl bank does not have enough ell. Please regenerate it or change lmax.")
-        dl_bank = dl_bank[:, :self.lmax+1]
+        dl_bank = self.load_dl_bank()
+        self.fit_label_scaler(dl_bank)
         logger.info(f"Done loading bank of Dls")
-
-        if self.spectrum_type == "theory":
-            dl_for_labels = dl_bank[:, 2:]            # ells 2..lmax
-            self.label_scaler.fit(dl_for_labels)
-            n_label_ells = dl_for_labels.shape[1]
-        else:  # "realization"
-            rps_stats = self.in_rps_stats.read()      # (4, lmax+1)
-            rps_for_labels = rps_stats[:, 2:]         # (4, lmax-1), ells 2..lmax
-            self.label_scaler.fit_from_stats(rps_for_labels)
-            n_label_ells = rps_for_labels.shape[1]
-
-        if n_label_ells != len(self.ells):
-            raise ValueError(
-                f"Mismatch: {self.spectrum_type} labels have {n_label_ells} ells "
-                f"but model expects {len(self.ells)} output channels."
-            )
     
         # Build generation pipeline
         valid_split = self.splits.get("valid")
@@ -222,6 +178,7 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
             self.out_model.write(model=model, epoch="init")
         model = model.to(self.device)
 
+        # MODEL DEPENDENT; BUNDLE WITH MODEL
         self._crosscheck_model_dims(model)
 
         loss_function = torch.nn.MSELoss(reduction='mean').to(self.device)
@@ -434,14 +391,14 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, epoch="final")
 
-    def init_model(self):
-        model_dict = dict(
-            arch_str=self.fcn_string,
-            n_in=hp.nside2npix(self.nside),
-            n_out=len(self.ells))
-        model = FCNFromString(**model_dict)
-        logger.info(f"Model dict: {model_dict}")
-        return model
+    # def init_model(self):
+    #     model_dict = dict(
+    #         arch_str=self.fcn_string,
+    #         n_in=hp.nside2npix(self.nside),
+    #         n_out=len(self.ells))
+    #     model = FCNFromString(**model_dict)
+    #     logger.info(f"Model dict: {model_dict}")
+    #     return model
 
     def set_up_fixed_dataset(self, split: Split) -> FixedDataset:
         feat_path = self.make_fn_template(split, self.in_valid_map)
@@ -461,7 +418,6 @@ class TrainOTFExecutor(BasePyTorchModelExecutor):
             device=self.device,
         )
         return dataset
-
 
     def _crosscheck_model_dims(self, model):
             expected_npix = hp.nside2npix(self.nside)

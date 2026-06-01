@@ -27,12 +27,13 @@ from d2ps_fcn.dataset_fixed import FixedFeatureDataset
 from d2ps_fcn.realization_spectra import make_real_spectra_maker
 from d2ps_fcn.stage_executors.F_train_otf import TrainOTFExecutor
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
+from d2ps_fcn.stage_executors._base_otf_executors import BaseOTFExecutor
 
 
 logger = logging.getLogger(__name__)
 
 
-class InferOTFExecutor(BasePyTorchModelExecutor):
+class InferOTFExecutor(BaseOTFExecutor):
     def __init__(self, cfg: DictConfig, stage_str="infer_otf") -> None:
         super().__init__(cfg, stage_str=stage_str)
         # BasePyTorchModelExecutor.__init__(self, cfg, stage_str=stage_str)
@@ -42,7 +43,6 @@ class InferOTFExecutor(BasePyTorchModelExecutor):
         self.spectrum_type = norm_ps_type(cfg.spectrum_type)  # "theory" | "realization"
 
         # Assets
-        self.ps_bundle:    Asset = self.assets_in["ps_bundle"]  # For label scaler
         self.in_features:  Asset = self.assets_in["cmb_map"]
         self.in_map_stats: Asset = self.assets_in["cmb_stats"]
         self.in_rps_stats: Asset = self.assets_in["rps_stats"]
@@ -52,30 +52,15 @@ class InferOTFExecutor(BasePyTorchModelExecutor):
 
         # Config
         self.infer_batch_size = cfg.model.train.valid_batch_size
-        self.n_batches        = cfg.model.train.n_batches
         self.n_epochs         = cfg.model.train.n_epochs
+        self.n_batches        = cfg.model.train.n_batches
         self.dtype            = self.dtype_mapping[cfg.model.dtype]
-        self.out_power        = cfg.out_power
-        self.activation       = cfg.model.activation
-        self.fcn_string       = cfg.fcn_string
+        self._model_epochs = cfg.use_epochs
 
-        self.sht_engine       = str(cfg.sim_engine).lower()
-         
-        logger.info(f"Running for {self.n_epochs} epochs.")
-
-        self.label_prep       = cfg.model.prep_label
-        self.feature_prep     = cfg.model.prep_feature
-
-        # Processor constructed in __init__ since it only wires asset references
-        self.map_processor = make_px_processor(mode=self.feature_prep, cfg=cfg, stage_str=stage_str)
-
-        # Scalers constructed here; fitted in execute()
-        self.label_scaler   = make_scaler_from_prep_spec(self.label_prep)
         logger.info(f"map_processor type: {type(self.map_processor).__name__}")
         logger.info(f"label_scaler: {self.label_scaler}")
 
         self.model = None  # Placeholder
-        self._model_epochs = cfg.use_epochs
     
     @property
     def model_epochs(self):
@@ -92,27 +77,9 @@ class InferOTFExecutor(BasePyTorchModelExecutor):
 
         # Load bank and fit scalers
         logger.debug(f"Loading bank of Dls")
-        dl_bank = self.ps_bundle.read()           # (n_spectra, some_lmax)
-        if dl_bank.shape[1] < self.lmax+1:
-            raise ValueError("Dl bank does not have enough ell. Please regenerate it or change lmax.")
-        dl_bank = dl_bank[:, :self.lmax+1]
+        dl_bank = self.load_dl_bank()
+        self.fit_label_scaler(dl_bank)
         logger.info(f"Done loading bank of Dls")
-
-        if self.spectrum_type == "theory":
-            dl_for_labels = dl_bank[:, 2:]            # ells 2..lmax
-            self.label_scaler.fit(dl_for_labels)
-            n_label_ells = dl_for_labels.shape[1]
-        else:  # "realization"
-            rps_stats = self.in_rps_stats.read()      # (4, lmax+1)
-            rps_for_labels = rps_stats[:, 2:]         # (4, lmax-1), ells 2..lmax
-            self.label_scaler.fit_from_stats(rps_for_labels)
-            n_label_ells = rps_for_labels.shape[1]
-
-        if n_label_ells != len(self.ells):
-            raise ValueError(
-                f"Mismatch: {self.spectrum_type} labels have {n_label_ells} ells "
-                f"but model expects {len(self.ells)} output channels."
-            )
         
         for epoch in self.model_epochs:
             with self.name_tracker.set_context("epoch", epoch):
@@ -148,14 +115,14 @@ class InferOTFExecutor(BasePyTorchModelExecutor):
         out = np.vstack(bundle)
         self.out_pred.write(data=out)
 
-    def init_model(self):
-        model_dict = dict(
-            arch_str=self.fcn_string,
-            n_in=hp.nside2npix(self.nside),
-            n_out=len(self.ells))
-        model = FCNFromString(**model_dict)
-        logger.info(f"Model dict: {model_dict}")
-        return model
+    # def init_model(self):
+    #     model_dict = dict(
+    #         arch_str=self.fcn_string,
+    #         n_in=hp.nside2npix(self.nside),
+    #         n_out=len(self.ells))
+    #     model = FCNFromString(**model_dict)
+    #     logger.info(f"Model dict: {model_dict}")
+    #     return model
 
     def set_up_fixed_dataset(self, split: Split) -> FixedFeatureDataset:
         with self.name_tracker.set_context("split", split.name):
