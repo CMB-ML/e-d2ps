@@ -135,6 +135,7 @@ class BaseFCNExecutor(BasePyTorchModelExecutor):
         self.nn_model = cfg.nn_model
 
         if self.nn_model == "fcn":
+            self.init_backbone = self.init_simple_backbone
             self.fcn_string = cfg.fcn_string
 
         elif self.nn_model == "MobileViTCMBRegressor":
