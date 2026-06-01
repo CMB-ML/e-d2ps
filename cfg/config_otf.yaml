@@ -56,7 +56,7 @@ num_epochs         : 20
 train_batch_size   : 256
 n_train_batches    : 4
 
-input_kind         : maps
+input_kind         : maps  # Currently deprecated; requires new implementation of on-the-fly mechanics
 spectrum_type      : ???
 prep_label         : ???
 prep_feature       : ???

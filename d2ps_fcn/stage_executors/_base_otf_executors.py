@@ -51,13 +51,17 @@ class BaseFCNExecutor(BasePyTorchModelExecutor):
         self.dtype      = self.dtype_mapping[cfg.model.dtype]
         self.fcn_string = cfg.fcn_string
         self.out_power  = cfg.out_power
-        self.model_init       = cfg.model.model_init
+        self.model_init = cfg.model.model_init
 
         # input_kind today is only set on the model_init config, but the
         # value it determines (n_input) is a property of the model itself,
         # so it lives on the base. Default to 'maps' to preserve existing
         # train/infer config files.
         input_kind = getattr(cfg, "input_kind", "maps")
+        if input_kind in ("alms", "alm"):
+            raise NotImplementedError(
+                f"input_kind={input_kind!r} not supported; 'alms' are to be reintroduced later."
+            )
         if input_kind not in ("alms", "alm", "maps", "map"):
             raise NotImplementedError(
                 f"input_kind={input_kind!r} not supported; use 'alms' or 'maps'."
