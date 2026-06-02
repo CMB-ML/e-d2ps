@@ -32,19 +32,21 @@ from d2ps_nn.utils.px_shape import make_px_shaper
 from d2ps_fcn.scaler_hydra_helper import make_scaler_from_prep_spec
 from d2ps_fcn.models.fcn_from_string import FCNFromString
 
-from d2ps_nn.models import (
+from d2ps_fcn.models import (
     TLPEncAggDec, 
     TLPEnc2AggDec, 
-    SimpleEncDec,
+    SimpleEncDec
+)
+from d2ps_nn.models import (
     MobileViTCMBRegressor
 )
-from d2ps_nn.models.polynomial_layers import (
-    PolynomialSpectrumLayer,
-    IdentitySpectrumLayer
-)
-from d2ps_nn.models.cosmo_param_layer import ParameterSpectrumLayer
-from d2ps_nn.models.wrapped_models import WrappedSpectrumModel
-
+# TODO: Re-add?
+# from d2ps_nn.models.polynomial_layers import (
+#     PolynomialSpectrumLayer,
+#     IdentitySpectrumLayer
+# )
+# from d2ps_nn.models.cosmo_param_layer import ParameterSpectrumLayer
+# from d2ps_nn.models.wrapped_models import WrappedSpectrumModel
 
 
 logger = logging.getLogger(__name__)
@@ -144,6 +146,7 @@ class BaseFCNExecutor(BasePyTorchModelExecutor):
         
         elif self.nn_model in ["SimpleEncDec", "TLPEnc2AggDec", "TLPEncAggDec"]:
             self.init_backbone = self.init_simple_backbone
+            self.fcn_string = cfg.fcn_string
 
             self.model_n_init_features = cfg.model.n_init_features
             self.model_n_levels = cfg.model.n_levels
@@ -152,7 +155,7 @@ class BaseFCNExecutor(BasePyTorchModelExecutor):
             self.dropout_rate = cfg.model.dropout_rate
             self.down_reductions = cfg.model.down_reductions
             self.spatial_reduction = cfg.model.spatial_reduction
-            self.final_activation = cfg.model.final_activation
+            # self.final_activation = cfg.model.final_activation
             if self.activation is None:
                 raise ValueError("Activation cannot be None. Please specify 'relu' or 'gelu' in config.")        
         else:
@@ -235,7 +238,8 @@ class BaseFCNExecutor(BasePyTorchModelExecutor):
             activation=self.activation,
             down_reductions=self.down_reductions,
             spatial_reduction=self.spatial_reduction,
-            final_activation=self.final_activation,
+            # final_activation=self.final_activation,
+            decoder_factory=make_decoder_factory(self.fcn_string),
             note=self.model_note,
         )
 
@@ -365,19 +369,12 @@ class BaseOTFExecutor(BaseFCNExecutor):
     def fit_label_scaler(self, dl_bank) -> int:
         """Fit self.label_scaler from the supplied Dl bank.
 
-        Returns n_label_ells. Raises if the bank is too short or if the
-        label ell count doesn't match the model's output channel count.
+        Raises if the bank is too short or if the label ell count doesn't match 
+        the model's output channel count.
 
         Subclasses call this near the top of execute() with whichever bank
         they own (in_train_cmb_ps for training, ps_bundle for inference).
         """
-        if dl_bank.shape[1] < self.lmax + 1:
-            raise ValueError(
-                "Dl bank does not have enough ell. "
-                "Regenerate it or change lmax."
-            )
-        dl_bank = dl_bank[:, : self.lmax + 1]
-
         if self.spectrum_type == "theory":
             dl_for_labels = dl_bank[:, 2:]            # ells 2..lmax
             self.label_scaler.fit(dl_for_labels)
@@ -393,4 +390,21 @@ class BaseOTFExecutor(BaseFCNExecutor):
                 f"Mismatch: {self.spectrum_type} labels have {n_label_ells} "
                 f"ells but model expects {len(self.ells)} output channels."
             )
-        # return n_label_ells
+
+
+def make_decoder_factory(dec_arch_str):
+    """Config string -> decoder_factory, or None to use the model's default.
+
+    The 'N' head is mandatory: a 'P' (pixel-pair) head would expand n_in to
+    n_in**2, which is meaningless for a decoder operating on aggregator output.
+    """
+    if dec_arch_str is None:
+        return None
+    head = dec_arch_str.split("_", 1)[0]
+    if head != "N":
+        raise ValueError(
+            f"decoder dec_arch_str must use the plain 'N' head, got '{head}'."
+        )
+    def factory(n_in, n_out):
+        return FCNFromString(arch_str=dec_arch_str, n_in=n_in, n_out=n_out)
+    return factory

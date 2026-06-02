@@ -2,8 +2,9 @@
 Written using ChatGPT with instructions to produce the simplest implementation of a UNet model,
 with parameterized depth (for simplicity when debugging: a very shallow UNet can be produced).
 
-Some modifications were made.
+Updated quite a bit.
 """
+from typing import Callable, Optional
 import numpy as np
 import torch
 import torch.nn as nn
@@ -16,6 +17,9 @@ from .layer_factories import (
     get_spatial_reduction
 )
 from .down_reduction_spec import expand_down_reduction_spec
+
+
+DecoderFactory = Callable[[int, int], nn.Module]
 
 
 class DoubleConv(nn.Module):
@@ -278,6 +282,28 @@ class FCNDecoder(nn.Module):
         return x
 
 
+def make_default_decoder_factory(
+    dropout_rate: float,
+    activation: str,
+    final_activation: Optional[str],
+) -> DecoderFactory:
+    """Original two-layer FCNDecoder (mid = n_in // 2).
+
+    Used when a model is built without an explicit decoder_factory, so prior
+    behavior and configs are preserved exactly.
+    """
+    def factory(n_in: int, n_out: int) -> nn.Module:
+        return FCNDecoder(
+            in_channels=n_in,
+            mid_channels=n_in // 2,
+            out_channels=n_out,
+            dropout_rate=dropout_rate,
+            activation=activation,
+            final_activation=final_activation,
+        )
+    return factory
+
+
 def check_main_input(x: torch.Tensor):
     if x.ndim != 5:
         raise ValueError(
@@ -305,6 +331,7 @@ class TLPEncAggDec(nn.Module):
                  down_reductions='avg',
                  spatial_reduction='avg',
                  face_reduction='avg',
+                 decoder_factory: Optional[DecoderFactory] = None,
                  note=''
                  ):
         super().__init__()
@@ -331,17 +358,17 @@ class TLPEncAggDec(nn.Module):
             spatial_reduction=spatial_reduction
             )
 
-        self.dec = FCNDecoder(
-            in_channels=self.agg.num_agg_out_features,
-            mid_channels=self.agg.num_agg_out_features // 2,
-            out_channels=n_outputs,
-            dropout_rate=dropout_rate,
-            activation=activation,
-            final_activation=final_activation
-        )
+        if decoder_factory is None:
+                    decoder_factory = make_default_decoder_factory(
+                        dropout_rate=dropout_rate,
+                        activation=activation,
+                        final_activation=final_activation,
+                    )
+        self.dec = decoder_factory(self.agg.num_agg_out_features, n_outputs)
+        
         self.example_in_shape = (n_in_channels, 12, nside, nside)
-        self.example_bn_shape = {self.agg.num_agg_out_features}
-        self.example_out_shape = {n_outputs}
+        self.example_bn_shape = (self.agg.num_agg_out_features, )
+        self.example_out_shape = (n_outputs, )
 
     def forward(self, x: torch.Tensor):
         check_main_input(x)
@@ -398,14 +425,14 @@ class TLPEnc2AggDec(nn.Module):
             spatial_reduction=spatial_reduction
             )
 
-        self.dec = FCNDecoder(
-            in_channels=self.agg.num_agg_out_features,
-            mid_channels=self.agg.num_agg_out_features // 2,
-            out_channels=n_outputs,
-            dropout_rate=dropout_rate,
-            activation=activation,
-            final_activation=final_activation
-        )
+        if decoder_factory is None:
+                    decoder_factory = make_default_decoder_factory(
+                        dropout_rate=dropout_rate,
+                        activation=activation,
+                        final_activation=final_activation,
+                    )
+        self.dec = decoder_factory(self.agg.num_agg_out_features, n_outputs)
+        
         self.register_buffer(
             "polar_faces",
             torch.tensor([0, 1, 2, 3, 8, 9, 10, 11], dtype=torch.long),
@@ -416,9 +443,10 @@ class TLPEnc2AggDec(nn.Module):
             torch.tensor([4, 5, 6, 7], dtype=torch.long),
             persistent=False,
         )
+
         self.example_in_shape = (n_in_channels, 12, nside, nside)
-        self.example_bn_shape = {self.agg.num_agg_out_features}
-        self.example_out_shape = {n_outputs}
+        self.example_bn_shape = (self.agg.num_agg_out_features, )
+        self.example_out_shape = (n_outputs, )
 
     def forward(self, x):
         check_main_input(x)
