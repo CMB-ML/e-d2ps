@@ -60,10 +60,10 @@ def run_C_fcn(cfg):
     logger.info(f"Running run_C_fcn in {__file__}")
 
     pipes = [
-        # TrainOTFExecutor,
-        # LossPlotExecutor,
-        # InferOTFExecutor,
-        # OTFShowPredsExecutor,
+        TrainOTFExecutor,
+        LossPlotExecutor,
+        InferOTFExecutor,
+        OTFShowPredsExecutor,
         PerEllStatsPlotExecutor,
     ]
     run(cfg, pipes)
