@@ -78,7 +78,7 @@ learning_rate_sweep: 5e-4  #, 1e-4, 1e-3
 # sigma_scale_sweep  : 0.2, 0.5, 1, 2, 5
 
 fcn_string         : ???
-fcn_str_sweep      : P_10aR_O, P_10aR_10aR_O, P_20aR_O, P_20aR_20aR_O, P_50aR_O, P_50aR_50aR_O, P_100aR_O, P_100aR_100aR_O, P_200aR_O, P_200aR_200aR_O, P_500aR_O, P_500aR_500aR_O, P_1000aR_O, P_1000aR_1000aR_O
+fcn_str_sweep      : N_10aR_O, N_10aR_10aR_O, N_20aR_O, N_20aR_20aR_O, N_50aR_O, N_50aR_50aR_O, N_100aR_O, N_100aR_100aR_O, N_200aR_O, N_200aR_200aR_O, N_500aR_O, N_500aR_500aR_O, N_1000aR_O, N_1000aR_1000aR_O
 
 ############
 ### Models: 
