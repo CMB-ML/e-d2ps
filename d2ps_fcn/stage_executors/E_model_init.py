@@ -10,6 +10,7 @@ from cmbml.core import Asset
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from cmbml.sims.random_seed_manager import SeedFactory
 
+from d2ps_nn.utils.model_summary import trace_module_shapes
 from d2ps_fcn.stage_executors._base_otf_executors import BaseFCNExecutor
 
 
@@ -39,10 +40,15 @@ class ModelInitExecutor(BaseFCNExecutor):
 
         model = self.init_model()
 
-        with torch.no_grad():
-            dummy_x = torch.zeros(1, *model.example_in_shape, dtype=self.dtype)
-            d_out = model(dummy_x)
-            logger.info(f"Model function checked. Input shape: {dummy_x.shape}, output shape: {d_out.shape}")
+        records = trace_module_shapes(model, model.example_in_shape, self.dtype)
+        logger.info(f"{'Input':<30} {'':<18} {'':<20} -> {str(model.example_in_shape):<20} [{np.prod(model.example_in_shape)}]")
+        for name, cls, in_s, out_s in records:
+            if cls == "Identity":
+                continue
+            if in_s == out_s:
+                continue
+            out_elem = np.prod(out_s)
+            logger.info(f"{name:<30} {cls:<18} {str(in_s):<20} -> {str(out_s):<20} [{out_elem}]")
 
         context = dict(model_num=self.model_num)
         with self.name_tracker.set_contexts(context):
