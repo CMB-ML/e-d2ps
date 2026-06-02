@@ -154,6 +154,10 @@ fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale
 ###############################################################
 # n_sims: ???
 
+diag_lmin: 2
+diag_lmax_print: 5
+diag_lmax_record: ${lmax}
+
 # splits:
 #   Train:
 #     n_sims: ${n_sims}
