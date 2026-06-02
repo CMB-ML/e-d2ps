@@ -89,6 +89,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_A_prep()
-    run_B_prep_model()
+    # run_A_prep()
+    # run_B_prep_model()
     run_C_fcn()
