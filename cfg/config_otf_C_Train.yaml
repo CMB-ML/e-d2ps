@@ -24,11 +24,11 @@ hydra:
       prep_feature       : ${prep_feature_sweep}
       learning_rate      : ${learning_rate_sweep}
 
-      # # SimpleEncDec
-      # norm_kind           : ${norm_sweep}
-      # activation          : ${activation_sweep}      
-      # down_reductions     : ${down_reductions_sweep}
-      # spatial_reduction   : ${spatial_reduction_sweep}
+      # SimpleEncDec
+      norm_kind           : ${norm_sweep}
+      activation          : ${activation_sweep}      
+      down_reductions     : ${down_reductions_sweep}
+      spatial_reduction   : ${spatial_reduction_sweep}
 
       # # TLPEncDec
       # norm_kind           : ${norm_sweep}
