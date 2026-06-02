@@ -91,56 +91,56 @@ fcn_str_sweep      : N_10aR_O, N_10aR_10aR_O, N_20aR_O, N_20aR_20aR_O, N_50aR_O,
 # working_dir        : "train_otf_ASDFASDF/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}/"
 # fig_model_name     : "On-The-Fly, ${nn_model} ${nside} ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
 
-## SimpleEncDec
-nn_model: SimpleEncDec
-px_arrange: cmbNNCS
-norm_kind: ???
-# norm_sweep: none, bn, gn
-norm_sweep: none, gn
-# Down reductions use X/m strings: X is max, m is avg;
-#   order starts with first/top layer and fills down 
-#   XmX would be Max, Avg, Max, and the rest Avg
-down_reductions: ???
-down_reductions_sweep: avg  #, max, Xm, XXm, mXX
-spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
-spatial_reduction_sweep: avg
-activation: ???
-# activation_sweep: relu, gelu
-activation_sweep: gelu
-use_pos_enc_lut: false
-model:
-  n_levels: 3
-model_fn_template  : ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
-working_dir        : "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_fcn_str-${fcn_string}_${model_num}/"
-fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
-
-# ## TLPEncAggDec / TLPEnc2AggDec
-# # nn_model: TLPEncAggDec
-# nn_model: TLPEnc2AggDec
-# px_arrange: channel
+# ## SimpleEncDec
+# nn_model: SimpleEncDec
+# px_arrange: cmbNNCS
 # norm_kind: ???
 # # norm_sweep: none, bn, gn
-# norm_sweep: gn
+# norm_sweep: none, gn
+# # Down reductions use X/m strings: X is max, m is avg;
+# #   order starts with first/top layer and fills down 
+# #   XmX would be Max, Avg, Max, and the rest Avg
 # down_reductions: ???
-# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-# down_reductions_sweep: avg
+# down_reductions_sweep: avg  #, max, Xm, XXm, mXX
 # spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
+# # # spatial_reduction_sweep: avg, max
 # spatial_reduction_sweep: avg
-# face_reduction: ???
-# # face_reduction_sweep: avg, max, weighted, softmax
-# face_reduction_sweep: avg
-# use_pos_enc_lut: false
 # activation: ???
 # # activation_sweep: relu, gelu
 # activation_sweep: gelu
+# use_pos_enc_lut: false
 # model:
 #   n_levels: 3
 # model_fn_template  : ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
-# working_dir        : "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_fcn_str-${fcn_string}_${model_num}/"
-# fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string}, \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
+# working_dir        : "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_fcn_str-${fcn_string}_${model_num}/"
+# fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
+
+## TLPEncAggDec / TLPEnc2AggDec
+# nn_model: TLPEncAggDec
+nn_model: TLPEnc2AggDec
+px_arrange: channel
+norm_kind: ???
+# norm_sweep: none, bn, gn
+norm_sweep: none, gn
+down_reductions: ???
+# for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
+# down_reductions_sweep: max, avg, X, Xm, XXm, mXX
+down_reductions_sweep: avg
+spatial_reduction: ???
+# spatial_reduction_sweep: avg, max
+spatial_reduction_sweep: avg
+face_reduction: ???
+# face_reduction_sweep: avg, max, weighted, softmax
+face_reduction_sweep: avg
+use_pos_enc_lut: false
+activation: ???
+# activation_sweep: relu, gelu
+activation_sweep: gelu
+model:
+  n_levels: 3
+model_fn_template  : ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
+working_dir        : "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_fcn_str-${fcn_string}_${model_num}/"
+fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string}, \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
 
 ### Or
 # nn_model: MobileViTCMBRegressor
