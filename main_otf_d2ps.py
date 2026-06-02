@@ -60,10 +60,11 @@ def run_C_fcn(cfg):
     logger.info(f"Running run_C_fcn in {__file__}")
 
     pipes = [
-        TrainOTFExecutor,
-        LossPlotExecutor,
-        InferOTFExecutor,
-        OTFShowPredsExecutor
+        # TrainOTFExecutor,
+        # LossPlotExecutor,
+        # InferOTFExecutor,
+        # OTFShowPredsExecutor,
+        PerEllStatsPlotExecutor,
     ]
     run(cfg, pipes)
 
@@ -88,6 +89,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_A_prep()
-    run_B_prep_model()
+    # run_A_prep()
+    # run_B_prep_model()
     run_C_fcn()
