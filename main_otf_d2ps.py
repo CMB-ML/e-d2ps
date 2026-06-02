@@ -22,7 +22,8 @@ from d2ps_fcn.ex import (
     ModelInitExecutor,
     TrainOTFExecutor,
     InferOTFExecutor,
-    OTFShowPredsExecutor
+    OTFShowPredsExecutor,
+    PerEllStatsPlotExecutor,
 )
 
 

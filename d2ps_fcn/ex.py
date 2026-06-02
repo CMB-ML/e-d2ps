@@ -6,3 +6,4 @@ from d2ps_fcn.stage_executors.E_model_init import ModelInitExecutor
 from d2ps_fcn.stage_executors.F_train_otf import TrainOTFExecutor
 from d2ps_fcn.stage_executors.G_infer_otf import InferOTFExecutor
 from d2ps_fcn.stage_executors._show_preds import OTFShowPredsExecutor
+from d2ps_fcn.stage_executors._show_r_rho_fve import PerEllStatsPlotExecutor
