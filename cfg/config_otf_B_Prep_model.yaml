@@ -24,18 +24,18 @@ hydra:
       prep_label          : none    # placeholder
       prep_feature        : none    # placeholder
 
-      # # SimpleEncDec
-      # norm_kind           : none    # placeholder
-      # activation          : relu    # placeholder
-      # down_reductions     : avg     # placeholder
-      # spatial_reduction   : avg     # placeholder
-
-      # TLPEncDec
+      # SimpleEncDec
       norm_kind           : none    # placeholder
       activation          : relu    # placeholder
       down_reductions     : avg     # placeholder
       spatial_reduction   : avg     # placeholder
-      face_reduction      : avg     # placeholder
+
+      # # TLPEncDec
+      # norm_kind           : none    # placeholder
+      # activation          : relu    # placeholder
+      # down_reductions     : avg     # placeholder
+      # spatial_reduction   : avg     # placeholder
+      # face_reduction      : avg     # placeholder
 
       # Other
       # sigma_scale: ${sigma_scale_sweep}
