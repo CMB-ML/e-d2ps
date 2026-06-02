@@ -31,12 +31,6 @@ from d2ps_fcn.stage_executors._base_otf_executors import BaseOTFExecutor
 logger = logging.getLogger(__name__)
 
 
-# Diagnostic range (inclusive) for printed R(ell) and rho(ell)
-DIAG_ELL_MIN = 2
-DIAG_ELL_MAX_PRINT = 7    # ells shown in the logger line
-DIAG_ELL_MAX_RECORD = 16  # ells written to the loss record CSV
-
-
 def _fmt_diag(vals):
     """Format a 1D tensor/array of diagnostic values as compact 4-char fields.
 
@@ -92,13 +86,16 @@ class TrainOTFExecutor(BaseOTFExecutor):
         logger.info(f"map_processor type: {type(self.map_processor).__name__}")
         logger.info(f"label_scaler: {self.label_scaler}")
 
-        self._diag_ells_print,  self._diag_cols_print  = self._build_diag_indices(DIAG_ELL_MAX_PRINT)
-        self._diag_ells_record, self._diag_cols_record  = self._build_diag_indices(DIAG_ELL_MAX_RECORD)
+        self.diag_lmin        = cfg.diag_lmin
+        self.diag_lmax_print  = cfg.diag_lmax_print
+        self.diag_lmax_record = cfg.diag_lmax_record
+        self._diag_ells_print,  self._diag_cols_print  = self._build_diag_indices(self.diag_lmax_print)
+        self._diag_ells_record, self._diag_cols_record  = self._build_diag_indices(self.diag_lmax_record)
 
     def _build_diag_indices(self, ell_max):
         ells_arr = np.asarray(self.ells)
         ells, cols = [], []
-        for ell in range(DIAG_ELL_MIN, ell_max + 1):
+        for ell in range(self.diag_lmin, ell_max + 1):
             matches = np.where(ells_arr == ell)[0]
             if len(matches):
                 ells.append(ell)
