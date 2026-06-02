@@ -14,7 +14,8 @@ def trace_module_shapes(model, example_in_shape, dtype, device="cpu",
         def hook(mod, inputs, output):
             in_shape = tuple(inputs[0].shape) if inputs and isinstance(inputs[0], torch.Tensor) else None
             out_shape = tuple(output.shape) if isinstance(output, torch.Tensor) else None
-            records.append((name, type(mod).__name__, in_shape, out_shape))
+            n_params = sum(p.numel() for p in mod.parameters(recurse=False))
+            records.append((name, type(mod).__name__, in_shape, out_shape, n_params))
         return hook
 
     for name, module in model.named_modules():

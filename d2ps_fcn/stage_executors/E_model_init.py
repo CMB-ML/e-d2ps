@@ -42,11 +42,13 @@ class ModelInitExecutor(BaseFCNExecutor):
 
         records = trace_module_shapes(model, model.example_in_shape, self.dtype)
         logger.info(f"{'Input':<40} {'':<18} {'':<20} -> {str(model.example_in_shape):<20} [{np.prod(model.example_in_shape)}]")
-        for name, cls, in_s, out_s in records:
-            if cls == "Identity":
+        for name, cls, in_s, out_s, n_params in records:
+            if n_params == 0 and in_s == out_s:
                 continue
-            if in_s == out_s:
-                continue
+            # if cls in ["Identity", "ReLU", "GeLU"]:
+            #     continue
+            # if in_s == out_s:
+            #     continue
             out_elem = np.prod(out_s)
             logger.info(f"{name:<40} {cls:<18} {str(in_s):<20} -> {str(out_s):<20} [{out_elem}]")
 
