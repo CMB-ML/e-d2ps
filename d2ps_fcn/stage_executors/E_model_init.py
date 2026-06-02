@@ -41,14 +41,14 @@ class ModelInitExecutor(BaseFCNExecutor):
         model = self.init_model()
 
         records = trace_module_shapes(model, model.example_in_shape, self.dtype)
-        logger.info(f"{'Input':<30} {'':<18} {'':<20} -> {str(model.example_in_shape):<20} [{np.prod(model.example_in_shape)}]")
+        logger.info(f"{'Input':<40} {'':<18} {'':<20} -> {str(model.example_in_shape):<20} [{np.prod(model.example_in_shape)}]")
         for name, cls, in_s, out_s in records:
             if cls == "Identity":
                 continue
             if in_s == out_s:
                 continue
             out_elem = np.prod(out_s)
-            logger.info(f"{name:<30} {cls:<18} {str(in_s):<20} -> {str(out_s):<20} [{out_elem}]")
+            logger.info(f"{name:<40} {cls:<18} {str(in_s):<20} -> {str(out_s):<20} [{out_elem}]")
 
         context = dict(model_num=self.model_num)
         with self.name_tracker.set_contexts(context):
