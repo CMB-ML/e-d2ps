@@ -73,9 +73,8 @@ learning_rate_sweep: 5e-4  #, 1e-4, 1e-3
 # activation_sweep   : relu
 # activation_sweep   : gelu, relu
 
-# sigma_scale          : ???
-# sigma_scale_sweep    : 0.2
-# sigma_scale_sweep  : 0.2, 0.5, 1, 2, 5
+sigma_scale          : ???
+sigma_scale_sweep  : 1, 2, 5, 10, 20
 
 fcn_string         : ???
 fcn_str_sweep      : N_10aR_O, N_10aR_10aR_O, N_20aR_O, N_20aR_20aR_O, N_50aR_O, N_50aR_50aR_O, N_100aR_O, N_100aR_100aR_O, N_200aR_O, N_200aR_200aR_O, N_500aR_O, N_500aR_500aR_O, N_1000aR_O, N_1000aR_1000aR_O
@@ -88,8 +87,8 @@ fcn_str_sweep      : N_10aR_O, N_10aR_10aR_O, N_20aR_O, N_20aR_20aR_O, N_50aR_O,
 nn_model           : fcn
 px_arrange         : none
 model_fn_template  : ${nn_model}_${fcn_string}_init_{model_num}
-working_dir        : "otf_${features_type}2ps_${nn_model}/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}/"
-fig_model_name     : "On-The-Fly, ${nn_model} ${nside} ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
+working_dir        : "otf_${features_type}2ps_${nn_model}/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
+fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
 
 # ## SimpleEncDec
 # nn_model: SimpleEncDec
@@ -112,7 +111,7 @@ fig_model_name     : "On-The-Fly, ${nn_model} ${nside} ${lmax}, ${num_epochs}, $
 # model:
 #   n_levels: 3
 # model_fn_template  : ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
-# working_dir        : "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_fcn_str-${fcn_string}_${model_num}/"
+# working_dir        : "otf_${features_type}2ps_${nn_model}/pred_${spectrum_type}-lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_fcn_str-${fcn_string}_${model_num}/"
 # fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
 
 # ## TLPEncAggDec / TLPEnc2AggDec

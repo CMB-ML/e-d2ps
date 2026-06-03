@@ -38,4 +38,4 @@ hydra:
       # face_reduction      : avg     # placeholder
 
       # Other
-      # sigma_scale: ${sigma_scale_sweep}
+      sigma_scale: ${sigma_scale_sweep}
