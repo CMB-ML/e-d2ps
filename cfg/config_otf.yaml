@@ -87,7 +87,7 @@ fcn_str_sweep      : N_10aR_O, N_10aR_10aR_O, N_20aR_O, N_20aR_20aR_O, N_50aR_O,
 nn_model           : fcn
 px_arrange         : none
 model_fn_template  : ${nn_model}_${fcn_string}_init_{model_num}
-working_dir        : "otf_${features_type}2ps_${nn_model}/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
+working_dir        : "otf_${features_type}2ps_${nn_model}_scales/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
 
 # ## SimpleEncDec
@@ -110,9 +110,9 @@ fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num
 # use_pos_enc_lut: false
 # model:
 #   n_levels: 3
-# model_fn_template  : ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
-# working_dir        : "otf_${features_type}2ps_${nn_model}/pred_${spectrum_type}-lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_fcn_str-${fcn_string}_${model_num}/"
-# fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
+# model_fn_template  : *ADD SCALES ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
+# working_dir        : *ADD SCALES "otf_${features_type}2ps_${nn_model}/pred_${spectrum_type}-lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_fcn_str-${fcn_string}_${model_num}/"
+# fig_model_name     : *ADD SCALES "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
 
 # ## TLPEncAggDec / TLPEnc2AggDec
 # # nn_model: TLPEncAggDec
@@ -137,9 +137,9 @@ fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num
 # activation_sweep: gelu
 # model:
 #   n_levels: 3
-# model_fn_template  : ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
-# working_dir        : "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_fcn_str-${fcn_string}_${model_num}/"
-# fig_model_name     : "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string}, \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
+# model_fn_template  : *ADD SCALES ${nn_model}_init_{model_num}_pe-${use_pos_enc_lut}_${fcn_string}
+# working_dir        : *ADD SCALES "otf_${features_type}2ps_${nn_model}/lr-${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_fcn_str-${fcn_string}_${model_num}/"
+# fig_model_name     : *ADD SCALES "${features_type} to PS, \n PS Scale:${prep_label} px Scale:${prep_feature}, ${fcn_string}, \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n lr: ${learning_rate}"
 
 ### Or
 # nn_model: MobileViTCMBRegressor
@@ -152,6 +152,10 @@ fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num
 #   Lesser-used set-up
 ###############################################################
 # n_sims: ???
+
+diag_lmin: 2
+diag_lmax_print: 5
+diag_lmax_record: ${lmax}
 
 # splits:
 #   Train:
