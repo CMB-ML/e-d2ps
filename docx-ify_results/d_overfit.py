@@ -14,22 +14,27 @@ from docx_helper import (
     RunRecord,
 )
 
+REPORT_NAME = "report_plots.docx"
+# REPORT_NAME = "report_best_pred_plots.docx"
+# REPORT_NAME = "report_train_rho_plots.docx"
+# REPORT_NAME = "report_train_FVE_plots.docx"
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"]) / 
-    "Datasets/I_32_Inf_CMB_only/train_otf"
+    "Datasets/I_8_Inf_CMB_only/otf_cmb2ps_fcn_scales"
 )
 
 DIRNAME_SPEC = (
-    "pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-act_${activation}-lmax_${lmax}/"
+    "pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${scale}/"
 )
 
 ROW_PRIORITY = [
     "fcn_string",
+    "spectrum_type"
 ]
 
 COLUMN_PRIORITY = [
-    "spectrum_type",
+    "scale",
 ]
 
 ROW_PRIORITY = [
@@ -38,19 +43,22 @@ ROW_PRIORITY = [
 ]
 
 FIELD_VALUE_ORDER = {
-    # "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
+    "fcn_string": ["N_10aR_O", "N_10aR_10aR_O", "N_20aR_O", "N_20aR_20aR_O", "N_50aR_O", "N_50aR_50aR_O", "N_100aR_O", "N_100aR_100aR_O", "N_200aR_O", "N_200aR_200aR_O", "N_500aR_O", "N_500aR_500aR_O", "N_1000aR_O", "N_1000aR_1000aR_O"],
 }
 
 FIG_SUBDIR = "Analysis_Figures"
 FIG_FILES = {
-    "loss": "fig_D_predictions_Test_ep_best.png",
+    "loss": "loss_plot.png",
+    "preds": "fig_D_predictions_Valid_ep_best.png",
+    "rho": "fig_E_train_rho.png",
+    "FVE": "fig_E_train_FVE.png",
 }
-# FIG_FILES = {
-#     "loss": "rel_update_plot.png",
-# }
 
 IMAGE_SPECS = [
     ("Loss", "loss"),
+    ("Preds", "preds"),
+    ("rho", "rho"),
+    ("FVE", "FVE"),
 ]
 
 RUN_TEMPLATE = extract_run_template(DIRNAME_SPEC)
@@ -403,6 +411,69 @@ def validate_image_specs(fig_files: dict[str, str], image_specs: list[tuple[str,
         )
 
 
+def add_grid_table(
+    doc: Document,
+    records: list[RunRecord],
+    row_keys: list[str],
+    col_keys: list[str],
+    fig_label: str,
+    fig_key: str,
+) -> None:
+    """Add one labelled table to an existing Document object."""
+    value_formatters = build_field_value_formatter(records, row_keys + col_keys)
+
+    doc.add_heading(fig_label, level=2)
+
+    row_tuples = get_unique_axis_tuples(records, row_keys)
+    col_tuples = get_unique_axis_tuples(records, col_keys)
+
+    grid = build_grid_lookup(records, row_keys, col_keys)
+
+    n_row_header_rows = max(1, len(col_keys))
+    n_row_label_cols  = max(1, len(row_keys))
+    n_rows = n_row_header_rows + len(row_tuples)
+    n_cols = n_row_label_cols  + len(col_tuples)
+
+    table = doc.add_table(rows=n_rows, cols=n_cols)
+    table.style = "Table Grid"
+
+    for i, key in enumerate(row_keys):
+        table.cell(n_row_header_rows - 1, i).text = key
+
+    for level, col_key in enumerate(col_keys):
+        for start, end, val in value_repeats_every(col_tuples, level):
+            cell = table.cell(level, n_row_label_cols + start)
+            cell.text = f"{col_key}={format_axis_value(col_key, val, value_formatters)}"
+            if end - start > 1:
+                cell.merge(table.cell(level, n_row_label_cols + end - 1))
+
+    for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
+        for j, value in enumerate(row_t):
+            table.cell(i, j).text = format_axis_value(row_keys[j], value, value_formatters)
+
+    for i, row_t in enumerate(row_tuples, start=n_row_header_rows):
+        for j, col_t in enumerate(col_tuples, start=n_row_label_cols):
+            rec = grid.get((row_t, col_t))
+            p   = None if rec is None else rec.get_figure(fig_key)
+            put_image_or_blank(table.cell(i, j), p, img_width_in=10.0)
+
+
+def build_docx_all(
+    records: list[RunRecord],
+    row_keys: list[str],
+    col_keys: list[str],
+    out_path: Path,
+) -> None:
+    doc = Document()
+    doc.add_heading("Overfit run report", level=1)
+
+    for fig_label, fig_key in IMAGE_SPECS:
+        add_grid_table(doc, records, row_keys, col_keys, fig_label, fig_key)
+        doc.add_page_break()
+
+    doc.save(out_path)
+
+
 def main() -> None:
     validate_image_specs(FIG_FILES, IMAGE_SPECS)
 
@@ -442,8 +513,9 @@ def main() -> None:
     print(f"  rows:    {row_keys}")
     print(f"  columns: {col_keys}")
 
-    out_docx = ROOT / "report_overfit_runs.docx"
-    build_docx_grid(records, row_keys, col_keys, out_docx)
+    out_docx = ROOT / REPORT_NAME
+    # build_docx_grid(records, row_keys, col_keys, out_docx)
+    build_docx_all(records, row_keys, col_keys, out_docx)
     print(f"\nWrote: {out_docx}")
 
 
