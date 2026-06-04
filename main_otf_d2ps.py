@@ -63,7 +63,8 @@ def run_C_fcn(cfg):
         TrainOTFExecutor,
         LossPlotExecutor,
         InferOTFExecutor,
-        OTFShowPredsExecutor
+        OTFShowPredsExecutor,
+        PerEllStatsPlotExecutor
     ]
     run(cfg, pipes)
 
