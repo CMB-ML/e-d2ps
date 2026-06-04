@@ -26,7 +26,7 @@ class LossPlotExecutor(BaseStageExecutor):
         self.out_fig.handler.set_fig_types(self.fig_type)
         fig, ax = make_loss_plot(some_path=self.in_loss_csv.path,
                                  fig_label=self.fig_label,
-                                 ylim=(1e-4,1e7),
+                                 ylim=(1e3,1e6),
                                  xlim=(0,self.n_epochs),
                                  sm_sigma2=None)
         self.out_fig.write(fig=fig)
@@ -37,7 +37,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
 
-        sm_sigma = 2000
+        sm_sigma = 100
 
         # df = df.dropna()
 
