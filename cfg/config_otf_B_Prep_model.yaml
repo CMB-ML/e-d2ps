@@ -17,7 +17,7 @@ hydra:
     params:
       model_num           : ${model_num_sweep}
       lmax                : ${lmax_sweep}
-      fcn_string: ${fcn_str_sweep}
+      fcn_string          : ${fcn_str_sweep}
 
       spectrum_type       : theory  # placeholder
       learning_rate       : 1e-3    # placeholder
@@ -30,12 +30,12 @@ hydra:
       # down_reductions     : avg     # placeholder
       # spatial_reduction   : avg     # placeholder
 
-      # TLPEncDec
-      norm_kind           : none    # placeholder
-      activation          : relu    # placeholder
-      down_reductions     : avg     # placeholder
-      spatial_reduction   : avg     # placeholder
-      face_reduction      : avg     # placeholder
+      # # TLPEncDec
+      # norm_kind           : none    # placeholder
+      # activation          : relu    # placeholder
+      # down_reductions     : avg     # placeholder
+      # spatial_reduction   : avg     # placeholder
+      # face_reduction      : avg     # placeholder
 
       # Other
       sigma_scale: 1
