@@ -14,8 +14,8 @@ from matplotlib.figure import Figure
 
 
 STAT_CONFIGS = {
-    "R":   {"ylim": (-0.05, 1.05), "label": r"S.D.($\ell) Ratio: $\sigma(D_\ell^\mathrm{pred}) / \sigma(D_\ell^\mathrm{true})$"},
-    "rho": {"ylim": (-0.05, 1.05), "label": r"Correlation($\ell): $\rho_\ell$"},
+    "R":   {"ylim": (-0.05, 1.05), "label": r"S.D.($\ell$) Ratio: $\sigma(D_\ell^\mathrm{pred}) / \sigma(D_\ell^\mathrm{true})$"},
+    "rho": {"ylim": (-0.05, 1.05), "label": r"Correlation($\ell$): $\rho_\ell$"},
     "FVE": {"ylim": (-0.05, 1.05), "label": r"FVE($\ell$): $1-\langle (D_\ell^\mathrm{pred} - D_\ell^\mathrm{true} )^2 \rangle / \sigma^2 (D_\ell^\mathrm{true})$"},
 }
 
