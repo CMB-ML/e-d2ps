@@ -133,6 +133,16 @@ show_train_stats_plots: # _show_preds.py / OTFShowPredsExecutor
       handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/fig_E_train_{stat}.{fig_type}"
   assets_in:
-    loss_record: {stage: train, orig_name: loss_record}
+    loss_parquet: {stage: log_to_parquet}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+show_score:
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_F_train_{stat}.{fig_type}"
+  assets_in:
+    loss_parquet: {stage: log_to_parquet}
   dir_name: Analysis_Figures
   make_stage_log: False
