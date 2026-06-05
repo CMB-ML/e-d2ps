@@ -79,6 +79,16 @@ train_otf:
   dir_name: F_Model
   make_stage_log: True
 
+log_to_parquet:
+  assets_out:
+    loss_parquet:
+      handler: PandasParquetHandler
+      path_template: "{root}/{dataset}/{working}{stage}/loss_record.parquet"
+  assets_in:
+    loss_record: {stage: train_otf}
+  dir_name: F_Model
+  make_stage_log: False
+
 infer_otf:
   assets_out:
     cmb_ps: 

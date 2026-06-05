@@ -7,3 +7,4 @@ from d2ps_fcn.stage_executors.F_train_otf import TrainOTFExecutor
 from d2ps_fcn.stage_executors.G_infer_otf import InferOTFExecutor
 from d2ps_fcn.stage_executors._show_preds import OTFShowPredsExecutor
 from d2ps_fcn.stage_executors._show_r_rho_fve import PerEllStatsPlotExecutor
+from d2ps_fcn.stage_executors.H_csv_log_to_parquet import LogToParquetExecutor
