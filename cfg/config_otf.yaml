@@ -37,10 +37,18 @@ prep_working_dir   : "d2ps-prep-fcn/"
 #                                                              #
 ################################################################
 sim_engine         : cuhpx  # synfast or cuHPX
-# nside              : 32
-nside              : 8
-lmax               : ???
-lmax_sweep         : 16
+nside              : 8  # CMML0b
+lmax               : 16
+fcn_str_sweep      : N_32aR_O, N_64aR_O, N_128aR_O, N_256aR_O, N_512aR_O
+nside              : 16  # CMML1b
+lmax               : 32
+fcn_str_sweep      : N_64aR_O, N_128aR_O, N_256aR_O, N_512aR_O, N_1024aR_O
+nside              : 32  # CMML2b
+lmax               : 64
+fcn_str_sweep      : N_128aR_O, N_256aR_O, N_512aR_O, N_1024aR_O, N_2048aR_O
+nside              : 64   # CMML3b
+lmax               : 128
+fcn_str_sweep      : N_256aR_O, N_512aR_O, N_1024aR_O, N_2048aR_O, N_4096aR_O
 
 splits:
   Valid:
