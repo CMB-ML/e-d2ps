@@ -16,7 +16,7 @@ hydra:
   sweeper:
     params:
       model_num          : ${model_num_sweep}
-      lmax               : ${lmax_sweep}
+      # lmax               : ${lmax_sweep}
       fcn_string         : ${fcn_str_sweep}
 
       spectrum_type      : ${spectrum_type_sweep}
