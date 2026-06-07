@@ -1,3 +1,4 @@
+import logging
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
@@ -11,10 +12,13 @@ from cmbml.core.asset_handlers import Figure
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from d2ps_nn.utils.clipped_gaussian_smooth import clipped_gaussian_smooth
 
+
+logger = logging.getLogger(__name__)
 
 STAT_CONFIGS = {
-    "R":   {"ylim": (-0.05, 1.05), "label": r"S.D.($\ell$) Ratio: $\sigma(D_\ell^\mathrm{pred}) / \sigma(D_\ell^\mathrm{true})$"},
+    "R":   {"ylim": (-0.05, 1.05), "label": r"S.D. Ratio($\ell$): $\sigma(D_\ell^\mathrm{pred}) / \sigma(D_\ell^\mathrm{true})$"},
     "rho": {"ylim": (-0.05, 1.05), "label": r"Correlation($\ell$): $\rho_\ell$"},
     "FVE": {"ylim": (-0.05, 1.05), "label": r"FVE($\ell$): $1-\langle (D_\ell^\mathrm{pred} - D_\ell^\mathrm{true} )^2 \rangle / \sigma^2 (D_\ell^\mathrm{true})$"},
 }
@@ -24,7 +28,7 @@ class PerEllStatsPlotExecutor(BaseStageExecutor):
     def __init__(self, cfg):
         super().__init__(cfg, stage_str="show_train_stats_plots")
         self.out_fig: Figure = self.assets_out["fig"]
-        self.in_loss_csv = self.assets_in["loss_record"]
+        self.in_parquet = self.assets_in["loss_parquet"]
 
         self.fig_label = cfg.fig_model_name
         self.fig_type = cfg.get("fig_type", None)
@@ -32,7 +36,8 @@ class PerEllStatsPlotExecutor(BaseStageExecutor):
 
     def execute(self):
         self.out_fig.handler.set_fig_types(self.fig_type)
-        df = pd.read_csv(self.in_loss_csv.path)
+        df = self.in_parquet.read()
+        df = df[(df["Epoch"] <= self.n_epochs)].reset_index(drop=True)
 
         for stat, stat_cfg in STAT_CONFIGS.items():
             fig, ax = make_ell_stat_plot(
@@ -96,10 +101,11 @@ def make_ell_stat_plot(
 
     n_epochs = df["Epoch"].iloc[-1]
     if sm == True:
-        sm_sigma = n_epochs // 20
+        sm_sigma = min(n_epochs // 20, 100)
     else:
         sm_sigma = sm
 
+    logger.info("Smoothing curves.")
     smoothed = {}
     for ell in ell_range:
         col = f"{this_stat}_ell{ell}"
@@ -109,6 +115,8 @@ def make_ell_stat_plot(
             smoothed[ell] = clipped_gaussian_smooth(df[col].values, sigma=sm_sigma, end_method="interior")
         else:
             smoothed[ell] = df[col].values
+
+    logger.info("Done smoothing.")
 
     # Last ell whose final smoothed value exceeds 0.5
     above_half = [ell for ell, s in smoothed.items() if s[-1] > 0.5]
@@ -152,77 +160,3 @@ def make_ell_stat_plot(
     ax.grid(True, linewidth=0.4, alpha=0.6)
     fig.tight_layout()
     return fig, ax
-
-
-def clipped_gaussian_smooth(
-    values: np.ndarray,
-    sigma: float,
-    width_factor: float = 3.0,
-    start_method: str = "margin",
-    end_method: str = "margin",
-) -> np.ndarray:
-    """Gaussian smoother with configurable edge handling.
-
-    In the interior, applies a truncated Gaussian with the given sigma,
-    spanning ±(sigma * width_factor) samples.
-
-    Near each edge, behavior is chosen by `start_method` / `end_method`:
-      - "interior": use the full-width kernel, truncated to available samples
-                    and renormalized. Same as the interior calculation, just
-                    with fewer samples on one side.
-      - "margin": horizontally compress the kernel to fit available samples,
-                  preserving Gaussian shape. Collapses to the raw value at i=0.
-
-    Parameters
-    ----------
-    values : 1D array to smooth.
-    sigma : Gaussian standard deviation in samples (interior value).
-    width_factor : Half-width of the truncated Gaussian in units of sigma.
-    start_method, end_method : "interior" or "margin".
-    """
-    valid = {"interior", "margin"}
-    if start_method not in valid or end_method not in valid:
-        raise ValueError(f"methods must be one of {valid}")
-
-    n = len(values)
-    half_width = int(np.ceil(sigma * width_factor))
-    out = np.empty(n)
-    full_offsets = np.arange(-half_width, half_width + 1, dtype=float)
-    full_kernel = np.exp(-0.5 * (full_offsets / sigma) ** 2)
-
-    for i in range(n):
-        dist_start = i
-        dist_end = n - 1 - i
-        distance_to_edge = min(dist_start, dist_end)
-
-        if distance_to_edge >= half_width:
-            # Interior: full kernel, already normalized below
-            kernel = full_kernel / full_kernel.sum()
-            out[i] = np.dot(kernel, values[i - half_width : i + half_width + 1])
-            continue
-
-        # Near an edge — pick method based on which edge
-        method = start_method if dist_start < dist_end else end_method
-
-        if method == "interior":
-            # Truncate the full kernel to whatever samples are available
-            lo = max(0, i - half_width)
-            hi = min(n - 1, i + half_width)
-            k_lo = lo - (i - half_width)
-            k_hi = k_lo + (hi - lo)
-            kernel = full_kernel[k_lo : k_hi + 1]
-            kernel = kernel / kernel.sum()
-            out[i] = np.dot(kernel, values[lo : hi + 1])
-
-        else:  # "margin"
-            local_half = distance_to_edge
-            if local_half == 0:
-                out[i] = values[i]
-                continue
-            compression = local_half / half_width
-            offsets = np.linspace(-local_half, local_half, 2 * local_half + 1)
-            kernel = np.exp(-0.5 * (offsets / (sigma * compression)) ** 2)
-            kernel /= kernel.sum()
-            out[i] = np.dot(kernel, values[i - local_half : i + local_half + 1])
-
-    return out

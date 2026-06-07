@@ -24,7 +24,8 @@ from d2ps_fcn.ex import (
     InferOTFExecutor,
     OTFShowPredsExecutor,
     PerEllStatsPlotExecutor,
-    LogToParquetExecutor
+    LogToParquetExecutor,
+    ScorePlotExecutor
 )
 
 
@@ -62,11 +63,12 @@ def run_C_fcn(cfg):
 
     pipes = [
         # TrainOTFExecutor,
-        LogToParquetExecutor,
+        # LogToParquetExecutor,
         # LossPlotExecutor,
         # InferOTFExecutor,
         # OTFShowPredsExecutor,
         # PerEllStatsPlotExecutor,
+        ScorePlotExecutor
     ]
     run(cfg, pipes)
 
