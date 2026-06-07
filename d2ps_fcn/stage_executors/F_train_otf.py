@@ -323,6 +323,8 @@ class TrainOTFExecutor(BaseOTFExecutor):
             note_save_interval = ""
             note_save_best = ""
 
+            in_final_window = (self.n_epochs - epoch) <= self.checkpoint
+
             is_new_best = (
                 valid_pst_loss == min(all_valid_pst_loss)
                 and epoch >= self.earliest_best
@@ -330,7 +332,7 @@ class TrainOTFExecutor(BaseOTFExecutor):
             if is_new_best:
                 halved = valid_pst_loss <= 0.5 * best_save_loss
                 stale = (epoch - last_best_epoch) >= self.checkpoint
-                if halved or stale:
+                if halved or stale or in_final_window:
                     with self.name_tracker.set_context("epoch", "best"):
                         self.out_model.write(model=model, epoch="best")
                     best_save_loss = valid_pst_loss
