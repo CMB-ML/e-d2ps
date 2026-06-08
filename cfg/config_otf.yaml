@@ -37,18 +37,28 @@ prep_working_dir   : "d2ps-prep-fcn/"
 #                                                              #
 ################################################################
 sim_engine         : cuhpx  # synfast or cuHPX
-# nside              : 32
+# CMML1b
 nside              : 8
-lmax               : ???
-lmax_sweep         : 16
+lmax               : 16
+fcn_str_sweep      : N_32aR_O, N_768aR_O
+
+# CMML0b
+nside              : 32
+lmax               : 64
+fcn_str_sweep      : N_128aR_O, N_12288aR_O
+
+n_train_sims: ???
+n_train_sims_sweep: [1000, 2000, 5000, 10_000, 20_000]
 
 splits:
+  Train:
+    n_sims: n_train_sims
   Valid:
-    n_sims: 256
+    n_sims: 250
 
-num_epochs         : 20
-train_batch_size   : 256
-n_train_batches    : 4
+num_epochs         : 2000
+train_batch_size   : 250
+n_train_batches    : 4  # UNUSED
 
 input_kind         : maps  # Currently deprecated; requires new implementation of on-the-fly mechanics
 spectrum_type      : ???
@@ -86,7 +96,7 @@ fcn_string         : ???
 nn_model           : fcn
 px_arrange         : none
 model_fn_template  : ${nn_model}_${fcn_string}_init_{model_num}
-working_dir        : "otf_${features_type}2ps_${nn_model}_H_sweep/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
+working_dir        : "otf_${features_type}2ps_${nn_model}_n_sims/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 # working_dir        : "otf_${features_type}2ps_${nn_model}_scales2_20kEp/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
 
