@@ -37,18 +37,18 @@ prep_working_dir   : "d2ps-prep-fcn/"
 #                                                              #
 ################################################################
 sim_engine         : cuhpx  # synfast or cuHPX
-nside              : 64  # CMML0
-lmax               : 128
-fcn_str_sweep      : N_256aR_O, N_2048aR_O
-nside              : 8  # CMML2
+# nside              : 64  # CMML0
+# lmax               : 128
+# fcn_str_sweep      : N_256aR_O, N_2048aR_O
+nside              : 8
 lmax               : 16
-fcn_str_sweep      : N_32aR_O, N_256aR_O, N_2048aR_O
+fcn_str_sweep      : N_768R_a768R_768Rz_a768R_768Rz_O, N_768R_a768Q_768Rz_a768Q_768Rz_O, N_768R_768R_768R_768R_768R_O, N_768R_768Q_768R_768Q_768R_O
 
 splits:
   Valid:
     n_sims: 256
 
-num_epochs         : 200_000
+num_epochs         : 2_000
 train_batch_size   : 256
 n_train_batches    : 4
 
@@ -57,7 +57,7 @@ spectrum_type      : ???
 prep_label         : ???
 prep_feature       : ???
 
-spectrum_type_sweep: real, theory
+spectrum_type_sweep: real  #, theory
 # prep_feature_sweep : none, meanstdv_local, minmax_global, minmax_local, meanstdv_global
 prep_feature_sweep : meanstdv_local
 # prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
@@ -76,8 +76,8 @@ learning_rate_sweep: 5e-4  #, 1e-4, 1e-3
 # activation_sweep   : gelu, relu
 
 sigma_scale          : ???
-# sigma_scale_sweep  : 1 # , 2, 5, 10, 20
-sigma_scale_sweep  : 2, 5, 10, 20
+sigma_scale_sweep  : 1 # , 2, 5, 10, 20
+# sigma_scale_sweep  : 2, 5, 10, 20
 
 fcn_string         : ???
 
@@ -89,7 +89,7 @@ fcn_string         : ???
 nn_model           : fcn
 px_arrange         : none
 model_fn_template  : ${nn_model}_${fcn_string}_init_{model_num}
-working_dir        : "otf_${features_type}2ps_${nn_model}_Ds_sweep/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
+working_dir        : "otf_${features_type}2ps_${nn_model}_TEST/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 # working_dir        : "otf_${features_type}2ps_${nn_model}_scales2_20kEp/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
 
