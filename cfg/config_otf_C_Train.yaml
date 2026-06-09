@@ -15,6 +15,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
+      n_train_sims       : ${n_train_sims_sweep}
       model_num          : ${model_num_sweep}
       # lmax               : ${lmax_sweep}
       fcn_string         : ${fcn_str_sweep}

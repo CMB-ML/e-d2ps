@@ -15,8 +15,8 @@ hydra:
   verbose      : false
   sweeper:
     params:
+      n_train_sims       : ${n_train_sims_sweep}
       # lmax: ${lmax_sweep}
       sigma_scale        : ${sigma_scale_sweep}
-      n_train_sims       : ${n_train_sims_sweep}
 
 working_dir: ${prep_working_dir}
