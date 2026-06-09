@@ -37,10 +37,10 @@ prep_working_dir   : "d2ps-prep-fcn/"
 #                                                              #
 ################################################################
 sim_engine         : cuhpx  # synfast or cuHPX
-# # CMML1b
-# nside              : 8
-# lmax               : 16
-# fcn_str_sweep      : N_32aR_O, N_768aR_O
+# CMML1b
+nside              : 8
+lmax               : 16
+fcn_str_sweep      : N_32aR_O, N_768aR_O
 
 # CMML0b
 nside              : 32
@@ -48,7 +48,7 @@ lmax               : 64
 fcn_str_sweep      : N_128aR_O, N_12288aR_O
 
 n_train_sims: ???
-n_train_sims_sweep: [1000, 2000, 5000, 10000, 20000]
+n_train_sims_sweep: 1000, 2000, 5000, 10000, 20000
 
 splits:
   Train:
