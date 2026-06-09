@@ -37,10 +37,10 @@ prep_working_dir   : "d2ps-prep-fcn/"
 #                                                              #
 ################################################################
 sim_engine         : cuhpx  # synfast or cuHPX
-# CMML1
-nside              : 8
-lmax               : 16
-fcn_str_sweep      : N_32aR_O, N_768aR_O
+# # CMML1
+# nside              : 8
+# lmax               : 16
+# fcn_str_sweep      : N_32aR_O, N_768aR_O
 
 # CMML3
 nside              : 32
@@ -48,8 +48,8 @@ lmax               : 64
 fcn_str_sweep      : N_128aR_O, N_12288aR_O
 
 n_train_sims: ???
-# n_train_sims_sweep: 1000, 2000, 5000, 10000, 20000
-n_train_sims_sweep: Inf
+n_train_sims_sweep: 1000, 2000, 5000, 10000, 20000
+# n_train_sims_sweep: Inf
 
 splits:
   Train:
@@ -85,7 +85,7 @@ learning_rate_sweep: 5e-4  #, 1e-4, 1e-3
 # activation_sweep   : gelu, relu
 
 sigma_scale          : ???
-sigma_scale_sweep  : 1 # , 2, 5, 10, 20
+sigma_scale_sweep  : 2, 5 # , 2, 5, 10, 20
 
 fcn_string         : ???
 
@@ -97,9 +97,9 @@ fcn_string         : ???
 nn_model           : fcn
 px_arrange         : none
 model_fn_template  : ${nn_model}_${fcn_string}_init_{model_num}
-working_dir        : "otf_${features_type}2ps_${nn_model}_n_sims/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}-n_sims${n_train_sims}/"
+working_dir        : "otf_${features_type}2ps_${nn_model}_n_sims2/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}-n_sims${n_train_sims}/"
 # working_dir        : "otf_${features_type}2ps_${nn_model}_scales2_20kEp/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
-fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
+fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate} Nsims=${n_train_sims}"
 
 # ## SimpleEncDec
 # nn_model: SimpleEncDec

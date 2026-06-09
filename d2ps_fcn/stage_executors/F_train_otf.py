@@ -182,10 +182,14 @@ class TrainOTFExecutor(BaseOTFExecutor):
 
         loss_record_headers = [
             'Epoch', 'Batch Loss',
-            'Validation Pre Loss', 'Training Pre Loss',
-            'Validation Loss', 'Training Loss',
+            'Training Pre Loss',
+            'Validation Pre Loss',
+            'Training Loss',
+            'Validation Loss',
             # 'Learning Rate',
         ]
+        for ell in self._diag_ells_record:
+            loss_record_headers.append(f'MSE_ell{ell}')
         for ell in self._diag_ells_record:
             loss_record_headers.append(f'R_ell{ell}')
         for ell in self._diag_ells_record:
@@ -293,21 +297,25 @@ class TrainOTFExecutor(BaseOTFExecutor):
                     # Equals 1 for perfect prediction, 0 for constant-mean predictor,
                     # negative if worse than the mean. Computed from MSE directly
                     # (not via 2 R rho - R^2) so it stays exact when pred/true means differ.
-                    mse_ell = (p - t).pow(2).mean(dim=0)
+                    diag_mse_ell = (p - t).pow(2).mean(dim=0)
                     true_var = t_std.pow(2)
-                    diag_fve = (1.0 - mse_ell / (true_var + eps)).cpu().numpy()
+                    diag_fve = (1.0 - diag_mse_ell / (true_var + eps)).cpu().numpy()
 
                     # Scalar summaries
                     diag_locked = int((diag_fve > 0.5).sum())          # count of "locked-in" ells
                     diag_score = float(np.clip(diag_fve, 0.0, None).sum())  # continuous progress
 
             row = [
-                epoch + 1, batch_loss,
-                train_pre_loss, valid_pre_loss,
-                train_pst_loss, valid_pst_loss,
+                epoch + 1,
+                batch_loss,
+                train_pre_loss, 
+                valid_pre_loss,
+                train_pst_loss,
+                valid_pst_loss,
             ]
             if self._diag_ells_record:
                 if diag_R is not None:
+                    row.extend(float(v) for v in diag_mse_ell)
                     row.extend(float(v) for v in diag_R)
                     row.extend(float(v) for v in diag_rho)
                     row.extend(float(v) for v in diag_fve)
@@ -316,7 +324,7 @@ class TrainOTFExecutor(BaseOTFExecutor):
                 else:
                     # Pad with NaN so column count stays consistent.
                     # 3 per-ell columns (R, rho, FVE) + 2 scalars (locked, score).
-                    row.extend([float('nan')] * (3 * len(self._diag_ells)))
+                    row.extend([float('nan')] * (3 * len(self._diag_ells_record)))
                     row.extend([float('nan'), float('nan')])
             self.out_loss_record.append(row)
 

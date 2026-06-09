@@ -39,7 +39,7 @@ def run_A_prep(cfg):
     logger.info(f"Running run_B_prep in {__file__}")
 
     pipes = [
-        MakeLutExecutor,
+        # MakeLutExecutor,
         GetOTFStatsExecutor,
         GetOTFFixedMapsExecutor,
     ]
@@ -63,8 +63,8 @@ def run_C_fcn(cfg):
     logger.info(f"Running run_C_fcn in {__file__}")
 
     pipes = [
-        # TrainFixedExecutor,
-        TrainOTFExecutor,
+        TrainFixedExecutor,
+        # TrainOTFExecutor,
         LogToParquetExecutor,
         LossPlotExecutor,
         InferOTFExecutor,
@@ -95,6 +95,6 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_A_prep()
+    run_A_prep()
     # run_B_prep_model()
     run_C_fcn()
