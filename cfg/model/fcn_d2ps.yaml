@@ -22,7 +22,7 @@ train:
 
   # Data loading
   train_batch_size  : ${train_batch_size}
-  valid_batch_size  : 5
+  valid_batch_size  : ${splits.Valid.n_sims}
   n_batches         : ${n_train_batches}
   num_loader_workers: 0
   # Training parameters
