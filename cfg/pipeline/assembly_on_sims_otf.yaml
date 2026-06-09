@@ -32,13 +32,13 @@ otf_fixed:
   assets_out:
     ps_thry:
       handler: NpyHandler
-      path_template: "{root}/{dataset}/{stage}/true_{split}_scale${sigma_scale}.npy"
+      path_template: "{root}/{dataset}/{stage}/true_{split}_scale${sigma_scale}_n${n_train_sims}.npy"
     ps_real:
       handler: NpyHandler
-      path_template: "{root}/{dataset}/{stage}/real_{split}_scale${sigma_scale}.npy"
+      path_template: "{root}/{dataset}/{stage}/real_{split}_scale${sigma_scale}_n${n_train_sims}.npy"
     cmb_map:
       handler: NpyHandler
-      path_template: "{root}/{dataset}/{stage}/cmb_maps_{split}_scale${sigma_scale}.npy"
+      path_template: "{root}/{dataset}/{stage}/cmb_maps_{split}_scale${sigma_scale}_n${n_train_sims}.npy"
   assets_in:
     cmb_ps: {stage: raw, orig_name: ps_bundle}
   splits: [train, valid, test]
