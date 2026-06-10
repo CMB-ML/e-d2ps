@@ -15,6 +15,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
+      n_train_sims        : Inf     # placeholder
       model_num           : ${model_num_sweep}
       fcn_string          : ${fcn_str_sweep}
 

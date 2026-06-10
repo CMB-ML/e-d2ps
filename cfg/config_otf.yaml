@@ -42,6 +42,9 @@ nside              : 8
 lmax               : 16
 fcn_str_sweep      : N_768R_a768R_768Rz_a768R_768Rz_O
 
+n_train_sims_sweep: 1000, 2000, 5000, 10000, 20000
+# n_train_sims_sweep: Inf
+
 splits:
   Valid:
     n_sims: 256

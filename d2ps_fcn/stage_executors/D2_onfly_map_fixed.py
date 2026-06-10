@@ -49,7 +49,8 @@ class GetOTFFixedMapsExecutor(BasePyTorchModelExecutor):
             )
         dl_bank = dl_bank[:, :self.lmax + 1]
         for split in self.splits:
-            self.run_split(split, dl_bank)
+            if split.n_sims != float("inf"):
+                self.run_split(split, dl_bank)
 
     def run_split(self, split: Split, dl_bank):
         n_maps = split.n_sims
