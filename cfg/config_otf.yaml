@@ -37,19 +37,25 @@ prep_working_dir   : "d2ps-prep-fcn/"
 #                                                              #
 ################################################################
 sim_engine         : cuhpx  # synfast or cuHPX
-# nside              : 32
-nside              : 8
-lmax               : 16
-fcn_str_sweep      : N_768R_a768R_768Rz_a768R_768Rz_O
+nside              : 32
+lmax               : 64
+fcn_str_sweep      : N_1536R_O
 
-n_train_sims_sweep: 1000, 2000, 5000, 10000, 20000
+nside              : 16
+lmax               : 32
+fcn_str_sweep      : N_384R_O
+
+n_train_sims: ???
+n_train_sims_sweep: 2048, 8192, 32768
+# n_train_sims_sweep: 1024, 2048, 4096, 8192, 16384, 32768
+
 # n_train_sims_sweep: Inf
 
 splits:
   Valid:
     n_sims: 256
 
-num_epochs         : 20
+num_epochs         : 20000
 train_batch_size   : 256
 n_train_batches    : 4
 
@@ -58,7 +64,7 @@ spectrum_type      : ???
 prep_label         : ???
 prep_feature       : ???
 
-spectrum_type_sweep: real, theory
+spectrum_type_sweep: real  #, theory
 # prep_feature_sweep : none, meanstdv_local, minmax_global, minmax_local, meanstdv_global
 prep_feature_sweep : meanstdv_local
 # prep_label_sweep   : none, meanstdv_global, meanstdv_local, minmax_global, minmax_local
@@ -77,7 +83,8 @@ learning_rate_sweep: 5e-4  #, 1e-4, 1e-3
 # activation_sweep   : gelu, relu
 
 sigma_scale          : ???
-sigma_scale_sweep  : 1 # , 2, 5, 10, 20
+# sigma_scale_sweep  : 1, 2, 5, 10, 20
+sigma_scale_sweep  : 2, 5, 10
 
 fcn_string         : ???
 

@@ -63,8 +63,8 @@ def run_C_fcn(cfg):
     logger.info(f"Running run_C_fcn in {__file__}")
 
     pipes = [
-        TrainOTFExecutor,
-        # TrainFixedExecutor,
+        # TrainOTFExecutor,
+        TrainFixedExecutor,
         LogToParquetExecutor,
         LossPlotExecutor,
         InferOTFExecutor,
