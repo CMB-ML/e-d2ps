@@ -39,8 +39,8 @@ prep_working_dir   : "d2ps-prep-fcn/"
 sim_engine         : cuhpx  # synfast or cuHPX
 # nside              : 32
 nside              : 8
-lmax               : ???
-lmax_sweep         : 16
+lmax               : 16
+fcn_str_sweep      : N_768R_a768R_768Rz_a768R_768Rz_O
 
 splits:
   Valid:

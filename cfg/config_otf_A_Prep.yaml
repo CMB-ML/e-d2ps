@@ -15,7 +15,6 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      # lmax: ${lmax_sweep}
       sigma_scale        : ${sigma_scale_sweep}
 
 working_dir: ${prep_working_dir}
