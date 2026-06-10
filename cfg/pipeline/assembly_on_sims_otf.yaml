@@ -41,7 +41,7 @@ otf_fixed:
       path_template: "{root}/{dataset}/{stage}/cmb_maps_{split}_scale${sigma_scale}.npy"
   assets_in:
     cmb_ps: {stage: raw, orig_name: ps_bundle}
-  splits: [valid, test]
+  splits: [train, valid, test]
   dir_name: Raw_Bundle
   make_stage_log: False
 
@@ -75,6 +75,7 @@ train_otf:
     cmb_stats    : {stage: get_otf_stats, orig_name: map_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv maps
     rps_stats    : {stage: get_otf_stats, working: "${prep_working_dir}"}  # Contains min, max, mean, stdv real ps
   splits:
+    - train
     - valid
   dir_name: F_Model
   make_stage_log: True
