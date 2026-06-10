@@ -26,7 +26,7 @@ class GetOTFStatsExecutor(BasePyTorchModelExecutor):
         self.out_rps_stats : Asset = self.assets_out["rps_stats"]
         # Config
         self.train_batch_size = cfg.model.train.train_batch_size
-        self.n_batches        = cfg.model.train.n_batches * 10
+        self.n_batches        = cfg.model.train.n_batches * 1000
         self.dtype            = self.dtype_mapping[cfg.model.dtype]
         self.sht_engine       = str(cfg.sim_engine).lower()
 
