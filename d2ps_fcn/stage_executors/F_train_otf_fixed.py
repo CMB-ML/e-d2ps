@@ -200,6 +200,7 @@ class TrainFixedExecutor(BaseOTFExecutor):
             # Training — on-the-fly generated maps
             model.train()
             batch_loss = 0.0
+            batch_count = 0
             for maps, scaled_dl in train_dataloader:
                 optimizer.zero_grad(set_to_none=True)
                 output = model(maps)
@@ -207,6 +208,10 @@ class TrainFixedExecutor(BaseOTFExecutor):
                 loss.backward()
                 optimizer.step()
                 batch_loss += loss.item()
+                batch_count += 1
+                if batch_count >=self.n_batches:
+                    break
+
             batch_loss /= len(train_dataloader)
             all_batch_loss.append(batch_loss)
 
