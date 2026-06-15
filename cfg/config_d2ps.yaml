@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all_big
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/patches  : toppatch
   - model/analysis : simple_apo
@@ -12,186 +12,43 @@ defaults:
   - override hydra/job_logging: custom_log
   - _self_
 
-dataset_name       : "${map_fields}_${scenario.nside}_20850"
-# SimpleEncDec
-working_dir        : &wd "${features_type}2ps_${nn_model}_train_reruns_find_lr4/Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
-fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
-## TLP
-# working_dir        : ## &wd "${features_type}2ps_${nn_model}_BASECHANGEME/Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${model.scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1${down_reductions}_r2${spatial_reduction}_r3${face_reduction}_${model_num}/"
-# fig_model_name     : ## "${features_type} to PS, Nsims: ${n_sims}, lr: ${learning_rate}, ${optimizer}, wd: ${adamw_wd} \n PS Scale:${model.scale_ps} px Scale:${model.scale_px} Pos. Enc.: ${use_pos_enc_lut}, en-${norm_kind}, ${activation}, ${down_reductions}, {spatial_reduction}, {face_reduction}, Model Init ${model_num}"
-
-trained_wd         : *wd
-prep_working_dir   : "d2ps-prep-rerun/"
-pl_fig_model_name  : "${features_type} to PS, On Planck, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with ${down_reductions}, ${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate}, wd: ${adamw_wd}"
-
-
-################################################################
-#                                                              #
-################################################################
-n_sims_train_full: 20000  # 128
-# n_sims_train_full: 2000   # 512
-
-# Overfit scheme
-# n_sims_train: 5
-# num_epochs: 100
-
-# # Normal training scheme
-n_sims_train: 2000
-# n_sims_train_infer: 200
-num_epochs: 50
-
-# # LR finder scheme
-# n_sims_train: 2000
-# # num_epochs: 3 
-
-spectrum_layer_kind: identity  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
-
-# N/A
-return_mode: spectrum  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs # TODO: Change name
-# basis_kind: ???
-# # basis_kind_sweep: chebyshev, legendre, monomial
-# basis_kind_sweep: chebyshev
-# degree: ???
-# degree_sweep: 18
-# out_range: [-1, 1]
-# scale_coef: local_meanstdv
-# scale_params: local_meanstdv
-# scale_params_sweep: local_meanstdv
-# scale_params_sweep: local_meanstdv, none
-
-model_num: ???
-model_num_sweep: 1 #, 2, 3
-
-scale_px: ???
-# scale_px_sweep: global_minmax, local_minmax, local_meanstdv, null
-scale_px_sweep: local_minmax  #, local_meanstdv
-# scale_px_sweep: global_minmax
-# scale_px_sweep: local_minmax
-# scale_px_sweep: local_meanstdv
-
-scale_ps: ???
-scale_ps_sweep: meanstdv
-
-use_pos_enc_lut: ???
-# use_pos_enc_lut: false
-use_pos_enc_lut_sweep: false
-# use_pos_enc_lut_sweep: false, true
-
-# optimizer: Adam
-optimizer: AdamW
-# adamw_wd : 0.0  # Due to interpolation, must be provided.
-adamw_wd : ???  # Due to interpolation, must be provided.
-# adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
-# adamw_wd_sweep: 0.0, 1e-4, 1e-2
-adamw_wd_sweep: 0.01
-
-learning_rate_start: 1e-8
-
-learning_rate_final: ???
-# learning_rate_final_sweep: 1e-5, 3e-5, 1e-4, 3e-4
-learning_rate_final_sweep: 1e-6
-learning_rate_final_sweep: 1e-5
-learning_rate_final_sweep: 3e-5
-learning_rate_final_sweep: 1e-4
-
-learning_rate_ramp_epochs: ???
-learning_rate_ramp_epochs_sweep: 0, 3, 10
-
-### Models: Either 
-nn_model: SimpleEncDec
-px_arrange: cmbNNCS
-norm_kind: ???
-# norm_sweep: none, bn, gn
-norm_sweep: gn
-# Down reductions use X/m strings: X is max, m is avg; 
-#   order starts with first/top layer and fills down 
-#   XmX would be Max, Avg, Max, and the rest Avg
-down_reductions: ???
-down_reductions_sweep: avg, max, Xm, XXm, mXX
-spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
-spatial_reduction_sweep: avg
-activation: ???
-# activation_sweep: relu, gelu
-activation_sweep: gelu
-
-### Or
-# # nn_model: TLPEncAggDec
-# nn_model: TLPEnc2AggDec
-# px_arrange: channel
-# norm_kind: ???
-# # norm_sweep: none, bn, gn
-# down_reductions: ???
-# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-# down_reductions_sweep: Xm
-# spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
-# spatial_reduction_sweep: avg
-# face_reduction: ???
-# # face_reduction_sweep: avg, max, weighted, softmax
-# face_reduction_sweep: avg
-# activation: ???
-# # activation_sweep: relu, gelu
-
-### Or
-# nn_model: MobileViTCMBRegressor
-# px_arrange: cmbNNCS
-# norm_kind: gn
-
-################################################################
-#   Lesser-used set-up
-###############################################################
-n_sims: ???
-
-splits:
-  Train:
-    n_sims: ${n_sims}
-  # Test:
-  #   n_sims: ${n_sims}
-  # TestFFN:
-  #   n_sims: ${n_sims}
-  # TestFP:
-  #   n_sims: ${n_sims}
-  # Valid:
-  #   n_sims: ${n_sims}
-
-planck_ds: PlanckAsDataset_${scenario.nside}
+# When creating multiple datasets, using interpolation like this may be easier:
+# dataset_name       : I_128_1750_d1_0rg
+dataset_name       : "${map_fields}_${scenario.nside}_1850"  # TODO: Figure out how to get the splits name here. It conflicts when using Planck as Dataset.
+working_dir        : "obs2ps_1000_300ep/"
+# fig_model_name     : "${features_type} to PS, 1280ell, 1000 sims, "
+fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}"
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose          : false
 
 fig_type: ['pdf', 'png']
 
-# Limit the number of simulations for which to generate figures
-n_show_cap           : 5
-n_show_treble_ell    : null
+splits:
+  Train:
+    n_sims: 1000
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside              : 128
+nside              : 512
 lmax               : 1280
 # nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
-features_type      : cmb
-# features_type      : obs
+# features_type      : cmb
+features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
-cosmo_param_names  : ["As", "H0", "ns", "ombh2", "omch2", "tau"]
-pivot_scalar       : 0.002  # For WMAP, use 0.002. For Planck, use CAMB
-                            # default of 0.05
-log_As             : false  # This should match the source distribution
-                            # Currently (WMAP), As is provided with mean 
-                            # and standard deviation *not* log-scaled. 
-                            # If we switch to Planck, change this to true
-
-track_grad_norm: True
-
 # In the model yaml
-# SET ABOVE
-# # num_epochs         : 5000
-# # num_epochs         : 1000  # 0000
+num_epochs         : 300
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:
@@ -202,8 +59,10 @@ use_epochs_imgs      : ${use_epochs}
 use_epochs_map_stats : ${use_epochs}
 # For summary statistics:
 use_epochs_ps_stats  : ${use_epochs}
+# Limit the number of simulations for which to generate figures
+n_show_cap           : 10
 
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : train  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
