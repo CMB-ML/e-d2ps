@@ -17,7 +17,7 @@ defaults:
 dataset_name       : "${map_fields}_${scenario.nside}_1850"  # TODO: Figure out how to get the splits name here. It conflicts when using Planck as Dataset.
 working_dir        : "obs2ps_1000_300ep/"
 # fig_model_name     : "${features_type} to PS, 1280ell, 1000 sims, "
-fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}"
+fig_model_name     : "${features_type} to PS, \n Nsims: ${splits.Train.n_sims}"
 hydra:
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
@@ -32,6 +32,24 @@ fig_type: ['pdf', 'png']
 splits:
   Train:
     n_sims: 1000
+
+pipeline:
+  raw:
+    assets_out:
+      ps_bundle:
+        handler: NpyHandler
+        path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
+  bundle_true: # Z_bundle.py / BundleTrueExecutor
+    assets_out:
+      ps_bundle:
+        handler: NpyHandler
+        path_template: "{root}/{dataset}/True/Analysis_Bundle/true_{split}.npy"
+
+
+sigma_scale: 1
+# n_sims_train: splits.Train.n_sims
+n_sims_train_infer: splits.Train.n_sims
+# learning_rate_start: 
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python

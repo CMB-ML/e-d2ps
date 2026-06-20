@@ -52,7 +52,8 @@ from d2ps_nn.ex import (
     # # ShowChiSquare,
     BundlePredExecutor, 
     BundleTrueExecutor,
-    ShowTrebleEll
+    ShowTrebleEll,
+    NewMetricExecutor
     )
 
 
@@ -130,9 +131,10 @@ def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         # PredictExecutor,
-        ShowPredictionsPeaksExecutor,
+        # ShowPredictionsPeaksExecutor,
         # BundlePredExecutor,
-        # ShowTrebleEll
+        # ShowTrebleEll,
+        NewMetricExecutor
     ]
     run(cfg, pipes)
 

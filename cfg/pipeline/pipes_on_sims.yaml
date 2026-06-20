@@ -498,3 +498,21 @@ show_treble_ell: # _show_treble_ell.py / ShowTrebleEll
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_Figures
   make_stage_log: False
+
+new_metric:
+  assets_out:
+    metric:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/metrics_{split}.txt"
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_H_{split}_{metric}.{fig_type}"
+  assets_in:
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    pred: {stage: bundle_pred, orig_name: ps_bundle}
+    bank: {stage: raw, orig_name: ps_bundle}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
