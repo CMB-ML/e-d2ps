@@ -1,5 +1,5 @@
 defaults:
-  - config_d2ps
+  - config_d2ps_coefs
   - override pipeline: assembly_coefs
   - _self_
 
