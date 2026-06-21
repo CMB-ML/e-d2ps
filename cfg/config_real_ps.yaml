@@ -3,7 +3,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_surr_real_ps
   - scenario       : scenario
-  - splits         : all
+  - splits         : all_2000
   - model          : basic_d2ps_nn_l2
   - model/sim      : sim
   - model/analysis : basic_analysis
@@ -45,7 +45,7 @@ hydra:
   verbose          : false
 
 fig_model_name: "Realization Spectra"
-fig_type      : pdf
+fig_type      : png
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.

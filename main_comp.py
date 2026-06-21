@@ -3,10 +3,10 @@ import hydra
 from omegaconf import OmegaConf
 from cmbml.core import PipelineContext, LogMaker
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
-from cmbml.sims import (
+from cmbml.sims.ex import (
     MaskCreatorExecutor,
 )
-from cmbml.analysis import (
+from cmbml.analysis.ex import (
     CommonRealPostExecutor,
     MakeRealPowerSpectrumExecutor
 )
@@ -34,7 +34,8 @@ def run_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        MakeRealPowerSpectrumExecutor,
+        # MaskCreatorExecutor,
+        # MakeRealPowerSpectrumExecutor,
         PowerSpectrumAnalysisExecutor,
         PerSplitAnalysis,
         ShowChiSquare,
@@ -149,8 +150,8 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_real()
-    run_real_pl()
-    run_cmbnncs()
-    run_cmbnncs_planck()
-    run_pyilc()
-    run_pyilc_planck()
+    # run_real_pl()
+    # run_cmbnncs()
+    # run_cmbnncs_planck()
+    # run_pyilc()
+    # run_pyilc_planck()
