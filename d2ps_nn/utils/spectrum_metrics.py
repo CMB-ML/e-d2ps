@@ -190,6 +190,51 @@ def pairwise_metrics(pred, thry, prior):
     return {"ell": prior.ells, "A": A, "r": r, "b": b, "R2": R2, "mse": mse}
 
 
+def decomposition(pred, thry, prior):
+    """The R^2 budget R^2 = r^2 - (A-r)^2 - b^2, as an additive per-ell account.
+ 
+    The diagnostic form of R^2:
+      ceiling_r2 = r^2          variance a perfect linear rescale could explain
+      loss_calib = (A-r)^2      lost to a mis-scaled amplitude (A != r), recoverable
+      loss_bias  = b^2          lost to bias, recoverable
+      R2_local   = ceiling_r2 - loss_calib - loss_bias
+ 
+    EVERYTHING here is normalized by the LOCAL target spread thry.std(0), not the
+    bank sigma_ring -- mandatory, because the identity closes only when r, A, b,
+    and R^2 share one normalizer and r (a correlation) is intrinsically local.
+ 
+    Consequence: R2_local is NOT the bank-referenced pairwise_metrics R^2. Same
+    MSE numerator, but denominator thry.std(0)^2 instead of bank S1, so the two
+    differ by the few-percent sampling gap between the split's targets and the
+    prior. A and b here are likewise local and differ slightly from the
+    bank-normalized A, b of pairwise_metrics. Score against rho0^2 with the bank
+    R^2; use this to read *why* R^2 lands where it does.
+    """
+    pred = np.asarray(pred, dtype=float)
+    thry = np.asarray(thry, dtype=float)
+    _check_matched(pred, thry, prior)
+ 
+    mu_p, mu_t = pred.mean(0), thry.mean(0)
+    sd_p, sd_t = pred.std(0), thry.std(0)
+ 
+    A = sd_p / sd_t
+    b = (mu_p - mu_t) / sd_t
+    cov = ((pred - mu_p) * (thry - mu_t)).mean(0)
+    r = cov / (sd_p * sd_t)
+ 
+    ceiling_r2 = r ** 2
+    loss_calib = (A - r) ** 2
+    loss_bias = b ** 2
+ 
+    return {
+        "ell": prior.ells,
+        "ceiling_r2": ceiling_r2,
+        "loss_calib": loss_calib,
+        "loss_bias": loss_bias,
+        "R2_local": ceiling_r2 - loss_calib - loss_bias,
+    }
+
+
 def tension_metrics(pred, thry, prior):
     """Per-ell mean-error normalizations.
 

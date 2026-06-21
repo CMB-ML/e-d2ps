@@ -13,7 +13,7 @@ from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.get_epochs import get_epochs_with_best
 # from d2ps_nn.utils.find_peaks import find_crits, PeakFitError
 from d2ps_nn.utils.spectrum_metrics import (
-    Prior, compute_metrics,
+    Prior, compute_metrics, decomposition,
     score, score_fraction, locked_count, cleared_count,
 )
 
@@ -127,6 +127,13 @@ class NewMetricExecutor(BaseStageExecutor):
             with self.name_tracker.set_context("metric", key):
                 self.out_fig.write(fig=fig)
             plt.close(fig)     
+
+        if "R2" in result:                       # matched, varying target
+            decomp = decomposition(pred, thry, self.prior)
+            fig = self._plot_decomposition(decomp, ref_spectra, title, rho0_sq=result["rho0_sq"])
+            with self.name_tracker.set_context("metric", "R2_decomp"):
+                self.out_fig.write(fig=fig)
+            plt.close(fig)
     
     def _plot_metric(self, result, key, spec, ref_spectra, title):
         """Two rows on a shared linear ell axis: top = first theory+pred spectra for
@@ -163,5 +170,39 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.set(xlabel=r"$\ell$", ylabel=spec["ylabel"])
 
         fig.suptitle(f"{key}  —  {title}", y=0.97)
+        fig.subplots_adjust(left=0.12, right=0.97, top=0.90, bottom=0.10, hspace=0.08)
+        return fig
+    
+    def _plot_decomposition(self, decomp, ref_spectra, title, rho0_sq=None):
+        ell = decomp["ell"]
+        r2  = decomp["ceiling_r2"]
+        R2  = decomp["R2_local"]
+        mid = r2 - decomp["loss_bias"]            # r^2 - b^2 : boundary between the two losses
+
+        fig, (ax_top, ax) = plt.subplots(
+            2, 1, figsize=(8, 6), sharex=True,
+            gridspec_kw=dict(height_ratios=[1, 2.4]),
+        )
+
+        dl_thry, dl_pred = ref_spectra
+        ax_top.plot(ell, dl_thry, color="k",  lw=1.0, label=r"theory $\mathring D_\ell$")
+        ax_top.plot(ell, dl_pred, color="C0", lw=0.8, label=r"pred $\widehat D_\ell$")
+        ax_top.set_ylabel(r"$D_\ell$"); ax_top.set_ylim(bottom=0)
+        ax_top.legend(fontsize=7, loc="upper right")
+
+        ax.fill_between(ell, mid, r2, color="C3", alpha=0.20, label=r"$b^2$  (bias loss)")
+        ax.fill_between(ell, R2, mid, color="C1", alpha=0.20, label=r"$(A-r)^2$  (calib. loss)")
+        ax.plot(ell, r2, color="0.3", lw=1.0, label=r"$r^2$  (corr. ceiling)")
+        ax.plot(ell, R2, color="C0", lw=1.2, label=r"$R^2_{\rm local}$  (achieved)")
+        if rho0_sq is not None:
+            ax.plot(ell, rho0_sq, "k--", lw=1.0, label=r"$\rho_0^2$")
+        ax.axhline(0, color="0.5", ls=":", lw=1.0)
+
+        ax.set_ylim(-1.0, 1.05)
+        ax.set_xlim(ell.min(), self.display_lmax)
+        ax.set(xlabel=r"$\ell$", ylabel=r"$R^2_\ell$ budget")
+        ax.legend(fontsize=7, loc="lower right", ncol=2)
+
+        fig.suptitle(f"R2 decomposition  —  {title}", y=0.97)
         fig.subplots_adjust(left=0.12, right=0.97, top=0.90, bottom=0.10, hspace=0.08)
         return fig
