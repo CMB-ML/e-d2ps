@@ -54,8 +54,10 @@ class BundleExecutor(BaseStageExecutor):
                     tt = read_dict_camb_ps(self.in_ps, target_ells, sim)
                 elif isinstance(handler, NumpyPowerSpectrum):
                     tt = read_npy_ps(self.in_ps, target_ells)
+                elif isinstance(handler, TextPowerSpectrum):
+                    tt = read_txt_ps(self.in_ps, target_ells)
                 else:
-                    raise NotImplementedError(f"Can only use DictCambPowerSpectrum and NumpyPowerSpectrum, got {handler}")
+                    raise NotImplementedError(f"Can only use DictCambPowerSpectrum, NumpyPowerSpectrum and TextPowerSpectrum, got {handler}")
             data.append(tt)
 
         data = np.stack(data, axis=0)
@@ -73,6 +75,11 @@ def read_dict_camb_ps(asset, ells, sim):
 def read_npy_ps(asset, ells):
     tt = asset.read()
     tt = tt[ells]
+    return tt
+
+def read_txt_ps(asset, ells):
+    tt = asset.read()
+    # tt = tt[ells]  # Text power spectra were already trimmed to ells. Probably.
     return tt
 
 class BundlePredExecutor(BundleExecutor):

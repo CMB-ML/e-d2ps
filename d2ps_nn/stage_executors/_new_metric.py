@@ -187,8 +187,9 @@ class NewMetricExecutor(BaseStageExecutor):
         dl_thry, dl_pred = ref_spectra
         ax_top.plot(ell, dl_thry, color="k",  lw=1.0, label=r"theory $\mathring D_\ell$")
         ax_top.plot(ell, dl_pred, color="C0", lw=0.8, label=r"pred $\widehat D_\ell$")
-        ax_top.set_ylabel(r"$D_\ell$"); ax_top.set_ylim(bottom=0)
+        ax_top.set_ylabel(r"$D_\ell$")
         ax_top.legend(fontsize=7, loc="upper right")
+        ax_top.set_ylim(*PLOT_SPEC["ref"]["ylim"])
 
         ax.fill_between(ell, mid, r2, color="C3", alpha=0.20, label=r"$b^2$  (bias loss)")
         ax.fill_between(ell, R2, mid, color="C1", alpha=0.20, label=r"$(A-r)^2$  (calib. loss)")
