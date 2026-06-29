@@ -39,8 +39,8 @@ def run_A_prep(cfg):
     logger.info(f"Running run_B_prep in {__file__}")
 
     pipes = [
-        MakeLutExecutor,
-        GetOTFStatsExecutor,
+        # MakeLutExecutor,
+        # GetOTFStatsExecutor,
         GetOTFFixedMapsExecutor,
     ]
     run(cfg, pipes)

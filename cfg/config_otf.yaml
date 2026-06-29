@@ -41,9 +41,9 @@ nside              : 32
 lmax               : 64
 fcn_str_sweep      : N_1536R_O
 
-nside              : 16
-lmax               : 32
-fcn_str_sweep      : N_384R_O
+# nside              : 16
+# lmax               : 32
+# fcn_str_sweep      : N_384R_O
 
 n_train_sims: ???
 n_train_sims_sweep: 2048, 8192, 32768
@@ -55,7 +55,7 @@ splits:
   Valid:
     n_sims: 256
 
-num_epochs         : 20000
+num_epochs         : 2000
 train_batch_size   : 256
 n_train_batches    : 4
 
@@ -96,7 +96,7 @@ fcn_string         : ???
 nn_model           : fcn
 px_arrange         : none
 model_fn_template  : ${nn_model}_${fcn_string}_init_{model_num}
-working_dir        : "otf_${features_type}2ps_${nn_model}_H_sweep/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
+working_dir        : "otf_${features_type}2ps_${nn_model}_n_sims3/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 # working_dir        : "otf_${features_type}2ps_${nn_model}_scales2_20kEp/pred_${spectrum_type}-lr_${learning_rate}-lbl_${prep_label}-ftr_${prep_feature}-fcn_str_${fcn_string}-lmax_${lmax}-sigma_scale${sigma_scale}/"
 fig_model_name     : "On-The-Fly, ${nn_model} Nside ${nside} lmax ${lmax}, ${num_epochs}, ${input_kind} target ${spectrum_type} scale ${sigma_scale} \n Feature ${prep_feature} Target ${prep_label} Model ${fcn_string} \n lr ${learning_rate}"
 
