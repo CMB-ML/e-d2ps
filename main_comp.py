@@ -78,6 +78,7 @@ def run_real(cfg):
     pipes = [
         # MaskCreatorExecutor,
         # BundlePredExecutor,
+        BundleTrueExecutor,
         BundleSmoothExecutor,
         # NewMetricExecutor,
         NewMetricSmExecutor,
