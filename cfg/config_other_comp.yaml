@@ -1,0 +1,9 @@
+defaults:
+  - config_pred_ps_base
+  - _self_
+
+# d2ps
+working_dir : "obs2ps_1000_300ep/"
+fig_model_name: "d2ps"
+n_show_cap           : 10
+use_epochs           : ["best"]

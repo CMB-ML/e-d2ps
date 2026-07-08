@@ -43,5 +43,7 @@ from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
 from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor, BundleRealExecutor
 from .stage_executors.Z_bundle_maps import BundleMapsExecutor
 from .stage_executors._show_treble_ell import ShowTrebleEll
+from .stage_executors.Z_bundle_smooth_ps import BundleSmoothExecutor, BundleSmoothTrueExecutor
 
-from .stage_executors._new_metric import NewMetricExecutor
+from .stage_executors._new_metric import NewMetricExecutor, NewMetricSmExecutor
+from .stage_executors._cloud import ShowPredictionsCloudsExecutor

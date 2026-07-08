@@ -226,8 +226,23 @@ def decomposition(pred, thry, prior):
     loss_calib = (A - r) ** 2
     loss_bias = b ** 2
  
+    # return {
+    #     "ell": prior.ells,
+    #     "ceiling_r2": ceiling_r2,
+    #     "loss_calib": loss_calib,
+    #     "loss_bias": loss_bias,
+    #     "R2_local": ceiling_r2 - loss_calib - loss_bias,
+    # }
     return {
         "ell": prior.ells,
+
+        # signed local-normalized terms
+        "A_local": A,
+        "r": r,
+        "b": b,
+        "A_minus_r": A - r,
+
+        # squared decomposition terms
         "ceiling_r2": ceiling_r2,
         "loss_calib": loss_calib,
         "loss_bias": loss_bias,
@@ -267,6 +282,39 @@ def tension_metrics(pred, thry, prior):
     }
 
 
+def relative_error_metrics(pred, thry, prior):
+    """Per-ell signed relative error.
+
+    rel_err : <(Pred - True) / True> over samples, computed per ell.
+
+    This is a matched/broadcast target quantity, not a bank-normalized quantity.
+    It is defined for either:
+      * matched targets: thry.shape == pred.shape
+      * single-spectrum targets: thry.shape == (1, n_ell), broadcasting over pred
+
+    Negative means the prediction is low on average; positive means high.
+    If True is zero at an ell/sample, that entry contributes NaN and is skipped
+    by the per-ell average. If all entries are undefined for an ell, rel_err is
+    NaN there.
+    """
+    pred = np.asarray(pred, dtype=float)
+    thry = np.atleast_2d(np.asarray(thry, dtype=float))
+    _check_broadcast(pred, thry, prior)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel = np.divide(
+            pred - thry,
+            thry,
+            out=np.full_like(pred, np.nan, dtype=float),
+            where=(thry != 0),
+        )
+
+    return {
+        "ell": prior.ells,
+        "rel_err": np.nanmean(rel, axis=0),
+    }
+
+
 def compute_metrics(pred, thry, prior):
     """All applicable per-ell metrics plus the prior reference lines, in one dict.
 
@@ -287,6 +335,8 @@ def compute_metrics(pred, thry, prior):
     if thry.shape[0] >= 2 and thry.shape[0] == pred.shape[0]:
         out.update(pairwise_metrics(pred, thry, prior))
     out.update(tension_metrics(pred, thry, prior))
+    out.update(relative_error_metrics(pred, thry, prior))
+    
     out["rho0"] = prior.rho0
     out["rho0_sq"] = prior.rho0_sq
     return out

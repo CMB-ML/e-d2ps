@@ -22,21 +22,45 @@ logger = logging.getLogger(__name__)
 
 
 PLOT_SPEC = {
-    "A":       dict(ylabel=r"$A_\ell$",   yscale="log",    ylim=(0.5, 2.0),   target=1.0),
-    "r":       dict(ylabel=r"$r_\ell$",   yscale="linear", ylim=(0.0, 1.02),  ref="rho0"),
-    "b":       dict(ylabel=r"$b_\ell$",   yscale="linear", ylim=(-0.5, 0.5),  target=0.0),
-    "R2":      dict(ylabel=r"$R^2_\ell$", yscale="linear", ylim=(-1.0, 1.05), ref="rho0_sq", target=0.0),
-    # "mse":     dict(ylabel=r"MSE$_\ell$", yscale="log",    ylim=None),
-    # "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_\ell$",                 yscale="linear", ylim=(-1.5, 1.5), target=0.0),
-    # "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$",   yscale="linear", ylim=(-1.5, 1.5), target=0.0),
-    "tension": dict(ylabel=r"Tension$_\ell$", yscale="log", ylim=(1e-3, 3e1),  target=1.0),
-    "ref":     dict(ylim=(0, 7500))
+    "ref":     dict(ylim=(0, 7500)),
+    "A":       dict(ylabel=r"$A_\ell$: $\widehat\sigma_\ell / \sigma_\ell$",
+                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    "r":       dict(ylabel=r"$r_\ell$: $\mathrm{corr}(\widehat{D}_\ell, D_\ell)$",
+                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    "b":       dict(ylabel=r"$b_\ell$: $(\widehat\mu_\ell - \mu_\ell)/ \sigma_\ell$",
+                    yscale="linear", ylim=(-1.05, 2.05), target=0.0),
+    "R2":      dict(ylabel=r"$R^2_\ell$: $1 - \mathrm{MSE}_\ell / \sigma_\ell$",
+                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    "mse":     dict(ylabel=r"MSE$_\ell$",
+                    yscale="linear", ylim=(0, 1e4)),
+    "tension": dict(ylabel=r"Tension$_\ell$",
+                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    "rel_err": dict(ylabel=r"RE$_\ell$: $\langle(\widehat D_\ell-\mathring D_\ell)/\mathring D_\ell\rangle$", 
+                    yscale="linear", ylim=(-1.05, 1.05), target=0.0),
+    "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{Th},\ell}$", 
+                    yscale="linear", ylim=(-2.05, 2.05), target=0.0),
+    "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$", 
+                    yscale="linear", ylim=(-2.05, 2.05), target=0.0),
 }
+
+# PLOT_SPEC = {
+#     "A":       dict(ylabel=r"$A_\ell$",   yscale="log",    ylim=(0.5, 2.0),   target=1.0),
+#     "r":       dict(ylabel=r"$r_\ell$",   yscale="linear", ylim=(0.0, 1.02),  ref="rho0"),
+#     "b":       dict(ylabel=r"$b_\ell$",   yscale="linear", ylim=(-0.5, 0.5),  target=0.0),
+#     "R2":      dict(ylabel=r"$R^2_\ell$", yscale="linear", ylim=(-1.0, 1.05), ref="rho0_sq", target=0.0),
+#     "mse":     dict(ylabel=r"MSE$_\ell$", yscale="log",    ylim=None),
+#     "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_\ell$",                 yscale="linear", ylim=(-1.5, 1.5), target=0.0),
+#     "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$",   yscale="linear", ylim=(-1.5, 1.5), target=0.0),
+#     "tension": dict(ylabel=r"Tension$_\ell$", yscale="linear", ylim=(0, 2),  target=1.0),
+#     # "tension": dict(ylabel=r"Tension$_\ell$", yscale="log", ylim=(1e-3, 3e1),  target=1.0),
+#     "rel_err": dict(ylabel=r"RE$_\ell$", yscale="linear", ylim=(0, 0.1),  target=0.0),
+#     "ref":     dict(ylim=(0, 7500))
+# }
 
 
 class NewMetricExecutor(BaseStageExecutor):
-    def __init__(self, cfg: DictConfig) -> None:
-        super().__init__(cfg, stage_str="new_metric")
+    def __init__(self, cfg: DictConfig, stage_str="new_metric") -> None:
+        super().__init__(cfg, stage_str)
 
         self.out_metric: Asset = self.assets_out["metric"]
         self.out_fig: Asset = self.assets_out["fig"]
@@ -134,7 +158,22 @@ class NewMetricExecutor(BaseStageExecutor):
             with self.name_tracker.set_context("metric", "R2_decomp"):
                 self.out_fig.write(fig=fig)
             plt.close(fig)
-    
+
+            fig = self._plot_decomposition_oriented(
+                decomp,
+                ref_spectra,
+                title,
+                rho0_sq=result["rho0_sq"],
+            )
+            with self.name_tracker.set_context("metric", "R2_decomp_terms_sq"):
+                self.out_fig.write(fig=fig)
+            plt.close(fig)
+
+            fig = self._plot_decomposition_terms(decomp, ref_spectra, title)
+            with self.name_tracker.set_context("metric", "R2_decomp_terms_sn"):
+                self.out_fig.write(fig=fig)
+            plt.close(fig)
+
     def _plot_metric(self, result, key, spec, ref_spectra, title):
         """Two rows on a shared linear ell axis: top = first theory+pred spectra for
         context, bottom = the metric with fixed limits/scale."""
@@ -142,7 +181,7 @@ class NewMetricExecutor(BaseStageExecutor):
         dl_thry, dl_pred = ref_spectra
 
         fig, (ax_top, ax) = plt.subplots(
-            2, 1, figsize=(8, 6), sharex=True,
+            2, 1, figsize=(12, 7), sharex=True,
             gridspec_kw=dict(height_ratios=[1, 2.4]),   # no hspace here
         )
 
@@ -170,7 +209,7 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.set(xlabel=r"$\ell$", ylabel=spec["ylabel"])
 
         fig.suptitle(f"{key}  —  {title}", y=0.97)
-        fig.subplots_adjust(left=0.12, right=0.97, top=0.90, bottom=0.10, hspace=0.08)
+        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
         return fig
     
     def _plot_decomposition(self, decomp, ref_spectra, title, rho0_sq=None):
@@ -180,7 +219,7 @@ class NewMetricExecutor(BaseStageExecutor):
         mid = r2 - decomp["loss_bias"]            # r^2 - b^2 : boundary between the two losses
 
         fig, (ax_top, ax) = plt.subplots(
-            2, 1, figsize=(8, 6), sharex=True,
+            2, 1, figsize=(12, 7), sharex=True,
             gridspec_kw=dict(height_ratios=[1, 2.4]),
         )
 
@@ -195,15 +234,106 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.fill_between(ell, R2, mid, color="C1", alpha=0.20, label=r"$(A-r)^2$  (calib. loss)")
         ax.plot(ell, r2, color="0.3", lw=1.0, label=r"$r^2$  (corr. ceiling)")
         ax.plot(ell, R2, color="C0", lw=1.2, label=r"$R^2_{\rm local}$  (achieved)")
-        if rho0_sq is not None:
-            ax.plot(ell, rho0_sq, "k--", lw=1.0, label=r"$\rho_0^2$")
+        # if rho0_sq is not None:
+        #     ax.plot(ell, rho0_sq, "k--", lw=1.0, label=r"$\rho_0^2$")
         ax.axhline(0, color="0.5", ls=":", lw=1.0)
 
-        ax.set_ylim(-1.0, 1.05)
+        ax.set_ylim(-1.05, 1.05)
         ax.set_xlim(ell.min(), self.display_lmax)
         ax.set(xlabel=r"$\ell$", ylabel=r"$R^2_\ell$ budget")
         ax.legend(fontsize=7, loc="lower right", ncol=2)
 
         fig.suptitle(f"R2 decomposition  —  {title}", y=0.97)
-        fig.subplots_adjust(left=0.12, right=0.97, top=0.90, bottom=0.10, hspace=0.08)
+        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
         return fig
+
+    def _plot_decomposition_oriented(self, decomp, ref_spectra, title, rho0_sq=None):
+        """Decomposition-oriented view without presenting the terms as an additive sum.
+
+        Plots the four local-normalized quantities that matter for interpreting
+        R2_local:
+
+            r^2          : correlation ceiling
+            (A-r)^2      : calibration loss magnitude
+            b^2          : bias loss magnitude
+            R2_local     : achieved local R^2
+
+        Unlike _plot_decomposition, this does not use filled regions or stacked
+        visual accounting. It is a same-axis comparison of the ingredients.
+        """
+        ell = decomp["ell"]
+
+        r2 = decomp["ceiling_r2"]
+        calib = decomp["loss_calib"]
+        bias = decomp["loss_bias"]
+        R2 = decomp["R2_local"]
+
+        fig, (ax_top, ax) = plt.subplots(
+            2, 1, figsize=(12, 7), sharex=True,
+            gridspec_kw=dict(height_ratios=[1, 2.4]),
+        )
+
+        # context: first matched theory/prediction pair
+        dl_thry, dl_pred = ref_spectra
+        ax_top.plot(ell, dl_thry, color="k",  lw=1.0, label=r"theory $\mathring D_\ell$")
+        ax_top.plot(ell, dl_pred, color="C0", lw=0.8, label=r"pred $\widehat D_\ell$")
+        ax_top.set_ylabel(r"$D_\ell$")
+        ax_top.set_ylim(*PLOT_SPEC["ref"]["ylim"])
+        ax_top.legend(fontsize=7, loc="upper right")
+
+        # decomposition-oriented traces, not a sum/stack
+        ax.plot(ell, r2,     color="0.25", lw=1.1, label=r"$r_\ell^2$")
+        ax.plot(ell, calib,  color="C1",   lw=1.0, label=r"$(A_\ell-r_\ell)^2$")
+        ax.plot(ell, bias,   color="C3",   lw=1.0, label=r"$b_\ell^2$")
+        ax.plot(ell, R2,     color="C0",   lw=1.2, label=r"$R^2_{\mathrm{local},\ell}$")
+
+        # if rho0_sq is not None:
+        #     ax.plot(ell, rho0_sq, "k--", lw=1.0, label=r"$\rho_{0,\ell}^2$")
+
+        ax.axhline(0, color="0.5", ls=":", lw=1.0)
+
+        ax.set_ylim(-1.05, 1.05)
+        ax.set_xlim(ell.min(), self.display_lmax)
+        ax.set(xlabel=r"$\ell$", ylabel=r"local decomposition terms")
+        ax.legend(fontsize=7, loc="best", ncol=2)
+
+        fig.suptitle(f"R2 decomposition terms  —  {title}", y=0.97)
+        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
+        return fig
+
+    def _plot_decomposition_terms(self, decomp_terms, ref_spectra, title):
+        ell = decomp_terms["ell"]
+
+        fig, (ax_top, ax) = plt.subplots(
+            2, 1, figsize=(12, 7), sharex=True,
+            gridspec_kw=dict(height_ratios=[1, 2.4]),
+        )
+
+        dl_thry, dl_pred = ref_spectra
+        ax_top.plot(ell, dl_thry, color="k",  lw=1.0, label=r"theory $\mathring D_\ell$")
+        ax_top.plot(ell, dl_pred, color="C0", lw=0.8, label=r"pred $\widehat D_\ell$")
+        ax_top.set_ylabel(r"$D_\ell$")
+        ax_top.set_ylim(*PLOT_SPEC["ref"]["ylim"])
+        ax_top.legend(fontsize=7, loc="upper right")
+
+        ax.plot(ell, decomp_terms["r"], color="0.2", lw=1.0, label=r"$r$")
+        ax.plot(ell, decomp_terms["A_minus_r"], color="C1", lw=1.0, label=r"$A-r$")
+        ax.plot(ell, decomp_terms["b"], color="C3", lw=1.0, label=r"$b$")
+        ax.plot(ell, decomp_terms["R2_local"], color="C0", lw=1.2, label=r"$R^2_{\rm local}$")
+
+        ax.axhline(0, color="0.5", ls=":", lw=1.0)
+        ax.axhline(1, color="0.85", ls=":", lw=0.8)
+
+        ax.set_ylim(-1.05, 1.05)
+        ax.set_xlim(ell.min(), self.display_lmax)
+        ax.set(xlabel=r"$\ell$", ylabel=r"local decomposition terms")
+        ax.legend(fontsize=7, loc="best", ncol=2)
+
+        fig.suptitle(f"R2 decomposition terms  —  {title}", y=0.97)
+        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
+        return fig
+
+
+class NewMetricSmExecutor(NewMetricExecutor):
+    def __init__(self, cfg: DictConfig, stage_str="new_metric_sm") -> None:
+        super().__init__(cfg, stage_str)

@@ -3,7 +3,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_surr_real_ps
   - scenario       : scenario
-  - splits         : all       # For CMB-ML dataset
+  - splits         : all_2000       # For CMB-ML dataset
   # - splits         : "1-1"   # For on_Planck
   - model          : basic_d2ps_nn_l2
   - model/sim      : sim
@@ -35,9 +35,21 @@ dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
 # n_show_cap           : 1
 # use_epochs           : [""]
 
-fig_type      : pdf
+fig_type      : [png, pdf]
+
+sigma_scale: 1
+# sm_basis_kind: chebyshev
+sm_basis_kind: chebyshev
+# sm_degree: 10
+sm_degree: 18
+out_range: [-1, 1]
 
 pipeline:
+  raw:
+    assets_out:
+      ps_bundle:
+        handler: NpyHandler
+        path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
   ps_analysis:
     assets_in:
       auto_pred: {stage: make_pred_ps, orig_name: auto_pred}
