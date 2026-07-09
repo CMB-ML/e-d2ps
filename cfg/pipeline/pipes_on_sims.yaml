@@ -1,3 +1,8 @@
+make_theory_ps:
+  assets_out:
+    cmb_ps:
+      handler: DictCambPowerSpectrum
+
 make_lut:  # B_make_lut.py / MakeLutExecutor
   assets_out:
     lut: 
