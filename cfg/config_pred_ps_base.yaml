@@ -12,6 +12,10 @@ defaults:
   - override hydra/job_logging: custom_log
   - _self_
 
+splits:
+  Valid:
+    n_sims: 200
+
 dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
 
 # NEEDS ONE OF THE FOLLOWING, AS WELL AS CORRECT SPLIT
@@ -102,4 +106,4 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : valid  # Either "test" ("train" should work, but is not recommended)

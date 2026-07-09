@@ -121,10 +121,10 @@ def run_cmbnncs(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="config_other_comp")
 def run_d2ps_comp(cfg):
     pipes = [
-        # BundlePredExecutor,
+        BundlePredExecutor,
         BundleSmoothExecutor,
-        # NewMetricExecutor,
-        NewMetricSmExecutor,
+        NewMetricExecutor,
+        # NewMetricSmExecutor,
         ShowPredictionsCloudsExecutor
         # PowerSpectrumAnalysisExecutor,
         # PerSplitAnalysis,
@@ -226,9 +226,9 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     # run_sm_theory()
-    run_real()
+    # run_real()
     # run_real_pl()
-    # run_d2ps_comp()
+    run_d2ps_comp()
     # run_cmbnncs()
     # run_cmbnncs_planck()
     # run_pyilc()

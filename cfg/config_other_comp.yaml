@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 # d2ps
-working_dir : "obs2ps_1000_300ep/"
+working_dir : "cmb2ps_TLPEnc2AggDec_train_coefs2/Nsims-2000_lr-0.0001_Adam_wd-0.0_sps-None_spx-local_meanstdv_pe-False_en-gn_gelu_r1-mXX_r2-avg_chebyshev18_1"
 fig_model_name: "d2ps"
 n_show_cap           : 10
 use_epochs           : ["best"]
