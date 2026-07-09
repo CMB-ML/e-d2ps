@@ -12,7 +12,7 @@ pipeline:
   predict:
     assets_out:
       cmb_ps:
-        path_template: "{root}/{dataset}/{working}{stage}/cmb_ps_pred_{epoch}.txt"
+        path_template: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_pred_{epoch}.txt"
   bundle_pred: # Z_bundle.py / BundlePredExecutor
     assets_out:
       ps_bundle:
