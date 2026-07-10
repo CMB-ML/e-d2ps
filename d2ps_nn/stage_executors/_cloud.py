@@ -183,7 +183,7 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
             2, 1,
             figsize=(12, 7),
             sharex=True,
-            gridspec_kw=dict(height_ratios=[2.2, 1.4]),
+            gridspec_kw=dict(height_ratios=[1, 2.4]),
         )
 
         fixed_theory = len(all_theory_ps) == 1

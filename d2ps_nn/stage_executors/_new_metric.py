@@ -23,24 +23,24 @@ logger = logging.getLogger(__name__)
 
 PLOT_SPEC = {
     "ref":     dict(ylim=(0, 7500)),
-    "A":       dict(ylabel=r"$A_\ell$: $\widehat\sigma_\ell / \sigma_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
-    "r":       dict(ylabel=r"$r_\ell$: $\mathrm{corr}(\widehat{D}_\ell, D_\ell)$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
-    "b":       dict(ylabel=r"$b_\ell$: $(\widehat\mu_\ell - \mu_\ell)/ \sigma_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=0.0),
-    "R2":      dict(ylabel=r"$R^2_\ell$: $1 - \mathrm{MSE}_\ell / \sigma_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
-    "mse":     dict(ylabel=r"MSE$_\ell$",
-                    yscale="linear", ylim=(0, 1e4)),
-    "tension": dict(ylabel=r"Tension$_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "A":       dict(ylabel=r"$A_\ell$: $\widehat\sigma_\ell / \sigma_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "r":       dict(ylabel=r"$r_\ell$: $\mathrm{corr}(\widehat{D}_\ell, D_\ell)$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "b":       dict(ylabel=r"$b_\ell$: $(\widehat\mu_\ell - \mu_\ell)/ \sigma_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=0.0),
+    # "R2":      dict(ylabel=r"$R^2_\ell$: $1 - \mathrm{MSE}_\ell / \sigma_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "mse":     dict(ylabel=r"MSE$_\ell$",
+    #                 yscale="linear", ylim=(0, 1e4)),
+    # "tension": dict(ylabel=r"Tension$_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
     "rel_err": dict(ylabel=r"RE$_\ell$: $\langle(\widehat D_\ell-\mathring D_\ell)/\mathring D_\ell\rangle$", 
-                    yscale="linear", ylim=(-1.05, 1.05), target=0.0),
-    "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{Th},\ell}$", 
-                    yscale="linear", ylim=(-2.05, 2.05), target=0.0),
-    "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$", 
-                    yscale="linear", ylim=(-2.05, 2.05), target=0.0),
+                    yscale="linear", ylim=(-0.2, 0.2), target=0.0),
+    # "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{Th},\ell}$", 
+    #                 yscale="linear", ylim=(-2.05, 2.05), target=0.0),
+    # "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$", 
+    #                 yscale="linear", ylim=(-2.05, 2.05), target=0.0),
 }
 
 # PLOT_SPEC = {
@@ -113,6 +113,8 @@ class NewMetricExecutor(BaseStageExecutor):
                 self.process_epoch(split, epoch)
 
     def process_epoch(self, split: Split, epoch) -> None:
+        # print(self.in_ps_thry.path)
+        # exit()
         thry = self.in_ps_thry.read()
         pred = self.in_ps_pred.read()
         result = compute_metrics(pred, thry, self.prior)
