@@ -551,7 +551,8 @@ new_metric_sm:
   splits:
     - ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
-  dir_name: Analysis_Figures
+  # dir_name: Analysis_Figures
+  dir_name: Analysis_Figures_RealPS_d${sm_degree}
   make_stage_log: False
 
 show_predictions_clouds: # _clouds.py / ShowPredictionsCloudsExecutor

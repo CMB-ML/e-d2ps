@@ -14,7 +14,7 @@ from d2ps_nn.utils.get_epochs import get_epochs_with_best
 # from d2ps_nn.utils.find_peaks import find_crits, PeakFitError
 from d2ps_nn.utils.spectrum_metrics import (
     Prior, compute_metrics, decomposition,
-    score, score_fraction, locked_count, cleared_count,
+    score, score_fraction, locked_count, cleared_count, mmse
 )
 
 
@@ -23,24 +23,24 @@ logger = logging.getLogger(__name__)
 
 PLOT_SPEC = {
     "ref":     dict(ylim=(0, 7500)),
-    "A":       dict(ylabel=r"$A_\ell$: $\widehat\sigma_\ell / \sigma_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
-    "r":       dict(ylabel=r"$r_\ell$: $\mathrm{corr}(\widehat{D}_\ell, D_\ell)$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
-    "b":       dict(ylabel=r"$b_\ell$: $(\widehat\mu_\ell - \mu_\ell)/ \sigma_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=0.0),
-    "R2":      dict(ylabel=r"$R^2_\ell$: $1 - \mathrm{MSE}_\ell / \sigma_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
-    "mse":     dict(ylabel=r"MSE$_\ell$",
-                    yscale="linear", ylim=(0, 1e4)),
-    "tension": dict(ylabel=r"Tension$_\ell$",
-                    yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "A":       dict(ylabel=r"$A_\ell$: $\widehat\sigma_\ell / \sigma_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "r":       dict(ylabel=r"$r_\ell$: $\mathrm{corr}(\widehat{D}_\ell, D_\ell)$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "b":       dict(ylabel=r"$b_\ell$: $(\widehat\mu_\ell - \mu_\ell)/ \sigma_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=0.0),
+    # "R2":      dict(ylabel=r"$R^2_\ell$: $1 - \mathrm{MSE}_\ell / \sigma_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
+    # "mse":     dict(ylabel=r"MSE$_\ell$",
+    #                 yscale="linear", ylim=(0, 1e4)),
+    # "tension": dict(ylabel=r"Tension$_\ell$",
+    #                 yscale="linear", ylim=(-1.05, 2.05), target=1.0),
     "rel_err": dict(ylabel=r"RE$_\ell$: $\langle(\widehat D_\ell-\mathring D_\ell)/\mathring D_\ell\rangle$", 
-                    yscale="linear", ylim=(-1.05, 1.05), target=0.0),
-    "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{Th},\ell}$", 
-                    yscale="linear", ylim=(-2.05, 2.05), target=0.0),
-    "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$", 
-                    yscale="linear", ylim=(-2.05, 2.05), target=0.0),
+                    yscale="linear", ylim=(-0.20, 0.20), target=0.0),
+    # "e_thry":  dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{Th},\ell}$", 
+    #                 yscale="linear", ylim=(-2.05, 2.05), target=0.0),
+    # "e_cv":    dict(ylabel=r"$\langle E_\ell\rangle/\sigma_{\mathrm{CV},\ell}$", 
+    #                 yscale="linear", ylim=(-2.05, 2.05), target=0.0),
 }
 
 # PLOT_SPEC = {
@@ -124,11 +124,13 @@ class NewMetricExecutor(BaseStageExecutor):
                 "locked_0.5": locked_count(result, 0.5),
                 "locked_0.9": locked_count(result, 0.9),
                 "cleared":    cleared_count(result),
+                "mse":        mmse(result)
             }
             logger.info(
                 f"[{split.name} | epoch {epoch}]  score={scalars['score']:.1f}  "
                 f"frac={scalars['score_frac']:.3f}  locked@0.5={scalars['locked_0.5']}  "
-                f"locked@0.9={scalars['locked_0.9']}  cleared={scalars['cleared']}"
+                f"locked@0.9={scalars['locked_0.9']}  cleared={scalars['cleared']}  "
+                f"mse={scalars['mse']}"
             )
         else:                                    # single-spectrum target: tension only
             med_t = float(np.nanmedian(result["tension"]))

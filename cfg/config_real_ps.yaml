@@ -51,9 +51,13 @@ pipeline:
 dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
 working_dir : "Real_PS/"
 hydra:
+  mode: MULTIRUN
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   verbose          : false
+  sweeper:
+    params:
+      sm_degree: 40, 60
 
 fig_model_name: "Realization Spectra"
 fig_type      : png

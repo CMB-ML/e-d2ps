@@ -3,7 +3,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_surr_real_ps
   - scenario       : scenario
-  - splits         : all_big       # For CMB-ML dataset
+  # - splits         : all_big       # For CMB-ML dataset
+  - splits         : all       # For CMB-ML dataset
   # - splits         : all_2000       # For CMB-ML dataset
   # - splits         : "1-1"   # For on_Planck
   - model          : basic_d2ps_nn_l2
@@ -89,7 +90,7 @@ hydra:
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
 # In the scenario yaml
-nside          : 128
+nside          : 512
 detectors      : [100, 143, 217, 353]
 map_fields     : "I"
 
@@ -107,4 +108,4 @@ use_epochs_ps_stats  : ${use_epochs}
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : valid  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)

@@ -386,3 +386,7 @@ def cleared_count(result):
     R2 = np.asarray(result["R2"], dtype=float)
     ceil = np.asarray(result["rho0_sq"], dtype=float)
     return int(np.sum(np.isfinite(R2) & (R2 > ceil)))
+
+
+def mmse(result):
+    return np.mean(result["mse"])
