@@ -101,7 +101,7 @@ adamw_wd_sweep: 0.01
 learning_rate_start: 1e-8
 
 learning_rate_final: ???
-learning_rate_final_sweep: 1e-6, 1e-5, 3e-6, 3e-7, 1e-7
+learning_rate_final_sweep: 1e-6  #, 1e-5, 3e-6, 3e-7, 1e-7
 
 learning_rate_ramp_epochs: ???
 learning_rate_ramp_epochs_sweep: 0  #, 3, 10
