@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : all_2000
+  - splits         : "1-1"
   - model          : basic_d2ps_nn_l2
   - model/patches  : toppatch
   - model/analysis : simple_apo
@@ -50,7 +50,7 @@ n_sims_train_full: 1000   # 512
 # # Normal training scheme
 n_sims_train: 1000
 n_sims_train_infer: 200
-num_epochs: 500
+num_epochs: 300
 
 # # LR finder scheme
 # n_sims_train: 2000
