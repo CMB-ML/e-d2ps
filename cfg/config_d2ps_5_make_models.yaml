@@ -18,9 +18,9 @@ hydra:
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
       activation: relu
       model_num: ${model_num_sweep}
-      norm_kind: none
-      down_reductions: max
-      spatial_reduction: avg
+      norm_kind: none          # Used as default value for model creation; overwritten in later stages
+      down_reductions: max     # default value
+      spatial_reduction: avg   # default value
       # degree: ${degree_sweep}
       # basis_kind: chebyshev  # Does not matter
 

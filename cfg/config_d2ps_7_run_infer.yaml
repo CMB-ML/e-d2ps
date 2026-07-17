@@ -6,7 +6,7 @@ defaults:
 hydra:
   sweeper:
     params:
-      run_inference_on: test
+      run_inference_on: test, valid, train
 
 splits:
   Train:

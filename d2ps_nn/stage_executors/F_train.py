@@ -188,9 +188,10 @@ class TrainingExecutor(BaseD2PSExecutor):
                                    'Training Pre Loss', 
                                    'Validation Loss', 
                                    'Training Loss', 
-                                   'Learning Rate',
-                                   'Mean Grad Norm',
-                                   'Max Grad Norm']
+                                   'Learning Rate']
+            if self.track_grad_norm:
+                loss_record_headers.append('Mean Grad Norm')
+                loss_record_headers.append('Max Grad Norm')
             self.out_loss_record.write(data=loss_record_headers)
 
         n_epoch_digits = len(str(self.n_epochs))

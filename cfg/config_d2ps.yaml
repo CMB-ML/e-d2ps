@@ -40,49 +40,20 @@ sigma_scale: 1
 ################################################################
 #                                                              #
 ################################################################
-# n_sims_train_full: 20000  # 128
 n_sims_train_full: 1000   # 512
-
-# Overfit scheme
-# n_sims_train: 5
-# num_epochs: 100
 
 # # Normal training scheme
 n_sims_train: 1000
 n_sims_train_infer: 200
 num_epochs: 500
 
-# # LR finder scheme
-# n_sims_train: 2000
-# # num_epochs: 3 
-
-spectrum_layer_kind: identity  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
-
-# N/A
 return_mode: spectrum  # 'coefs' or 'spectrum'; if using cosmo_param, use coefs # TODO: Change name
-# basis_kind: ???
-# # basis_kind_sweep: chebyshev, legendre, monomial
-# basis_kind_sweep: chebyshev
-# degree: ???
-# degree_sweep: 18
-# out_range: [-1, 1]
-# scale_coef: local_meanstdv
-# scale_params: local_meanstdv
-# scale_params_sweep: local_meanstdv
-# scale_params_sweep: local_meanstdv, none
 
 model_num: ???
-# model_num_sweep: 21,22,23
 model_num_sweep: 1
-# model_num_sweep: 2
-# model_num_sweep: 3
 
 scale_px: ???
-# scale_px_sweep: global_minmax, local_minmax, local_meanstdv, null
 scale_px_sweep: local_minmax  #, local_meanstdv
-# scale_px_sweep: global_minmax
-# scale_px_sweep: local_minmax
-# scale_px_sweep: local_meanstdv
 
 scale_ps: ???
 scale_ps_sweep: meanstdv
@@ -90,39 +61,31 @@ scale_ps_sweep: meanstdv
 use_pos_enc_lut: ???
 use_pos_enc_lut_sweep: false
 
-# optimizer: Adam
 optimizer: AdamW
-# adamw_wd : 0.0  # Due to interpolation, must be provided.
 adamw_wd : ???  # Due to interpolation, must be provided.
-# adamw_wd_sweep: 0.0, 1e-4, 5e-3, 1e-2, 1e-1, 5e-1
-# adamw_wd_sweep: 0.0, 1e-4, 1e-2
 adamw_wd_sweep: 0.01
 
 learning_rate_start: 1e-8
 
 learning_rate_final: ???
-learning_rate_final_sweep: 1e-6, 1e-5, 3e-6, 3e-7, 1e-7
+learning_rate_final_sweep: 1e-5
 
 learning_rate_ramp_epochs: ???
-learning_rate_ramp_epochs_sweep: 0  #, 3, 10
+learning_rate_ramp_epochs_sweep: 0
 
 ## Models: Either 
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
 norm_kind: ???
-# norm_sweep: none, bn, gn
 norm_sweep: gn
 # Down reductions use X/m strings: X is max, m is avg; 
 #   order starts with first/top layer and fills down 
 #   XmX would be Max, Avg, Max, and the rest Avg
 down_reductions: ???
-down_reductions_sweep: mmmmmmm  #, Xmmmmmm  # CMML0
-# down_reductions_sweep: mmmXmmm, mmmmmXm  # CMML1
+down_reductions_sweep: mmmmmmm
 spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
 spatial_reduction_sweep: avg
 activation: ???
-# activation_sweep: relu, gelu
 activation_sweep: gelu
 
 # ### Or
@@ -144,9 +107,8 @@ activation_sweep: gelu
 # # activation_sweep: relu, gelu
 # activation_sweep: gelu
 
-face_reduction: ???
-# face_reduction_sweep: avg, max, weighted, softmax
-face_reduction_sweep: avg
+# face_reduction: ???
+# face_reduction_sweep: avg
 
 ### Or
 # nn_model: MobileViTCMBRegressor
@@ -161,14 +123,6 @@ n_sims: ???
 splits:
   Train:
     n_sims: ${n_sims}
-  # Test:
-  #   n_sims: ${n_sims}
-  # TestFFN:
-  #   n_sims: ${n_sims}
-  # TestFP:
-  #   n_sims: ${n_sims}
-  # Valid:
-  #   n_sims: ${n_sims}
 
 planck_ds: PlanckAsDataset_${scenario.nside}
 
@@ -184,7 +138,6 @@ n_show_treble_ell    : null
 # In the scenario yaml
 nside              : 512
 lmax               : 1280
-# nside              : 512  # When changing this, change mask apodization as well!
 
 # Features type should be either "cmb" or "obs"
 # features_type      : cmb
@@ -192,20 +145,15 @@ features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
-cosmo_param_names  : ["As", "H0", "ns", "ombh2", "omch2", "tau"]
-pivot_scalar       : 0.002  # For WMAP, use 0.002. For Planck, use CAMB
-                            # default of 0.05
-log_As             : false  # This should match the source distribution
-                            # Currently (WMAP), As is provided with mean 
-                            # and standard deviation *not* log-scaled. 
-                            # If we switch to Planck, change this to true
+# cosmo_param_names  : ["As", "H0", "ns", "ombh2", "omch2", "tau"]
+# pivot_scalar       : 0.002  # For WMAP, use 0.002. For Planck, use CAMB
+#                             # default of 0.05
+# log_As             : false  # This should match the source distribution
+#                             # Currently (WMAP), As is provided with mean 
+#                             # and standard deviation *not* log-scaled. 
+#                             # If we switch to Planck, change this to true
 
-track_grad_norm: True
-
-# In the model yaml
-# SET ABOVE
-# # num_epochs         : 5000
-# # num_epochs         : 1000  # 0000
+track_grad_norm: False
 
 # In the pipeline yamls
 # For prediction, postprocessing, power spectra generation:

@@ -29,31 +29,21 @@ from d2ps_nn.ex import (
     PreprocessMapsExecutor,
     PreprocessSpectraExecutor,
 
-    CheckGPULoadExecutor,
     ModelInitExecutor,
-    TrainingExecutor,
+    CheckGPULoadExecutor,
     OverfitTrainingExecutor,
-    LRFindingTrainingExecutor,
-    PredictExecutor,
-    LossPlotExecutor,
-    LearningRatePlotExecutor,
     RelativeUpdatePlotExecutor,
+    LRFindingTrainingExecutor,
+    LearningRatePlotExecutor,
+    TrainingExecutor,
+    LossPlotExecutor,
+    PredictExecutor,
     ShowPredictionsPeaksExecutor,
-    # # PowerSpectrumAnalysisExecutor,
-    # # PerSplitAnalysis,
-    # # PowerSpectrumAggExecutor,
-    # # ShowPredictionsExecutor,
-    # # ShowBWPredictionsExecutor,
-    # # ShowIndivPredictionsExecutor,
-    # # ErrorAnalysisExecutor,
-    # # ShowPredictionsWithChiSquareExecutor,
-    # # ShowRelativeError,
-    # # ShowCosmicFractions,
-    # # ShowChiSquare,
     BundlePredExecutor, 
     BundleTrueExecutor,
     ShowTrebleEll,
-    NewMetricExecutor
+    NewMetricExecutor,
+    ShowPredictionsCloudsExecutor
     )
 
 
@@ -114,15 +104,13 @@ def run_6_train(cfg):
         raise ValueError("Don't make this mistake again, please.")
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # CheckGPULoadExecutor,
+        CheckGPULoadExecutor,
         # OverfitTrainingExecutor,
-        # LossPlotExecutor,
         # RelativeUpdatePlotExecutor,
         # LRFindingTrainingExecutor,
         # LearningRatePlotExecutor,
         TrainingExecutor,
         LossPlotExecutor,
-        # BundleTrueExecutor
     ]
     run(cfg, pipes)
 
@@ -130,12 +118,13 @@ def run_6_train(cfg):
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        # PredictExecutor,
-        # ShowPredictionsPeaksExecutor,
+        PredictExecutor,
+        ShowPredictionsPeaksExecutor,
         BundlePredExecutor,
-        # ShowTrebleEll,
-        # BundleTrueExecutor,
-        NewMetricExecutor
+        BundleTrueExecutor,
+        ShowTrebleEll,
+        NewMetricExecutor,
+        ShowPredictionsCloudsExecutor
     ]
     run(cfg, pipes)
 
@@ -154,8 +143,7 @@ def run_8_prep_planck(cfg):
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-            #  PredictExecutor,
-            #  PowerSpectrumAnalysisExecutor,
+             PredictExecutor,
              ShowPredictionsPeaksExecutor,
              ]
     run(cfg, pipes)
@@ -181,12 +169,12 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_1_prelim_px()
-    # run_2_prelim_ps()
-    # run_3_prep_px()
-    # run_4_prep_ps()
-    # run_5_make_models()
-    # run_6_train()
+    run_1_prelim_px()
+    run_2_prelim_ps()
+    run_3_prep_px()
+    run_4_prep_ps()
+    run_5_make_models()
+    run_6_train()
     run_7_infer()
-    # run_8_prep_planck()
-    # run_9_run_planck()
+    run_8_prep_planck()
+    run_9_run_planck()
