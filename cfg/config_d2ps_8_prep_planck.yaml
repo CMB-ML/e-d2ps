@@ -5,7 +5,7 @@ defaults:
   - _self_
 
 splits:
-  name: 1850
+  name: 2850
 
 working_dir        : ${prep_working_dir}
 hydra:

@@ -12,7 +12,7 @@ defaults:
   - override hydra/job_logging: custom_log
   - _self_
 
-dataset_name       : "${map_fields}_${scenario.nside}_${splits.name}"
+dataset_name       : "${map_fields}_${scenario.nside}_2850"
 # SimpleEncDec
 working_dir        : &wd "${features_type}2ps_final/"
 # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
@@ -147,8 +147,8 @@ nside              : 512
 lmax               : 1280
 
 # Features type should be either "cmb" or "obs"
-# features_type      : cmb
-features_type      : obs
+features_type      : cmb
+# features_type      : obs
 detectors          : [100, 143, 217, 353]
 map_fields         : "I"
 
