@@ -68,5 +68,7 @@ class FindSpectraStatsExecutor(BaseStageExecutor):
             use_alt_path = False
 
         cmb_ps = self.in_cmb_ps.read(use_alt_path=use_alt_path)
+        if isinstance(cmb_ps, dict):
+            cmb_ps = cmb_ps['TT']
         cmb_ps = cmb_ps[self.ells]
         return cmb_ps

@@ -90,6 +90,8 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
                     with self.name_tracker.set_contexts(context):
                         ps_pred = self.in_ps_pred.read()
                         ps_thry = self.in_ps_thry.read(use_alt_path=use_path_alt)
+                        if isinstance(ps_thry, dict):
+                            ps_thry = ps_thry['TT']
                     # TODO: Fix this. Patch exists to handle Realization Power Spectra,
                     #       which are produced using a different way of defining ells
                     #       (thye use lmax; this later method uses use_ells)

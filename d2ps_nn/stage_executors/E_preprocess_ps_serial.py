@@ -59,6 +59,8 @@ class PreprocessSpectraExecutor(BaseStageExecutor):
 
     def process_sim(self) -> None:
         cmb_ps = self.in_cmb_ps.read(use_alt_path=False)
+        if isinstance(cmb_ps, dict):
+            cmb_ps = cmb_ps['TT']
         cmb_ps = cmb_ps[self.ells]
 
         cmb_ps = self.scale_ps.preprocess(cmb_ps)
