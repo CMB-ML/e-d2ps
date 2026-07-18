@@ -44,8 +44,8 @@ face_reduction: ${face_reduction}
 
 # Other model parameters
 n_init_features: 16
-n_levels: 7  # For 128
-# n_levels: 9  # For 512
+# n_levels: 7  # For 128
+n_levels: 9  # For 512
 note: null
 
 preprocess:
