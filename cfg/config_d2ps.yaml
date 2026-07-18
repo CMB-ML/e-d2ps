@@ -63,7 +63,7 @@ scale_ps: ???
 scale_ps_sweep: meanstdv
 
 spectrum_layer_kind: identity  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
-model_fn_template  : ${nn_model}_init_${model_num}
+model_fn_template  : ${features_type}2ps_${nn_model}_init_${model_num}
 
 use_pos_enc_lut: ???
 use_pos_enc_lut_sweep: false
