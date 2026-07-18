@@ -4,6 +4,9 @@ defaults:
   - override splits: "1-1"
   - _self_
 
+splits:
+  name: 1850
+
 fig_model_name     : ${pl_fig_model_name}
 hydra:
   mode: MULTIRUN
@@ -17,7 +20,9 @@ hydra:
   sweeper:
     params:
       n_sims: ${n_sims_train}
-      learning_rate: ${learning_rate_sweep}
+      learning_rate_start: ${learning_rate_start}
+      learning_rate_final: ${learning_rate_final_sweep}
+      learning_rate_ramp_epochs: ${learning_rate_ramp_epochs_sweep}
       scale_px: ${scale_px_sweep}
       scale_ps: ${scale_ps_sweep}
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
