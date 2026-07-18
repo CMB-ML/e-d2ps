@@ -21,10 +21,10 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_out:
     obs_maps:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/{split}/{sim}/obs_prep_{freq}_cmbNNCS_local_minmax.npy"
     cmb_map:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_prep.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/{split}/{sim}/cmb_prep_cmbNNCS_local_minmax.npy"
   assets_in:
     obs_maps:
       stage: make_sims
@@ -44,8 +44,8 @@ preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_out:
     cmb_ps:
       handler: TextPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.txt"
-      path_template_alt: "{root}/{dataset}/{working}{stage}/{split}/cmb_ps_prep.txt"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/{split}/{sim}/cmb_ps_prep_meanstdv.txt"
+      path_template_alt: "{root}/{dataset}/${prep_working_dir}{stage}/{split}/cmb_ps_prep_meanstdv.txt"
       # handler: NumpyPowerSpectrum
       # path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_ps_prep.npy"
   assets_in:

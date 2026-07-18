@@ -4,7 +4,7 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_on_sims
   - scenario       : scenario
-  - splits         : "1-1"
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/patches  : toppatch
   - model/analysis : simple_apo
@@ -101,7 +101,7 @@ adamw_wd_sweep: 0.01
 learning_rate_start: 1e-8
 
 learning_rate_final: ???
-learning_rate_final_sweep: 1e-6  #, 1e-5, 3e-6, 3e-7, 1e-7
+learning_rate: 1e-6  #, 1e-5, 3e-6, 3e-7, 1e-7
 
 learning_rate_ramp_epochs: ???
 learning_rate_ramp_epochs_sweep: 0  #, 3, 10
@@ -156,7 +156,7 @@ face_reduction_sweep: avg
 ################################################################
 #   Lesser-used set-up
 ###############################################################
-n_sims: ???
+n_sims: ${n_sims_train_full}
 
 splits:
   Train:
