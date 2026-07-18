@@ -26,7 +26,11 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
         self.out_fig: Asset = self.assets_out["fig"]
         out_lut_handler: Figure
 
-        self.in_ps_pred: Asset = self.assets_in["pred"]
+        if 'sm_basis_kind' in cfg:
+            self.in_ps_pred: Asset = self.assets_in["pred_sm"]
+        else:
+            self.in_ps_pred: Asset = self.assets_in["pred_ns"]
+
         self.in_ps_thry: AssetWithPathAlts = self.assets_in["thry"]
         # self.in_report: Asset = self.assets_in["report"]
         in_pred_handler: NpyHandler
