@@ -76,14 +76,14 @@ def run_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        # MaskCreatorExecutor,
-        # BundlePredExecutor,
-        # BundleTrueExecutor,
+        MaskCreatorExecutor,
+        MakeRealPowerSpectrumExecutor,
+        BundlePredExecutor,
+        BundleTrueExecutor,
         BundleSmoothExecutor,
         # NewMetricExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor,
-        # MakeRealPowerSpectrumExecutor,
+        NewMetricSmExecutor,
+        ShowPredictionsCloudsExecutor,
         # PowerSpectrumAnalysisExecutor,
         # PerSplitAnalysis,
         # ShowChiSquare,
