@@ -104,12 +104,12 @@ def run_6_train(cfg):
         raise ValueError("Don't make this mistake again, please.")
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        CheckGPULoadExecutor,
+        # CheckGPULoadExecutor,
         # OverfitTrainingExecutor,
         # RelativeUpdatePlotExecutor,
         # LRFindingTrainingExecutor,
         # LearningRatePlotExecutor,
-        TrainingExecutor,
+        # TrainingExecutor,
         LossPlotExecutor,
     ]
     run(cfg, pipes)
@@ -118,7 +118,7 @@ def run_6_train(cfg):
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        PredictExecutor,
+        # PredictExecutor,
         ShowPredictionsPeaksExecutor,
         BundlePredExecutor,
         BundleTrueExecutor,
@@ -143,7 +143,7 @@ def run_8_prep_planck(cfg):
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-             PredictExecutor,
+            #  PredictExecutor,
              ShowPredictionsPeaksExecutor,
              ]
     run(cfg, pipes)
@@ -169,12 +169,12 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_1_prelim_px()
-    run_2_prelim_ps()
-    run_3_prep_px()
-    run_4_prep_ps()
-    run_5_make_models()
+    # run_1_prelim_px()
+    # run_2_prelim_ps()
+    # run_3_prep_px()
+    # run_4_prep_ps()
+    # run_5_make_models()
     run_6_train()
     run_7_infer()
-    run_8_prep_planck()
+    # run_8_prep_planck()
     run_9_run_planck()
