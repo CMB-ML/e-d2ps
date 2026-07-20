@@ -37,7 +37,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
 
-        sm_sigma = 100
+        sm_sigma = 10
 
         # df = df.dropna()
 
