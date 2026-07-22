@@ -236,7 +236,7 @@ def mark_crits(
         if ell is None:
             continue
 
-        y_pos = [0, tick_frac] if theory else [1-tick_frac, 1]
+        y_pos = [1-tick_frac, 1] if theory else [0, tick_frac]
 
         ax.plot(
             [ell, ell],
