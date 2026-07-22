@@ -102,7 +102,7 @@ def make_fig(ells, thry, pred, fsky, units, fig_label, fig_handler, split_name=N
                      color="k", 
                      edgecolor=None,
                      alpha=0.2, 
-                     label=r"$\pm1\sigma$")
+                     label=r"$\pm1\sigma_\mathrm{CV}$")
     ax1.plot(ells, thry[t_example], color='black', lw=1, label="Theory")
     ax1.plot(ells, pred[example], label="Prediction, sim0000")
 
