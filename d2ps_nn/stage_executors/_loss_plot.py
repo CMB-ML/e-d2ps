@@ -37,7 +37,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
 
-        sm_sigma = 100
+        sm_sigma = 5
 
         # df = df.dropna()
 
@@ -82,7 +82,7 @@ def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim
             best_val_loss = df.loc[best_idx, "Validation Loss"]
             best_epoch = df.loc[best_idx, "Epoch"]
 
-            ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss", color="tab:orange", alpha=0.2, linewidth=0.5)
+            ax.plot(df["Epoch"], df["Validation Loss"], label="Validation Loss", color="tab:orange", alpha=1.0, linewidth=0.5)
 
             val = df["Validation Loss"].values
             val_log = np.log(val)
