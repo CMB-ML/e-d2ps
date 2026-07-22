@@ -17,5 +17,6 @@ hydra:
   sweeper:
     params:
       job_sweep: r0, r1
+      run_inference_on: valid, test, train
 
-n_sims: ${n_sims_train}
+n_sims: ${n_sims_train_infer}
