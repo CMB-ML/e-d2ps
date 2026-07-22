@@ -14,6 +14,7 @@ hydra:
                                                 #   This is a minor bug, not worth fixing.
   verbose      : false
   sweeper:
-    params: null  # Nothing needed
+    params: 
+      scale_ps: meanstdv
 
 n_sims: ${n_sims_train_full}

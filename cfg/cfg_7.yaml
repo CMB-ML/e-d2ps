@@ -1,0 +1,13 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - cfg_6
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      run_inference_on: test, valid, train
+
+splits:
+  Train:
+    n_sims: ${n_sims_train_infer}

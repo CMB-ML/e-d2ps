@@ -1,0 +1,10 @@
+# @package _global_
+
+scale_ps: meanstdv
+scale_px: minmax_local
+optimizer: AdamW
+learning_rate_final: 2e-4
+norm_kind: gn
+activation: gelu
+down_reductions: mmmmmmmmm
+spatial_reduction: avg

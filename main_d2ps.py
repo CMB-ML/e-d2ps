@@ -98,7 +98,7 @@ def run_5_make_models(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_6_run_train")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_6")
 def run_6_train(cfg):
     if cfg.model.n_levels == 7 and cfg.nside == 512:
         raise ValueError("Don't make this mistake again, please.")
@@ -114,7 +114,7 @@ def run_6_train(cfg):
     ]
     run(cfg, pipes)
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_7_run_infer")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_7")
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
@@ -139,7 +139,7 @@ def run_8_prep_planck(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_9_run_planck")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_9")
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
@@ -150,6 +150,17 @@ def run_9_run_planck(cfg):
 
 
 def run(cfg, pipes):
+    # scale_px = cfg.get("scale_px", "~~~~~")
+    # scale_ps = cfg.get("scale_ps", "~~~~~")
+    # optimizer = cfg.get("optimizer", "~~~~~")
+    # learning_rate_final = cfg.get("learning_rate_final", "~~~~~")
+    # adamwd_wd = cfg.get("adamw_wd", "~~~~~")
+    # norm_kind = cfg.get("norm_kind", "~~~~~")
+    # activation = cfg.get("activation", "~~~~~")
+    # down_reductions = cfg.get("down_reductions", "~~~~~")
+    # spatial_reductions = cfg.get("spatial_reduction", "~~~~~")
+    # print(scale_px, scale_ps, optimizer, learning_rate_final, adamwd_wd, norm_kind, activation, down_reductions, spatial_reductions)
+
     log_maker = LogMaker(cfg)
     log_maker.log_procedure_to_hydra(source_script=__file__)
 
@@ -169,12 +180,15 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_1_prelim_px()
-    run_2_prelim_ps()
-    run_3_prep_px()
-    run_4_prep_ps()
-    run_5_make_models()
+    ## ALREADY DONE.
+    ## run_1_prelim_px()
+    ## run_2_prelim_ps()
+    ## run_3_prep_px()
+    ## run_4_prep_ps()
+    ## run_5_make_models()
+    ## run_8_prep_planck()
+
+    # New
     run_6_train()
     run_7_infer()
-    run_8_prep_planck()
     run_9_run_planck()
