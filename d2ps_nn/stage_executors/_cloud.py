@@ -73,16 +73,29 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
         thry = np.atleast_2d(thry)
         pred = self.in_ps_pred.read()
 
-        fig = self._plot_prediction_relerr_cloud(
-            all_pred_ps=pred,
-            all_theory_ps=thry,
-            split_name=split.name,
-            epoch=epoch,
-            show_max_l=self.ells[-1],
-        )
+        normalizations = ["thry"]
 
-        self.out_fig.write(fig=fig)
-        plt.close(fig)
+        if len(thry) > 1:
+            normalizations.append("sd_thry")
+        else:
+            logger.info(
+                f"Skipping sd_thry normalization for {split.name}: "
+                "the split contains one fixed theory spectrum."
+            )
+
+        for norm in normalizations:
+            fig = self._plot_prediction_relerr_cloud(
+                all_pred_ps=pred,
+                all_theory_ps=thry,
+                split_name=split.name,
+                epoch=epoch,
+                show_max_l=self.ells[-1],
+                error_normalization=norm
+            )
+
+            with self.name_tracker.set_context("norm", norm):
+                self.out_fig.write(fig=fig)
+            plt.close(fig)
 
     def _prediction_on_used_ells(self, ps_pred, part_ells):
         """Return prediction values on self.ells.
@@ -149,6 +162,7 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
         split_name,
         epoch,
         show_max_l,
+        error_normalization
     ):
         """Plot prediction cloud and relative-error cloud.
 
@@ -156,12 +170,13 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
             cloud of predictions only, no target/theory spectra drawn.
 
         Bottom:
-            cloud of per-simulation relative errors:
-                (prediction - theory) / theory
+            cloud of per-simulation relative errors, depending on error_normalization:
+                "thry": (prediction - theory) / theory
+                "sd_thry": (prediction - theory) / std(theory)
 
         Peak ticks:
-            theory peak locations are marked at the bottom of the top axis.
-            prediction peak locations are marked at the top of the top axis.
+            theory peak locations are marked at thry_peak_mark_loc of the top axis.
+            prediction peak locations are marked at thry_peak_mark_loc of the top axis.
         """
         part_ells = np.asarray(self.ells)
 
@@ -170,9 +185,6 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
                 f"Expected either one fixed theory spectrum or one theory per prediction; "
                 f"got {len(all_theory_ps)} theories and {len(all_pred_ps)} predictions."
             )
-
-        fixed_theory = len(all_theory_ps) == 1
-        marked_fixed_theory_peaks = False
 
         trace_color = "C0"
         peak_color = "0.15"
@@ -183,15 +195,98 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
         trace_alpha = 0.25
         peak_alpha = 0.35
 
+        thry_peak_mark_loc = "top"
+        pred_peak_mark_loc = "bottom"
+
+        y_range_thry = (-0.5, 0.5)
+        y_range_sd_thry = (-5, 5)
+
+        fixed_theory = len(all_theory_ps) == 1
+        marked_fixed_theory_peaks = False
+
+        theory_stack = np.stack(
+            [
+                self._theory_on_used_ells(ps_thry, part_ells)
+                for ps_thry in all_theory_ps
+            ],
+            axis=0,
+        )
+        pred_stack = np.stack(
+            [
+                self._prediction_on_used_ells(ps_pred, part_ells)
+                for ps_pred in all_pred_ps
+            ],
+            axis=0,
+        )
+        # mean_pred = pred_stack.mean(axis=0)
+        # mean_thry = theory_stack.mean(axis=0)
+
+        # if len(theory_stack) > 1:
+        #     sd_thry = theory_stack.std(axis=0)
+        # else:
+        #     sd_thry = None
+
+        mean_thry = theory_stack.mean(axis=0)
+        mean_pred = pred_stack.mean(axis=0)
+
+        sd_pred = pred_stack.std(axis=0)
+
+        if len(theory_stack) > 1:
+            sd_thry = theory_stack.std(axis=0)
+        else:
+            sd_thry = None
+
         fig, (ax_top, ax_err) = plt.subplots(
             2, 1,
             figsize=(12, 7),
             sharex=True,
             gridspec_kw=dict(height_ratios=[1, 2.4]),
+            layout="constrained"
         )
 
-        fixed_theory = len(all_theory_ps) == 1
-        marked_fixed_theory_peaks = False
+        # if sd_thry is not None:
+        #     ax_top.fill_between(
+        #         part_ells,
+        #         mean_thry - 2.0 * sd_thry,
+        #         mean_thry + 2.0 * sd_thry,
+        #         alpha=0.10,
+        #         linewidth=0,
+        #         label=r"Theory $\pm 2\sigma$",
+        #         zorder=0,
+        #     )
+
+        #     ax_top.fill_between(
+        #         part_ells,
+        #         mean_thry - sd_thry,
+        #         mean_thry + sd_thry,
+        #         alpha=0.20,
+        #         linewidth=0,
+        #         label=r"Theory $\pm 1\sigma$",
+        #         zorder=1,
+        #     )
+
+        if sd_thry is not None:
+            ax_top.fill_between(
+                part_ells,
+                mean_thry - sd_thry,
+                mean_thry + sd_thry,
+                color="tab:orange",
+                alpha=0.15,
+                linewidth=0,
+                label=r"Theory $\pm 1\sigma$",
+                zorder=0,
+            )
+
+        ax_top.fill_between(
+            part_ells,
+            mean_pred - sd_pred,
+            mean_pred + sd_pred,
+            color=trace_color,
+            alpha=0.15,
+            linewidth=0,
+            label=r"Prediction $\pm 1\sigma$",
+            zorder=1,
+        )
 
         for i, ps_pred_raw in enumerate(all_pred_ps):
             ps_thry_raw = self._theory_for_prediction(all_theory_ps, i)
@@ -206,6 +301,7 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
                 color=trace_color,
                 alpha=trace_alpha,
                 linewidth=pred_lw,
+                zorder=2
             )
 
             # Mark theory peaks once for fixed-theory splits, otherwise once per matched theory.
@@ -223,7 +319,7 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
                         ax_top,
                         crits_thry,
                         color=peak_color,
-                        where="bottom",
+                        where=thry_peak_mark_loc,
                         tick_frac=0.025,
                         linewidth=peak_lw,
                         alpha=peak_alpha,
@@ -248,7 +344,7 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
                     ax_top,
                     crits_pred,
                     color=peak_color,
-                    where="top",
+                    where=pred_peak_mark_loc,
                     tick_frac=0.025,
                     linewidth=peak_lw,
                     alpha=peak_alpha,
@@ -263,22 +359,52 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
             except Exception as e:
                 logger.warning(f"Could not mark prediction peaks for sim {i}: {e}")
 
-            # bottom: relative-error cloud
+            # Bottom: normalized prediction-error cloud
+            if error_normalization == "thry":
+                denominator = ps_thry_used
+            elif error_normalization == "sd_thry":
+                denominator = sd_thry
+            else:
+                # This should already have been caught in __init__.
+                raise RuntimeError(
+                    f"Unhandled error normalization: {error_normalization!r}"
+                )
+
             with np.errstate(divide="ignore", invalid="ignore"):
-                rel_err = np.divide(
+                normalized_err = np.divide(
                     ps_pred - ps_thry_used,
-                    ps_thry_used,
+                    denominator,
                     out=np.full_like(ps_pred, np.nan, dtype=float),
-                    where=(ps_thry_used != 0),
+                    where=(denominator != 0),
                 )
 
             ax_err.plot(
                 part_ells,
-                rel_err,
+                normalized_err,
                 color=trace_color,
                 alpha=trace_alpha,
                 linewidth=err_lw,
             )
+
+        ax_top.plot(
+            part_ells,
+            mean_thry,
+            color="0.15",
+            linewidth=1.2,
+            linestyle="-",
+            label="Mean theory",
+            zorder=4,
+        )
+
+        ax_top.plot(
+            part_ells,
+            mean_pred,
+            color=trace_color,
+            linewidth=1.2,
+            linestyle="--",
+            label="Mean prediction",
+            zorder=5,
+        )
 
         # Legend proxies: no per-trace labels
         pred_proxy = Line2D(
@@ -293,18 +419,25 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
             color=peak_color,
             linewidth=1.0,
             linestyle="-",
-            label="Theory peaks (bottom)",
+            label=f"Theory peaks ({thry_peak_mark_loc})",
         )
         pred_peak_proxy = Line2D(
             [0], [0],
             color=peak_color,
             linewidth=1.0,
             linestyle="--",
-            label="Prediction peak (top)",
+            label=f"Prediction peak ({pred_peak_mark_loc})",
         )
 
+        band_handles, band_labels = ax_top.get_legend_handles_labels()
+
         ax_top.legend(
-            handles=[pred_proxy, thry_peak_proxy, pred_peak_proxy],
+            handles=[
+                *band_handles,
+                pred_proxy,
+                thry_peak_proxy,
+                pred_peak_proxy,
+            ],
             fontsize=8,
             loc="upper right",
         )
@@ -316,27 +449,30 @@ class ShowPredictionsCloudsExecutor(BaseStageExecutor):
         ax_top.set_xlim(part_ells.min(), show_max_l)
 
         ax_err.axhline(0, color="0.5", linestyle=":", linewidth=1.0)
-        ax_err.set_ylabel(r"$\langle(\widehat D_\ell-\mathring D_\ell)/\mathring D_\ell\rangle$")
+        if error_normalization == "thry":
+            error_ylabel = (
+                r"$(\widehat D_\ell-\mathring D_\ell)"
+                r"/\mathring D_\ell$"
+            )
+            err_y_lim = y_range_thry
+        elif error_normalization == "sd_thry":
+            error_ylabel = (
+                r"$(\widehat D_\ell-\mathring D_\ell)"
+                r"/\sigma_{\mathring D,\ell}$"
+            )
+            err_y_lim = y_range_sd_thry
+
+        ax_err.set_ylabel(error_ylabel)
+
         ax_err.set_xlabel(r"$\ell$")
         ax_err.set_xlim(part_ells.min(), show_max_l)
 
-        # # Symmetric robust y-limit for relative error, so one bad trace does not
-        # # destroy readability.
-        # err_lines = [line.get_ydata() for line in ax_err.lines]
-        # if err_lines:
-        #     err_all = np.concatenate(err_lines)
-        #     finite = np.isfinite(err_all)
-        #     if np.any(finite):
-        #         q = np.nanpercentile(np.abs(err_all[finite]), 99)
-        #         y = max(0.05, min(1.0, 1.15 * q))
-        #         ax_err.set_ylim(-y, y)
-        ax_err.set_ylim(-0.2, 0.2)
+        ax_err.set_ylim(*err_y_lim)
 
         fig.suptitle(
-            f"Prediction cloud and relative error — {split_name}, epoch {epoch}, {self.fig_label}",
-            y=0.98,
+            f"Prediction and normalized-error clouds: "
+            f"{split_name}, epoch {epoch}, {self.fig_label}"
         )
-        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
 
         return fig
 

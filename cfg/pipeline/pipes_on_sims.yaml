@@ -558,7 +558,7 @@ show_predictions_clouds: # _clouds.py / ShowPredictionsCloudsExecutor
   assets_out:
     fig: 
       handler: MPLFigure
-      path_template: "{root}/{dataset}/{working}{stage}/fig_L_predictions_{split}_ep_{epoch}_peaks.{fig_type}"
+      path_template: "{root}/{dataset}/{working}{stage}/fig_L_predictions_{split}_ep_{epoch}_peaks_{norm}.{fig_type}"
   assets_in:
     thry: {stage: bundle_true, orig_name: ps_bundle}
     pred_sm: {stage: bundle_smooth, orig_name: ps_bundle}

@@ -184,7 +184,8 @@ class NewMetricExecutor(BaseStageExecutor):
 
         fig, (ax_top, ax) = plt.subplots(
             2, 1, figsize=(12, 7), sharex=True,
-            gridspec_kw=dict(height_ratios=[1, 2.4]),   # no hspace here
+            gridspec_kw=dict(height_ratios=[1, 2.4]),
+            layout="constrained"
         )
 
         # context: the first matched (theory, prediction) pair
@@ -210,8 +211,8 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.set_xlim(ell.min(), self.display_lmax)     # linear ell
         ax.set(xlabel=r"$\ell$", ylabel=spec["ylabel"])
 
-        fig.suptitle(f"{key}  —  {title}", y=0.97)
-        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
+        fig.suptitle(f"{key}  —  {title}")
+        # fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
         return fig
     
     def _plot_decomposition(self, decomp, ref_spectra, title, rho0_sq=None):
@@ -223,6 +224,7 @@ class NewMetricExecutor(BaseStageExecutor):
         fig, (ax_top, ax) = plt.subplots(
             2, 1, figsize=(12, 7), sharex=True,
             gridspec_kw=dict(height_ratios=[1, 2.4]),
+            layout="constrained"
         )
 
         dl_thry, dl_pred = ref_spectra
@@ -245,8 +247,8 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.set(xlabel=r"$\ell$", ylabel=r"$R^2_\ell$ budget")
         ax.legend(fontsize=7, loc="lower right", ncol=2)
 
-        fig.suptitle(f"R2 decomposition  —  {title}", y=0.97)
-        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
+        fig.suptitle(f"R2 decomposition  —  {title}")
+        # fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
         return fig
 
     def _plot_decomposition_oriented(self, decomp, ref_spectra, title, rho0_sq=None):
@@ -273,6 +275,7 @@ class NewMetricExecutor(BaseStageExecutor):
         fig, (ax_top, ax) = plt.subplots(
             2, 1, figsize=(12, 7), sharex=True,
             gridspec_kw=dict(height_ratios=[1, 2.4]),
+            layout="constrained"
         )
 
         # context: first matched theory/prediction pair
@@ -299,8 +302,8 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.set(xlabel=r"$\ell$", ylabel=r"local decomposition terms")
         ax.legend(fontsize=7, loc="best", ncol=2)
 
-        fig.suptitle(f"R2 decomposition terms  —  {title}", y=0.97)
-        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
+        fig.suptitle(f"R2 decomposition terms  —  {title}")
+        # fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
         return fig
 
     def _plot_decomposition_terms(self, decomp_terms, ref_spectra, title):
@@ -309,6 +312,7 @@ class NewMetricExecutor(BaseStageExecutor):
         fig, (ax_top, ax) = plt.subplots(
             2, 1, figsize=(12, 7), sharex=True,
             gridspec_kw=dict(height_ratios=[1, 2.4]),
+            layout="constrained"
         )
 
         dl_thry, dl_pred = ref_spectra
@@ -331,8 +335,8 @@ class NewMetricExecutor(BaseStageExecutor):
         ax.set(xlabel=r"$\ell$", ylabel=r"local decomposition terms")
         ax.legend(fontsize=7, loc="best", ncol=2)
 
-        fig.suptitle(f"R2 decomposition terms  —  {title}", y=0.97)
-        fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
+        fig.suptitle(f"R2 decomposition terms  —  {title}")
+        # fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.10, hspace=0.08)
         return fig
 
 

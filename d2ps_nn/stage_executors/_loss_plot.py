@@ -32,7 +32,7 @@ class LossPlotExecutor(BaseStageExecutor):
         self.out_fig.write(fig=fig)
 
 
-def make_loss_plot(some_path, fig_label, figsize=(10,6), fig=None, ax=None, ylim=None, xlim=None, sm_sigma2=None, show_sigma2=False):
+def make_loss_plot(some_path, fig_label, figsize=(12,7), fig=None, ax=None, ylim=None, xlim=None, sm_sigma2=None, show_sigma2=False):
         df = pd.read_csv(some_path)
         #skipping the first few rows if they are not needed
         # df = df[df["Epoch"] >= self.skip_n_values]
