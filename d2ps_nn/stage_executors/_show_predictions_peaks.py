@@ -105,7 +105,7 @@ class ShowPredictionsPeaksExecutor(BaseStageExecutor):
 
                 # logger.info(f"There are {len(part_ells)} ells chosen.")
 
-                fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+                fig, ax = plt.subplots(1, 1, figsize=(12, 7))
 
                 for i, ps_thry in enumerate(all_theory_ps):
                     ax.plot(full_ells[2:], ps_thry[2:], 
