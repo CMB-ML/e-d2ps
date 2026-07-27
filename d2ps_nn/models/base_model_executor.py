@@ -5,7 +5,7 @@ from tqdm import tqdm
 from functools import partial
 import torch
 from torch.utils.data import DataLoader
-from omegaconf import DictConfig
+from omegaconf import DictConfig, ListConfig
 
 from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
@@ -121,6 +121,11 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
             self.norm_kind = cfg.model.norm_kind
             self.activation = cfg.model.activation
             self.dropout_rate = cfg.model.dropout_rate
+            if isinstance(self.dropout_rate, ListConfig):
+                self.dropout_rate = list(self.dropout_rate)
+            if self.nn_model == "SimpleEncDec":
+                self.dropout_pos_enc = cfg.model.dropout_pos_enc
+                self.dropout_type_enc = cfg.model.dropout_type_enc
             self.down_reductions = cfg.model.down_reductions
             self.spatial_reduction = cfg.model.spatial_reduction
             self.final_activation = cfg.model.final_activation
@@ -196,6 +201,10 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
 
         if use_model in [TLPEncAggDec, TLPEnc2AggDec]:
             layer_dict["face_reduction"]    = self.face_reduction
+
+        if use_model in [SimpleEncDec]:
+            layer_dict["dropout_pos_enc"] = self.dropout_pos_enc
+            layer_dict["dropout_type_enc"] = self.dropout_type_enc
 
         logger.info(f"Backbone params: {layer_dict}")
 

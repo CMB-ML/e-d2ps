@@ -68,7 +68,7 @@ def get_norm(kind: Optional[str], num_channels: int) -> nn.Module:
         raise ValueError(f"Unknown norm kind '{kind}'. Choose from: 'bn', 'gn', 'none'.")
 
 
-def get_dropout(p: Optional[float]) -> nn.Module:
+def get_dropout_2d(p: Optional[float]) -> nn.Module:
     """Return Dropout2d or Identity if disabled."""
     if p is None or p == 0:
         return nn.Identity()
@@ -77,3 +77,14 @@ def get_dropout(p: Optional[float]) -> nn.Module:
         raise ValueError(f"Dropout probability must satisfy 0 <= p < 1, got {p}.")
 
     return nn.Dropout2d(p)
+
+
+def get_dropout_1d(p: Optional[float]) -> nn.Module:
+    """Return Dropout or Identity if disabled."""
+    if p is None or p == 0:
+        return nn.Identity()
+
+    if not (0.0 <= p < 1.0):
+        raise ValueError(f"Dropout probability must satisfy 0 <= p < 1, got {p}.")
+
+    return nn.Dropout(p)

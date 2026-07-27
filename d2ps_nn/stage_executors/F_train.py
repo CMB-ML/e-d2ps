@@ -291,7 +291,8 @@ class TrainingExecutor(BaseD2PSExecutor):
             if is_best_condition_a and is_best_condition_b:
                 with self.name_tracker.set_context("epoch", "best"):
                     self.out_model.write(model=model,
-                                         epoch="best"
+                                         epoch="best",
+                                         optimizer=optimizer
                                          )
 
             # Checkpoint every so many epochs
