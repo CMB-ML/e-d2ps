@@ -21,6 +21,9 @@ hydra:
       norm_kind: none          # Used as default value for model creation; overwritten in later stages
       down_reductions: max     # default value
       spatial_reduction: avg   # default value
+      dropout_rate: 0.0
+      dropout_pos_enc: post_pool  # MUST SWEEP OVER THIS
+      dropout_type_enc: drop2d
       # degree: ${degree_sweep}
       # basis_kind: chebyshev  # Does not matter
 
