@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .layer_factories import (
     get_activation,
-    get_dropout,
+    get_dropout_2d,
     get_norm,
     get_downsample_pooling,
     get_spatial_reduction
@@ -38,7 +38,7 @@ class DoubleConv(nn.Module):
                                 kernel_size=3, padding=1, bias=use_bias)
         self.norm1  = get_norm(norm_kind, out_channels)
         self.act_1  = get_activation(activation)
-        self.drop1  = get_dropout(dropout_rate)
+        self.drop1  = get_dropout_2d(dropout_rate)
         self.conv2  = nn.Conv2d(out_channels, out_channels, 
                           kernel_size=3, padding=1, bias=use_bias)
         self.norm2  = get_norm(norm_kind, out_channels)
@@ -265,10 +265,11 @@ class FCNDecoder(nn.Module):
                  activation,
                  final_activation
                  ):
+        raise NotImplementedError("Changed dropout; need to consider dropout_1d or dropout_2d")
         super().__init__()
         self.mlp1 = nn.Linear(in_channels, mid_channels, bias=True)
         self.act1 = get_activation(activation)
-        self.drop = get_dropout(dropout_rate)
+        self.drop = get_dropout_2d(dropout_rate)
         self.mlp2 = nn.Linear(mid_channels, out_channels)
         self.act2 = get_activation(final_activation)
 
