@@ -17,43 +17,43 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"]) / 
-    "Datasets/I_128_20850/cmb2ps_SimpleEncDec_train_reruns"
+    "Datasets/I_512_1850_broad_dist/obs2ps_sweep"
 )
 
 DIRNAME_SPEC = (
-    "Nsims-${n_sims}_lr-${learning_rate}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_${model_num}/"
+    "scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}"
 )
 
 COLUMN_PRIORITY = [
-    "down_reductions",
-    "adamw_wd",
-    "learning_rate",
+    # "down_reductions",
+    # "adamw_wd",
+    # "learning_rate",
 ]
 
 FIELD_VALUE_ORDER = {
-    "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
+    # "down_reductions": ["max", "Xm", "XXm", "mXX", "avg"],
 }
 
 FIG_SUBDIR = "Analysis_Figures"
 
 FIG_FILES = {
     "loss": "loss_plot.png",
-    "train_predictions": "fig_D_predictions_Train_ep_best_peaks.png",
-    "valid_predictions": "fig_D_predictions_Valid_ep_best_peaks.png",
     "test_predictions": "fig_D_predictions_Test_ep_best_peaks.png",
-    "testFFN_predictions": "fig_D_predictions_TestFFN_ep_best_peaks.png",
-    "testFP_predictions": "fig_D_predictions_TestFP_ep_best_peaks.png",
-    "planck_predictions": "fig_D_predictions_Test_ep_best_peaks_PLANCK.png",
+    "test_cloud": "fig_L_predictions_Test_ep_best_peaks_thry.png",
+    "test_R2": "fig_H_Test_R2_decomp.png",
+    "train_predictions": "fig_D_predictions_Train_ep_best_peaks.png",
+    "train_cloud": "fig_L_predictions_Train_ep_best_peaks_thry.png",
+    "train_R2": "fig_H_Train_R2_decomp.png",
 }
 
 IMAGE_SPECS = [
     ("Loss", "loss"),
-    ("Train predictions", "train_predictions"),
-    ("Valid predictions", "valid_predictions"),
-    ("Test predictions", "test_predictions"),
-    ("TestFFN predictions", "testFFN_predictions"),
-    ("TestFP predictions", "testFP_predictions"),
-    ("Predictions on Planck", "planck_predictions"),
+    ("Test Predictions", "test_predictions"),
+    ("Test Cloud", "test_cloud"),
+    ("Test R2", "test_R2"),
+    ("Train Predictions", "train_predictions"),
+    ("Train Cloud", "train_cloud"),
+    ("Train R2", "train_R2"),
 ]
 
 RUN_TEMPLATE = extract_run_template(DIRNAME_SPEC)
