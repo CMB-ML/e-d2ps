@@ -206,8 +206,8 @@ class SimpleEncDec(nn.Module):
                  spatial_reduction='avg',
                  activation='relu',
                  final_activation=None,
-                 enc_dropout_pos=None,
-                 enc_drop_type=None,
+                 dropout_pos_enc=None,
+                 dropout_type_enc=None,
                  note=''
                  ):
         super().__init__()
@@ -216,10 +216,10 @@ class SimpleEncDec(nn.Module):
 
         self.note = note
 
-        if enc_dropout_pos is None:
-            raise ValueError(f"enc_dropout_pos should be either 'post_pool' or 'pre_pool', got {enc_dropout_pos}")
-        if enc_drop_type is None:
-            raise ValueError(f"enc_drop_type should be either 'drop2d' or 'drop1d', got {enc_drop_type}")
+        if dropout_pos_enc is None:
+            raise ValueError(f"enc_dropout_pos should be either 'post_pool' or 'pre_pool', got {dropout_pos_enc}")
+        if dropout_type_enc is None:
+            raise ValueError(f"enc_drop_type should be either 'drop2d' or 'drop1d', got {dropout_type_enc}")
 
         if isinstance(dropout_rate, list):
             expected_len = n_levels + 2
@@ -246,8 +246,8 @@ class SimpleEncDec(nn.Module):
             dropout_rate=enc_dropout,
             activation=activation,
             down_reduction_spec=down_reductions,
-            dropout_position=enc_dropout_pos,
-            drop_type=enc_drop_type,
+            dropout_position=dropout_pos_enc,
+            drop_type=dropout_type_enc,
         )
 
         self.dec = FCNDecoder(
