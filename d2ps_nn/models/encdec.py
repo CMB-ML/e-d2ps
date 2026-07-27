@@ -236,7 +236,7 @@ class SimpleEncDec(nn.Module):
             dec_dropout = dropout_rate[-2:]
         else:
             enc_dropout = dropout_rate
-            dec_dropout = dropout_rate[dropout_rate, dropout_rate]
+            dec_dropout = [dropout_rate, dropout_rate]
 
         self.enc = Encoder(
             n_in_channels = n_in_channels,
