@@ -292,6 +292,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                 with self.name_tracker.set_context("epoch", "best"):
                     self.out_model.write(model=model,
                                          epoch="best",
+                                         best_loss=min(all_valid_pre_loss),
                                          optimizer=optimizer
                                          )
 
