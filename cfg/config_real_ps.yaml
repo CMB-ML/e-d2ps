@@ -3,8 +3,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_surr_real_ps
   - scenario       : scenario
-  - splits         : all_2000
-  # - splits         : all
+  # - splits         : all_2000
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/sim      : sim
   - model/analysis : basic_analysis
@@ -14,7 +14,7 @@ defaults:
 
 sigma_scale: 1
 sm_basis_kind: chebyshev
-sm_degree: 60
+sm_degree: 18
 out_range: [-1, 1]
 
 pipeline:
@@ -30,6 +30,9 @@ pipeline:
     assets_in:
       ps_pred: {stage: make_real_ps, orig_name: auto_real}
   show_predictions:
+    assets_in:
+      ps_pred: {stage: make_real_ps, orig_name: auto_real}
+  show_predictions_peaks:
     assets_in:
       ps_pred: {stage: make_real_ps, orig_name: auto_real}
   show_predictions_bw:
@@ -48,7 +51,7 @@ pipeline:
     assets_in:
       ps: {stage: make_real_ps, orig_name: auto_real}
 
-dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
+dataset_name: "${map_fields}_${scenario.nside}_${splits.name}_broad_dist"
 working_dir : "Real_PS/"
 hydra:
   run:

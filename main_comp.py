@@ -11,16 +11,9 @@ from cmbml.analysis.ex import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn.ex import (
-    PowerSpectrumAnalysisExecutor,
-    PerSplitAnalysis,
-    ShowChiSquare,
-    ShowRelativeError,
-    ShowCosmicFractions,
     ShowPredictionsExecutor,
-    ShowBWPredictionsExecutor,
-    ShowIndivPredictionsExecutor,
-    ErrorAnalysisExecutor,
-    ShowPredictionsWithChiSquareExecutor,
+    ShowPredictionsPeaksExecutor,
+    ShowTrebleEll,
     BundlePredExecutor,
     BundleSmoothExecutor,
     BundleSmoothTrueExecutor,
@@ -76,66 +69,45 @@ def run_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        # MaskCreatorExecutor,
-        # BundlePredExecutor,
-        # BundleTrueExecutor,
+        MakeRealPowerSpectrumExecutor,
+        MaskCreatorExecutor,
+        BundlePredExecutor,
+        BundleTrueExecutor,
         BundleSmoothExecutor,
-        # NewMetricExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor,
-        # MakeRealPowerSpectrumExecutor,
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        NewMetricSmExecutor,
+        ShowPredictionsCloudsExecutor,
+        ShowPredictionsPeaksExecutor,
+        # ShowTrebleEll,
     ]
     run(cfg, pipes)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_cmbnncs")
 def run_cmbnncs(cfg):
     pipes = [
-        # BundlePredExecutor,
+        BundlePredExecutor,
         BundleSmoothExecutor,
-        # NewMetricExecutor,
+        BundlePredExecutor,
+        BundleTrueExecutor,
+        BundleSmoothExecutor,
         NewMetricSmExecutor,
-        ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        ShowPredictionsCloudsExecutor,
+        ShowPredictionsPeaksExecutor,
+        # ShowTrebleEll,
     ]
     run(cfg, pipes)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_other_comp")
 def run_d2ps_comp(cfg):
     pipes = [
-        # BundlePredExecutor,
+        BundlePredExecutor,
         BundleSmoothExecutor,
-        # NewMetricExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        BundlePredExecutor,
+        BundleTrueExecutor,
+        BundleSmoothExecutor,
+        NewMetricSmExecutor,
+        ShowPredictionsCloudsExecutor,
+        ShowPredictionsPeaksExecutor,
+        # ShowTrebleEll,
     ]
     run(cfg, pipes)
 
@@ -143,20 +115,17 @@ def run_d2ps_comp(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_pyilc")
 def run_pyilc(cfg):
     pipes = [
-        # BundlePredExecutor,
+        BundlePredExecutor,
         BundleSmoothExecutor,
         NewMetricSmExecutor,
-        ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        ShowPredictionsCloudsExecutor,
+        BundlePredExecutor,
+        BundleTrueExecutor,
+        BundleSmoothExecutor,
+        NewMetricSmExecutor,
+        ShowPredictionsCloudsExecutor,
+        ShowPredictionsPeaksExecutor,
+        # ShowTrebleEll,
     ]
     run(cfg, pipes)
 
@@ -231,5 +200,5 @@ if __name__ == "__main__":
     # run_d2ps_comp()
     # run_cmbnncs()
     # run_cmbnncs_planck()
-    # run_pyilc()
+    run_pyilc()
     # run_pyilc_planck()
