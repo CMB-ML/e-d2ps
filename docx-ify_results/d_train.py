@@ -17,11 +17,11 @@ from docx_helper import (
 
 ROOT = (
     Path(os.environ["CMB_ML_DATA"]) / 
-    "Datasets/I_512_1850_broad_dist/obs2ps_sweep"
+    "Datasets/I_512_1850_broad_dist/obs2ps_polyfit2"
 )
 
 DIRNAME_SPEC = (
-    "scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}"
+    "scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
 )
 
 COLUMN_PRIORITY = [
@@ -38,22 +38,22 @@ FIG_SUBDIR = "Analysis_Figures"
 
 FIG_FILES = {
     "loss": "loss_plot.png",
-    "test_predictions": "fig_D_predictions_Test_ep_best_peaks.png",
-    "test_cloud": "fig_L_predictions_Test_ep_best_peaks_thry.png",
     "test_R2": "fig_H_Test_R2_decomp.png",
-    "train_predictions": "fig_D_predictions_Train_ep_best_peaks.png",
-    "train_cloud": "fig_L_predictions_Train_ep_best_peaks_thry.png",
     "train_R2": "fig_H_Train_R2_decomp.png",
+    "test_predictions": "fig_D_predictions_Test_ep_best_peaks.png",
+    "train_predictions": "fig_D_predictions_Train_ep_best_peaks.png",
+    "test_cloud": "fig_L_predictions_Test_ep_best_peaks_thry.png",
+    "train_cloud": "fig_L_predictions_Train_ep_best_peaks_thry.png",
 }
 
 IMAGE_SPECS = [
     ("Loss", "loss"),
-    ("Test Predictions", "test_predictions"),
-    ("Test Cloud", "test_cloud"),
     ("Test R2", "test_R2"),
-    ("Train Predictions", "train_predictions"),
-    ("Train Cloud", "train_cloud"),
     ("Train R2", "train_R2"),
+    ("Test Predictions", "test_predictions"),
+    ("Train Predictions", "train_predictions"),
+    ("Test Cloud", "test_cloud"),
+    ("Train Cloud", "train_cloud"),
 ]
 
 RUN_TEMPLATE = extract_run_template(DIRNAME_SPEC)
