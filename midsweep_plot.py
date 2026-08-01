@@ -11,6 +11,7 @@ from cmbml.core import (
                       )
 from d2ps_nn.ex import (
     LossPlotExecutor,
+    LossDeltaPlotExecutor,
     PredictExecutor,
     ShowPredictionsPeaksExecutor,
     BundlePredExecutor, 
@@ -28,16 +29,16 @@ logger = logging.getLogger(__name__)
 def predict_and_plot(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        PredictExecutor,
-        ShowPredictionsPeaksExecutor,
-        BundlePredExecutor,
-        BundleTrueExecutor,
-        ShowTrebleEll,
-        NewMetricExecutor,
-        ShowPredictionsCloudsExecutor
+        # PredictExecutor,
+        # ShowPredictionsPeaksExecutor,
+        # BundlePredExecutor,
+        # BundleTrueExecutor,
+        # ShowTrebleEll,
+        # NewMetricExecutor,
+        # ShowPredictionsCloudsExecutor
     ]
     if cfg.run_inference_on == "test":
-        pipes = [LossPlotExecutor, *pipes]
+        pipes = [LossPlotExecutor, LossDeltaPlotExecutor, *pipes]
     run(cfg, pipes)
 
 
