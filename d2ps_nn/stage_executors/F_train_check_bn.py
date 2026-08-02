@@ -215,7 +215,7 @@ class BatchNormCheckExecutor(BaseD2PSExecutor):
         draws_pre, draws_pst = redraw_spread(
             base_model, train_dataset, valid_dataloader,
             loss_function, post, self.device, self.dtype,
-            n_draws=6, n_batches=None, batch_size=self.batch_size,
+            n_draws=6, n_batches=32, batch_size=self.batch_size,
             cumulative=True,          # population average, matches Test 1's estimator
         )
         logger.info(f"redraw val pre  per-draw: {np.array2string(draws_pre, precision=4)}")
