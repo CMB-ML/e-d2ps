@@ -38,7 +38,10 @@ def predict_and_plot(cfg):
         # ShowPredictionsCloudsExecutor
     ]
     if cfg.run_inference_on == "test":
-        pipes = [LossPlotExecutor, LossDeltaPlotExecutor, *pipes]
+        pipes = [
+            # LossPlotExecutor, 
+            LossDeltaPlotExecutor, 
+            *pipes]
     run(cfg, pipes)
 
 
