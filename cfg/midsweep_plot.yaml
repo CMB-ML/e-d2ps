@@ -16,7 +16,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      job_sweep: r0, r1
+      job_sweep: r14
       run_inference_on: test
       # run_inference_on: valid, test, train
 
