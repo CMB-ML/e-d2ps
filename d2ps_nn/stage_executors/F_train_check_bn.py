@@ -59,19 +59,22 @@ def recompute_bn(model, dataloader, device, dtype, n_batches=None):
 def redraw_spread(base_model, dataset, eval_loader, loss_function, post,
                   device, dtype, n_draws=6, n_batches=None, batch_size=None,
                   num_workers=0, cumulative=False):
-    losses = []
+    pre_losses = []
+    pst_losses = []
     for d in range(n_draws):
+        logger.info(f"Running on redraw {d} of {n_draws}")
         model = copy.deepcopy(base_model)          # frozen weights, fresh buffers
         g = torch.Generator().manual_seed(1000 + d)
         loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size, shuffle=True,
             num_workers=num_workers, generator=g,
         )
-        reset_bn(model, cumulative=cumulative)     # cumulative=False -> order matters too
+        reset_bn(model, cumulative=cumulative)
         recompute_bn(model, loader, device, dtype, n_batches=n_batches)
-        pre, _ = evaluate(model, eval_loader, loss_function, post, device, dtype)
-        losses.append(pre)
-    return np.array(losses)
+        pre, pst = evaluate(model, eval_loader, loss_function, post, device, dtype)
+        pre_losses.append(pre)
+        pst_losses.append(pst)
+    return np.array(pre_losses), np.array(pst_losses)
 
 
 class BatchNormCheckExecutor(BaseD2PSExecutor):
@@ -135,7 +138,7 @@ class BatchNormCheckExecutor(BaseD2PSExecutor):
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        model = self.init_model()
+        # model = self.init_model()
 
         train_split = self.splits.get("train")
         valid_split = self.splits.get("valid")
@@ -175,34 +178,52 @@ class BatchNormCheckExecutor(BaseD2PSExecutor):
 
         post = self.scale_ps.postprocess
 
+        # Test 1: recompute buffers over full train, weights frozen
+        logger.info("\n\n\nRunning Test 1...")
         model = self.init_model()
         with self.name_tracker.set_context("epoch", "best"):
-            self.in_resume_model.read(model=model, epoch="best")
-
-        # Test 1
-        # baseline: online EMA buffers as saved at epoch 75
+            record = self.in_resume_model.read(model=model, epoch="best")
+        if isinstance(record, dict):
+            logger.info(f"Loaded 'best' checkpoint: epoch={record.get('epoch')} "
+                        f"best_loss={record.get('best_loss')}")
+            
+        # baseline: online EMA buffers as saved at "best" (epoch 75)
         model.eval()
-        base_pre, _ = evaluate(model, valid_dataloader, loss_function, post, self.device, self.dtype)
+        base_val_pre, base_val_pst = evaluate(model, valid_dataloader,       loss_function, post, self.device, self.dtype)
+        base_trn_pre, base_trn_pst = evaluate(model, train_infer_dataloader, loss_function, post, self.device, self.dtype)
 
-        # deployable buffers: recompute over training data, weights frozen
+        # deployable buffers: recompute over full training data, weights frozen
         reset_bn(model, cumulative=True)
-        recompute_bn(model, train_dataloader, self.device, self.dtype)   # full or large chunk
-        recomp_pre, _ = evaluate(model, valid_dataloader, loss_function, post, self.device, self.dtype)
+        recompute_bn(model, train_dataloader, self.device, self.dtype)
+        rcmp_val_pre, rcmp_val_pst = evaluate(model, valid_dataloader,       loss_function, post, self.device, self.dtype)
+        rcmp_trn_pre, rcmp_trn_pst = evaluate(model, train_infer_dataloader, loss_function, post, self.device, self.dtype)
 
-        logger.info(f"recompute_pre: {recomp_pre}, base_pre: {base_pre}")
+        logger.info(
+            "Test 1 (recompute buffers, weights frozen):\n"
+            f"  val   pre : base={base_val_pre:.4e}  recomp={rcmp_val_pre:.4e}\n"
+            f"  val   post: base={base_val_pst:.4e}  recomp={rcmp_val_pst:.4e}\n"
+            f"  train pre : base={base_trn_pre:.4e}  recomp={rcmp_trn_pre:.4e}\n"
+            f"  train post: base={base_trn_pst:.4e}  recomp={rcmp_trn_pst:.4e}"
+        )
 
-        # Test 2
+        # Test 2: buffer redraw spread (error bar; keep none of these models)
+        logger.info("\n\n\nRunning Test 2...")
         base_model = self.init_model()
         with self.name_tracker.set_context("epoch", "best"):
             self.in_resume_model.read(model=base_model, epoch="best")
 
-        draws = redraw_spread(base_model, train_dataset, valid_dataloader,
-                              loss_function, post, self.device, self.dtype,
-                              n_draws=6, n_batches=32, batch_size=self.batch_size,
-                              cumulative=False)
-        logger.info(f"redraw val pre: mean={draws.mean():.2e} std={draws.std():.2e} "
-                    f"min={draws.min():.2e} max={draws.max():.2e}")
-
+        draws_pre, draws_pst = redraw_spread(
+            base_model, train_dataset, valid_dataloader,
+            loss_function, post, self.device, self.dtype,
+            n_draws=6, n_batches=32, batch_size=self.batch_size,
+            cumulative=False,
+        )
+        logger.info(f"redraw val pre  per-draw: {np.array2string(draws_pre, precision=4)}")
+        logger.info(f"redraw val post per-draw: {np.array2string(draws_pst, precision=4)}")
+        logger.info(f"redraw val pre : mean={draws_pre.mean():.4e} std={draws_pre.std():.4e} "
+                    f"min={draws_pre.min():.4e} max={draws_pre.max():.4e}")
+        logger.info(f"redraw val post: mean={draws_pst.mean():.4e} std={draws_pst.std():.4e} "
+                    f"min={draws_pst.min():.4e} max={draws_pst.max():.4e}")
 
     def set_up_dataset(self, split: Split, early_stop: int=None) -> None:
         context = dict(px_arrange=self.px_arrange, scale=self.scale_px)
