@@ -10,7 +10,9 @@ from cmbml.core import (
                       LogMaker
                       )
 from d2ps_nn.ex import (
+    BatchNormCheckExecutor,
     LossPlotExecutor,
+    LossDeltaPlotExecutor,
     PredictExecutor,
     ShowPredictionsPeaksExecutor,
     BundlePredExecutor, 
@@ -28,16 +30,20 @@ logger = logging.getLogger(__name__)
 def predict_and_plot(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
-        PredictExecutor,
-        ShowPredictionsPeaksExecutor,
-        BundlePredExecutor,
-        BundleTrueExecutor,
-        ShowTrebleEll,
-        NewMetricExecutor,
-        ShowPredictionsCloudsExecutor
+        BatchNormCheckExecutor
+        # PredictExecutor,
+        # ShowPredictionsPeaksExecutor,
+        # BundlePredExecutor,
+        # BundleTrueExecutor,
+        # ShowTrebleEll,
+        # NewMetricExecutor,
+        # ShowPredictionsCloudsExecutor
     ]
-    if cfg.run_inference_on == "test":
-        pipes = [LossPlotExecutor, *pipes]
+    # if cfg.run_inference_on == "test":
+    #     pipes = [
+    #         # LossPlotExecutor, 
+    #         LossDeltaPlotExecutor, 
+    #         *pipes]
     run(cfg, pipes)
 
 

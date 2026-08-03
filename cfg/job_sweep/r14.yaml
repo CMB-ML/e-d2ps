@@ -1,0 +1,14 @@
+# @package _global_
+
+scale_ps: meanstdv
+scale_px: minmax_local
+optimizer: AdamW
+learning_rate_final: 2e-4
+norm_kind: bn
+activation: gelu
+down_reductions: XXXXXXXXX
+spatial_reduction: max
+dropout_pos_enc: post_pool
+dropout_type_enc: drop2d
+dropout_rate: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.05]
+dropout_paradigm_name: dec_005
