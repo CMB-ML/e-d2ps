@@ -159,7 +159,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                                                          optimizer=optimizer, 
                                                          scheduler=scheduler
                                                          )
-            start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch']) + 1
+            start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch'])
             if model_record['best_loss'] is not None:
                 all_valid_pre_loss.append(model_record['best_loss'])
             do_loss_record = "continue"
