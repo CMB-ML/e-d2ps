@@ -14,7 +14,7 @@ defaults:
 
 dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_warm_start2/lr${learning_rate_final}"
+working_dir        : &wd "${features_type}2ps_warm_start2/lr${learning_rate_final}/"
 # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 
 model_name_base    : "Dropout: ${dropout_paradigm_name} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"

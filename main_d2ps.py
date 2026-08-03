@@ -37,6 +37,7 @@ from d2ps_nn.ex import (
     LearningRatePlotExecutor,
     TrainingExecutor,
     LossPlotExecutor,
+    LossDeltaPlotExecutor,
     PredictExecutor,
     ShowPredictionsPeaksExecutor,
     BundlePredExecutor, 
@@ -111,6 +112,7 @@ def run_6_train(cfg):
         # LearningRatePlotExecutor,
         TrainingExecutor,
         LossPlotExecutor,
+        LossDeltaPlotExecutor
     ]
     run(cfg, pipes)
 
