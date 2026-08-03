@@ -44,7 +44,7 @@ sigma_scale: 1
 ################################################################
 #                                                              #
 ################################################################
-warmstart_path: "{root}/{dataset}/${warmstart_dir}/F_Model/model_best.pth"
+warmstart_path: "{root}/{dataset}/${warmstart_dir}/F_Model/model_best_ep79.pth"
 
 # n_sims_train_full: 1000   # 128 (deliberate shortchange)
 n_sims_train_full: 1000   # 512
