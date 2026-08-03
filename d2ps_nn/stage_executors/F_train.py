@@ -16,6 +16,7 @@ from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
+from d2ps_nn.models.attenuated_bn import set_bn_alpha
 
 
 logger = logging.getLogger(__name__)
@@ -106,6 +107,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
+        # TEMP: alpha=0 warm-start probe — remove before commit
+        set_bn_alpha(model, 0.0)
 
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
@@ -132,6 +135,10 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         if start_epoch >= self.n_epochs:
             logger.warning(f"start_epoch {start_epoch} >= n_epochs {self.n_epochs}; no training will run.")
+
+        vm0 = self.validate(model, train_infer_dataloader, valid_dataloader, loss_function, post, epoch=-1)
+        logger.info(f"WARM-START GATE pre-train valid_pre: {vm0.valid_pre_loss:.02e}")
+        # exit()
 
         best_valid_loss = initial_best_loss
         for epoch in range(start_epoch, self.n_epochs):
