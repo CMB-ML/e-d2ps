@@ -291,7 +291,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             if is_best_condition_a and is_best_condition_b:
                 with self.name_tracker.set_context("epoch", "best"):
                     self.out_model.write(model=model,
-                                         epoch="best",
+                                         epoch=f"best_ep{epoch + 1}",
                                          best_loss=min(all_valid_pre_loss),
                                          optimizer=optimizer
                                          )
