@@ -226,10 +226,10 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     # run_sm_theory()
-    run_real()
+    # run_real()
     # run_real_pl()
     # run_d2ps_comp()
-    # run_cmbnncs()
-    # run_cmbnncs_planck()
+    run_cmbnncs()
+    run_cmbnncs_planck()
     # run_pyilc()
     # run_pyilc_planck()
