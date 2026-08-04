@@ -100,7 +100,7 @@ def run_real(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_cmbnncs")
 def run_cmbnncs(cfg):
     pipes = [
-        # BundlePredExecutor,
+        BundlePredExecutor,
         BundleSmoothExecutor,
         # NewMetricExecutor,
         NewMetricSmExecutor,
