@@ -65,7 +65,7 @@ train:
 
   # Epochs
   n_epochs          : ${num_epochs}
-  restart_epoch     : 100  # Set to null to create a new model, or give a checkpoint number
+  restart_epoch     : null  # Set to null to create a new model, or give a checkpoint number
 
   # Checkpointing
   earliest_best     : 0   # Earliest epoch to save the best model

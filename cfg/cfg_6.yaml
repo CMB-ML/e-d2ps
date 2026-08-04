@@ -16,6 +16,6 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      job_sweep: r17
+      job_sweep: r22
 
 n_sims: ${n_sims_train}

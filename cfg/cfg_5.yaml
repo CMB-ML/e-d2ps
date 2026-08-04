@@ -1,0 +1,21 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - config_d2ps
+  - job_sweep: ???
+  - override pipeline: assembly_on_sims_sepprep
+  - _self_
+
+hydra:
+  mode: MULTIRUN
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose      : false
+  sweeper:
+    params:
+      job_sweep: r22
+
+n_sims: ${n_sims_train}
