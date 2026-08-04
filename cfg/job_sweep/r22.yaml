@@ -4,7 +4,7 @@ scale_ps: none
 scale_px: minmax_global
 optimizer: Adam
 learning_rate_final: 1e-3
-norm_kind: bn
+norm_kind: abn
 activation: gelu
 down_reductions: XXXXXXXXX
 spatial_reduction: max
