@@ -15,6 +15,7 @@ from .stage_executors.F_train import TrainingExecutor
 from .stage_executors.F_train_overfit import OverfitTrainingExecutor, LRFindingTrainingExecutor
 from .stage_executors.F_train_coefs import TrainingCoefExecutor, OverfitTrainingCoefExecutor
 from .stage_executors.F_train_params import TrainingParamsExecutor, OverfitTrainingParamsExecutor
+from .stage_executors.F_train_abn import AttBNTrainingExecutor
 from .stage_executors.G_predict import PredictExecutor
 from .stage_executors.G_predict_coefs import PredictCoefsExecutor
 from .stage_executors.G_predict_params import PredictParamsExecutor
