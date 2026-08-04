@@ -1,5 +1,6 @@
 import logging
-import time
+from typing import Optional
+from dataclasses import dataclass
 
 from tqdm import tqdm
 import numpy as np
@@ -18,6 +19,21 @@ from d2ps_nn.utils.ps_scale import make_ps_processor
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class TrainMetrics:
+    batch_loss: float
+    mean_grad_norm: Optional[float]
+    max_grad_norm: Optional[float]
+
+
+@dataclass(frozen=True)
+class ValidMetrics:
+    train_pre_loss:float
+    valid_pre_loss:float
+    train_pst_loss:float
+    valid_pst_loss:float
 
 
 class TrainingExecutor(BaseD2PSExecutor):
@@ -77,69 +93,29 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.random_init   = cfg.model.get("random_init", False)
 
         self.track_grad_norm = cfg.get("track_grad_norm", False)
+        self.n_epoch_digits = len(str(self.n_epochs))
+
+    def get_pos_enc_lut(self):
+        if not self.use_pos_enc_lut:
+            return None
+        with self.name_tracker.set_context("style", self.lut_style):
+            pos_enc_lut = self.in_pos_enc_lut.read() 
+        return pos_enc_lut
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
 
-        train_split = self.splits.get("train")
-        valid_split = self.splits.get("valid")
-
-        train_infer_dataset = self.set_up_dataset(train_split, early_stop=self.n_sims_train_infer)
-        train_infer_dataloader_params = dict(
-            batch_size=self.batch_size, 
-            shuffle=True,
-            num_workers=self.num_workers
-        )
-        logger.info(f"Train dataloader: {train_infer_dataloader_params}")
-        train_infer_dataloader = DataLoader(train_infer_dataset, **train_infer_dataloader_params)
-
-        train_dataset = self.set_up_dataset(train_split)
-        train_dataloader_params = dict(
-            batch_size=self.batch_size, 
-            shuffle=True,
-            num_workers=self.num_workers
-        )
-        logger.info(f"Train dataloader: {train_dataloader_params}")
-        train_dataloader = DataLoader(train_dataset, **train_dataloader_params)
-
-        valid_dataset = self.set_up_dataset(valid_split)
-        valid_dataloader_params = dict(
-            batch_size=self.batch_size, 
-            shuffle=False,
-            num_workers=self.num_workers
-        )
-        logger.info(f"Valid dataloader: {valid_dataloader_params}")        
-        valid_dataloader = DataLoader(valid_dataset, **valid_dataloader_params)
-
-        logger.info(f"Training on {len(train_dataloader)} and Validation on {len(valid_dataloader)} batches, batch size {self.batch_size}.")
-
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
         logger.info(f"Loss: {self.loss_key}")
 
-        steps_per_epoch = len(train_dataloader)
-        total_warmup_steps = self.lr_rmp_e * steps_per_epoch
-
-        optimizer = self.get_optimizer(model)
-        if self.lr_rmp_e > 0:
-            scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,
-                                                        start_factor=self.lr_start / self.lr_final,
-                                                        end_factor=1.0,
-                                                        total_iters=total_warmup_steps
-                                                        )
-        else:
-            scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer,
-                                                            factor=1,
-                                                            total_iters=1)
-        # scheduler_1 = torch.optim.lr_scheduler.ConstantLR(optimizer)
-        # scheduler = torch.optim.lr_scheduler.ChainedScheduler([scheduler_0, scheduler_1])
+        train_dataloader, train_infer_dataloader, valid_dataloader = self.build_dataloaders()
+        optimizer, scheduler = self.build_optimization(model, len(train_dataloader))
 
         # Initialize for training
         all_batch_loss = []
-        all_avg_grad_norm = []
-        all_max_grad_norm = []
         all_train_pre_loss = []
         all_valid_pre_loss = []
 
@@ -147,167 +123,55 @@ class TrainingExecutor(BaseD2PSExecutor):
         all_train_pst_loss = []
         all_valid_pst_loss = []
 
-        do_loss_record = "new"
-        start_epoch = 0
-        if self.restart_epoch is not None:
-            logger.info(f"Restarting training at epoch {self.restart_epoch}")
-            # The following returns the epoch number stored in the checkpoint
-            #     as well as loading the model and optimizer with checkpoint information
-            with self.name_tracker.set_context("epoch", self.restart_epoch):
-                model_record = self.in_resume_model.read(model=model, 
-                                                         epoch=self.restart_epoch, 
-                                                         optimizer=optimizer, 
-                                                         scheduler=scheduler
-                                                         )
-            start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch'])
-            if model_record['best_loss'] is not None:
-                all_valid_pre_loss.append(model_record['best_loss'])
-            do_loss_record = "continue"
-            logger.warning("Restarting training without finding previous best loss!")
-        elif self.random_init:
-            logger.info(f"Starting new, randomly initialized model.")
-            with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model, epoch="init")
-        else:
-            logger.info(f"Loading transfer-initialization model.")
-            context = dict(model_num=self.model_num,
-                           pos_enc=self.use_pos_enc_lut)
-            with self.name_tracker.set_contexts(context):
-                self.in_initial_model.read(model=model, strict=False)
-            with self.name_tracker.set_context("epoch", "init"):
-                self.out_model.write(model=model, epoch="init")
+        is_continuation, start_epoch, initial_best_loss = self.prep_training_state(
+            model, optimizer, scheduler
+        )
+        if initial_best_loss is not None:
+            all_valid_pre_loss.append(initial_best_loss)
+        self.set_up_loss_record(is_continuation)
 
-        if do_loss_record == "continue":
-            self.out_loss_record.start()  # New lines will be added, naively
-                                          #  Naively = appended; if resuming, manual cleaning may be needed.
-        else:
-            loss_record_headers = ['Epoch', 
-                                   'Batch Loss', 
-                                   'Validation Pre Loss', 
-                                   'Training Pre Loss', 
-                                   'Validation Loss', 
-                                   'Training Loss', 
-                                   'Learning Rate']
-            if self.track_grad_norm:
-                loss_record_headers.append('Mean Grad Norm')
-                loss_record_headers.append('Max Grad Norm')
-            self.out_loss_record.write(data=loss_record_headers)
+        if start_epoch >= self.n_epochs:
+            logger.warning(f"start_epoch {start_epoch} >= n_epochs {self.n_epochs}; no training will run.")
 
-        n_epoch_digits = len(str(self.n_epochs))
-
+        best_valid_loss = initial_best_loss
         for epoch in range(start_epoch, self.n_epochs):
-            # Training
-            epoch_grad_norm = []
-            with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
-                model.train()
-                batch_loss = 0
-                for train_features, train_label in pbar:
-                    train_features = train_features.to(device=self.device, dtype=self.dtype)
-                    train_label = train_label.to(device=self.device, dtype=self.dtype)
+            tm:TrainMetrics = self.train_one_epoch(
+                model, train_dataloader, loss_function, optimizer, scheduler, epoch)
+            all_batch_loss.append(tm.batch_loss)
 
-                    optimizer.zero_grad()
-                    
-                    output = model(train_features)
-                    # logger.info(f"Memory after forward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
-                    # loss = loss_function(output, train_label)
-                    # loss.backward()
-                    # logger.info(f"Memory after backward: {torch.cuda.max_memory_allocated() / 1024**2:.2f} MB")
-                    # exit()
+            vm: ValidMetrics = self.validate(
+                model, train_infer_dataloader, valid_dataloader, loss_function, post, epoch)
+            all_train_pre_loss.append(vm.train_pre_loss) 
+            all_train_pst_loss.append(vm.train_pst_loss)
+            all_valid_pre_loss.append(vm.valid_pre_loss)
+            all_valid_pst_loss.append(vm.valid_pst_loss)
 
-                    batch_train_loss = loss_function(output, train_label)
-                    batch_train_loss.backward()
-
-                    if self.track_grad_norm:
-                        epoch_grad_norm.append(_get_global_grad_norm(model))
-
-                    optimizer.step()
-                    scheduler.step()
-                    pbar.set_postfix({'Loss': batch_train_loss.item()})
-                    batch_loss += batch_train_loss.item()
-            batch_loss /= len(train_dataloader)
-            all_batch_loss.append(batch_loss)
-            if self.track_grad_norm:
-                mean_grad_norm = np.mean(epoch_grad_norm)
-                all_avg_grad_norm.append(mean_grad_norm)
-                max_grad_norm = np.max(epoch_grad_norm)
-                all_max_grad_norm.append(max_grad_norm)
-
-            # Validation
-            model.eval()
-            train_pre_loss = 0
-            valid_pre_loss = 0
-            train_pst_loss = 0
-            valid_pst_loss = 0
-            with torch.no_grad():
-                train_pre_loss, train_pst_loss = evaluate(
-                    model=model,
-                    dataloader=train_infer_dataloader,
-                    loss_function=loss_function,
-                    post=post,
-                    device=self.device,
-                    dtype=self.dtype,
-                )
-                all_train_pre_loss.append(train_pre_loss)
-                all_train_pst_loss.append(train_pst_loss)
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"train_{self.scale_ps.pre_name}: {train_pre_loss:.02e} | "
-                    f"train_{self.scale_ps.post_name}: {train_pst_loss:.02e}"
-                )
-
-                valid_pre_loss, valid_pst_loss = evaluate(
-                    model=model,
-                    dataloader=valid_dataloader,
-                    loss_function=loss_function,
-                    post=post,
-                    device=self.device,
-                    dtype=self.dtype,
-                )
-                all_valid_pre_loss.append(valid_pre_loss)
-                all_valid_pst_loss.append(valid_pst_loss)
-                note_min_loss = " *" if valid_pre_loss == min(all_valid_pre_loss) else ""
-                logger.info(
-                    f"Epoch {epoch + 1:<{n_epoch_digits}} "
-                    f"valid_{self.scale_ps.pre_name}: {valid_pre_loss:.02e} | "
-                    f"valid_{self.scale_ps.post_name}: {valid_pst_loss:.02e}"
-                    f"{note_min_loss}"
-                )
-            record_line = [
-                epoch + 1, 
-                batch_loss, 
-                valid_pre_loss, 
-                train_pre_loss, 
-                valid_pst_loss, 
-                train_pst_loss,
-                optimizer.param_groups[0]["lr"]            
-                ]
-            if self.track_grad_norm:
-                record_line.append(mean_grad_norm)
-                record_line.append(max_grad_norm)
-            self.out_loss_record.append(record_line)
-
-            is_best_condition_a = valid_pre_loss == min(all_valid_pre_loss)
-            is_best_condition_b = epoch >= self.earliest_best
-            if is_best_condition_a and is_best_condition_b:
-                with self.name_tracker.set_context("epoch", f"best_ep_{epoch + 1}"):
-                    self.out_model.write(model=model,
-                                         epoch=f"best_ep{epoch + 1}",
-                                         best_loss=min(all_valid_pre_loss),
-                                         optimizer=optimizer
-                                         )
-
-            # Checkpoint every so many epochs
-            condition_a = (epoch + 1) in self.extra_check
-            condition_b = (epoch + 1) % self.checkpoint == 0
-            if (condition_a or condition_b):
-                with self.name_tracker.set_context("epoch", epoch + 1):
-                    self.out_model.write(model=model,
-                                         optimizer=optimizer,
-                                         best_loss=min(all_valid_pre_loss),
-                                         epoch=epoch + 1)
+            best_valid_loss = min(all_valid_pre_loss)
+            self.record_and_checkpoint(model, optimizer, epoch, tm, vm, best_valid_loss)
 
         with self.name_tracker.set_context("epoch", "final"):
-            self.out_model.write(model=model, epoch="final")
+            self.out_model.write(model=model, optimizer=optimizer, best_loss=best_valid_loss, epoch="final")
+
+    def build_dataloaders(self):
+        train_split = self.splits.get("train")
+        valid_split = self.splits.get("valid")
+
+        train_dl = self._make_dataloader(
+            self.set_up_dataset(train_split), 
+            shuffle=True, 
+            label="train")
+        train_infer_dl = self._make_dataloader(
+            self.set_up_dataset(train_split, early_stop=self.n_sims_train_infer), 
+            shuffle=False, 
+            label="train infer")
+        valid_dl = self._make_dataloader(
+            self.set_up_dataset(valid_split), 
+            shuffle=False, 
+            label="valid")
+
+        logger.info(f"Training on {len(train_dl)} and Validation on {len(valid_dl)} "
+                    f"batches, batch size {self.batch_size}.")
+        return train_dl, train_infer_dl, valid_dl
 
     def set_up_dataset(self, split: Split, early_stop: int=None) -> None:
         context = dict(px_arrange=self.px_arrange, scale=self.scale_px)
@@ -338,13 +202,28 @@ class TrainingExecutor(BaseD2PSExecutor):
         dataset = dataset_class(**dataset_params)
         return dataset
 
-    def get_pos_enc_lut(self):
-        if not self.use_pos_enc_lut:
-            return None
-        with self.name_tracker.set_context("style", self.lut_style):
-            pos_enc_lut = self.in_pos_enc_lut.read() 
-        return pos_enc_lut
+    def _make_dataloader(self, dataset, shuffle, label):
+        params = dict(batch_size=self.batch_size, shuffle=shuffle,
+                    num_workers=self.num_workers)
+        logger.info(f"Dataloader {label} (shuffle={shuffle}): {params}")
+        return DataLoader(dataset, **params)
 
+    def build_optimization(self, model, steps_per_epoch):
+        total_warmup_steps = self.lr_rmp_e * steps_per_epoch
+
+        optimizer = self.get_optimizer(model)
+        if self.lr_rmp_e > 0:
+            scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,
+                                                        start_factor=self.lr_start / self.lr_final,
+                                                        end_factor=1.0,
+                                                        total_iters=total_warmup_steps
+                                                        )
+        else:
+            scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer,
+                                                            factor=1,
+                                                            total_iters=1)
+        return optimizer, scheduler
+    
     def get_optimizer(self, model):
         if self.optimizer == "Adam":
             optim_dict = dict(lr=self.lr_final)
@@ -387,6 +266,171 @@ class TrainingExecutor(BaseD2PSExecutor):
         logger.info(f"Optimizer: {optimizer.__class__.__name__} with {optim_dict}")
         return optimizer
 
+    def prep_training_state(self, model, optimizer, scheduler):
+        is_continuation = False
+        start_epoch = 0
+        initial_best_loss = None
+        if self.restart_epoch is not None:
+            logger.info(f"Restarting training at epoch {self.restart_epoch}")
+            with self.name_tracker.set_context("epoch", self.restart_epoch):
+                model_record = self.in_resume_model.read(model=model,
+                                                         epoch=self.restart_epoch,
+                                                         optimizer=optimizer,
+                                                         scheduler=scheduler)
+            if model_record['epoch'] != "init" and int(model_record['epoch']) != int(self.restart_epoch):
+                raise ValueError(
+                    f"Requested restart at epoch {self.restart_epoch} but loaded checkpoint "
+                    f"reports epoch {model_record['epoch']}; no matching checkpoint on disk."
+                )
+            start_epoch = 0 if model_record['epoch'] == "init" else int(model_record['epoch'])
+            if model_record['best_loss'] is not None:
+                initial_best_loss = model_record['best_loss']
+                logger.info(f"Resuming with stored best loss: {initial_best_loss:.02e}")
+            else:
+                initial_best_loss = None
+                logger.warning("Restarting without a stored best loss; 'best' checkpoints "
+                            "will be judged only against epochs from this run.")
+            is_continuation = True
+        elif self.random_init:
+            logger.info(f"Starting new, randomly initialized model.")
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model, epoch="init")
+        else:
+            logger.info(f"Loading transfer-initialization model.")
+            context = dict(model_num=self.model_num,
+                           pos_enc=self.use_pos_enc_lut)
+            with self.name_tracker.set_contexts(context):
+                self.in_initial_model.read(model=model, strict=False)
+            with self.name_tracker.set_context("epoch", "init"):
+                self.out_model.write(model=model, epoch="init")
+        
+        return is_continuation, start_epoch, initial_best_loss
+
+    def set_up_loss_record(self, is_continuation):
+        if is_continuation:
+            self.out_loss_record.start()  # New lines will be added, naively
+                                          #  Naively = appended; if resuming, manual cleaning may be needed.
+        else:
+            loss_record_headers = ['Epoch', 
+                                   'Batch Loss', 
+                                   'Validation Pre Loss', 
+                                   'Training Pre Loss', 
+                                   'Validation Loss', 
+                                   'Training Loss', 
+                                   'Learning Rate']
+            if self.track_grad_norm:
+                loss_record_headers.append('Mean Grad Norm')
+                loss_record_headers.append('Max Grad Norm')
+            self.out_loss_record.write(data=loss_record_headers)
+
+    def train_one_epoch(self, model, train_dataloader, loss_function, optimizer, scheduler, epoch):
+        epoch_grad_norm = []
+        with tqdm(train_dataloader, desc=f"Ep {epoch + 1:<{self.n_epoch_digits}}", postfix={'Loss': 0}) as pbar:
+            model.train()
+            batch_loss = 0
+            for train_features, train_label in pbar:
+                train_features = train_features.to(device=self.device, dtype=self.dtype)
+                train_label = train_label.to(device=self.device, dtype=self.dtype)
+
+                optimizer.zero_grad()
+                
+                output = model(train_features)
+                batch_train_loss = loss_function(output, train_label)
+                batch_train_loss.backward()
+
+                if self.track_grad_norm:
+                    epoch_grad_norm.append(_get_global_grad_norm(model))
+
+                optimizer.step()
+                scheduler.step()
+                pbar.set_postfix({'Loss': batch_train_loss.item()})
+                batch_loss += batch_train_loss.item()
+        batch_loss /= len(train_dataloader)
+        if self.track_grad_norm:
+            mean_gn = np.mean(epoch_grad_norm)
+            max_gn = np.max(epoch_grad_norm)
+        else:
+            mean_gn = None
+            max_gn = None
+        return TrainMetrics(batch_loss=batch_loss, mean_grad_norm=mean_gn, max_grad_norm=max_gn)
+
+    def validate(self, model, train_infer_dataloader, valid_dataloader, loss_function, post, epoch):
+        model.eval()
+        with torch.no_grad():
+            train_pre, train_pst = evaluate(
+                model=model,
+                dataloader=train_infer_dataloader,
+                loss_function=loss_function,
+                post=post,
+                device=self.device,
+                dtype=self.dtype,
+            )
+            logger.info(
+                f"Epoch {epoch + 1:<{self.n_epoch_digits}} "
+                f"train_{self.scale_ps.pre_name}: {train_pre:.02e} | "
+                f"train_{self.scale_ps.post_name}: {train_pst:.02e}"
+            )
+
+            valid_pre, valid_pst = evaluate(
+                model=model,
+                dataloader=valid_dataloader,
+                loss_function=loss_function,
+                post=post,
+                device=self.device,
+                dtype=self.dtype,
+            )
+            # This is logged in record_and_checkpoint
+
+        return ValidMetrics(
+            train_pre_loss=train_pre, train_pst_loss=train_pst,
+            valid_pre_loss=valid_pre, valid_pst_loss=valid_pst
+        )
+
+    # record_and_checkpoint(model, optimizer, epoch, tm, vm, all_valid_pre_loss)
+    def record_and_checkpoint(self, model, optimizer, epoch, 
+                              tm: TrainMetrics, vm: ValidMetrics,
+                              best_valid_loss):
+            note_min_loss = " *" if vm.valid_pre_loss == best_valid_loss else ""
+            logger.info(
+                f"Epoch {epoch + 1:<{self.n_epoch_digits}} "
+                f"valid_{self.scale_ps.pre_name}: {vm.valid_pre_loss:.02e} | "
+                f"valid_{self.scale_ps.post_name}: {vm.valid_pst_loss:.02e}"
+                f"{note_min_loss}"
+            )
+
+            record_line = [
+                epoch + 1, 
+                tm.batch_loss, 
+                vm.valid_pre_loss, 
+                vm.train_pre_loss, 
+                vm.valid_pst_loss, 
+                vm.train_pst_loss,
+                optimizer.param_groups[0]["lr"]            
+                ]
+            if self.track_grad_norm:
+                record_line.append(tm.mean_grad_norm)
+                record_line.append(tm.max_grad_norm)
+            self.out_loss_record.append(record_line)
+
+            is_best_condition_a = vm.valid_pre_loss == best_valid_loss
+            is_best_condition_b = epoch >= self.earliest_best
+            if is_best_condition_a and is_best_condition_b:
+                with self.name_tracker.set_context("epoch", "best"):
+                    self.out_model.write(model=model,
+                                         epoch="best",
+                                         best_loss=best_valid_loss,
+                                         optimizer=optimizer
+                                         )
+
+            # Checkpoint every so many epochs
+            condition_a = (epoch + 1) in self.extra_check
+            condition_b = (epoch + 1) % self.checkpoint == 0
+            if (condition_a or condition_b):
+                with self.name_tracker.set_context("epoch", epoch + 1):
+                    self.out_model.write(model=model,
+                                         optimizer=optimizer,
+                                         best_loss=best_valid_loss,
+                                         epoch=epoch + 1)
 
 def evaluate(model, dataloader, loss_function, post, device, dtype):
     pre_loss = 0.0

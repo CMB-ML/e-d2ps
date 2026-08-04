@@ -1,6 +1,8 @@
 from typing import Optional
 import torch.nn as nn
 
+from d2ps_nn.models.attenuated_bn import AttenuatedBatchNorm2d
+
 
 def get_activation(kind: Optional[str]) -> nn.Module:
     """Return an activation module from a string spec."""
@@ -62,10 +64,12 @@ def get_norm(kind: Optional[str], num_channels: int) -> nn.Module:
         return nn.BatchNorm2d(num_channels)
     elif kind == "gn":
         return nn.GroupNorm(num_groups=8, num_channels=num_channels)
+    elif kind == "abn":
+        return AttenuatedBatchNorm2d(num_channels)
     elif kind == "none":
         return nn.Identity()
     else:
-        raise ValueError(f"Unknown norm kind '{kind}'. Choose from: 'bn', 'gn', 'none'.")
+        raise ValueError(f"Unknown norm kind '{kind}'. Choose from: 'bn', 'gn', 'abn', 'none'.")
 
 
 def get_dropout_2d(p: Optional[float]) -> nn.Module:
