@@ -21,7 +21,6 @@ scale_px  : ${scale_px}
 #            meanstdv (for use with FindSpectraStatsExecutor)
 #            null (no scaling)
 scale_ps  : ${scale_ps}
-
 final_activation: null
 norm_kind: ${norm_kind}
 
@@ -62,6 +61,7 @@ train:
   learning_rate_ramp_epochs : ${learning_rate_ramp_epochs}
   optimizer         : ${optimizer}
   adamw_wd          : ${adamw_wd}
+  bn_alpha          : ${bn_alpha}
 
   # Epochs
   n_epochs          : ${num_epochs}
