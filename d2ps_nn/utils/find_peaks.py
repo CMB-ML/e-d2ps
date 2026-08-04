@@ -116,7 +116,7 @@ def iterate_crit(
     if strict:
         raise PeakFitError(window_n, "Hit max iterations")
 
-    logger.warning(f"Window {window_n}: Hit max iterations")
+    logger.debug(f"Window {window_n}: Hit max iterations")
     return None
 
 
