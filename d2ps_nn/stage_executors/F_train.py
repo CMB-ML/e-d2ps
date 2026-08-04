@@ -422,7 +422,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             is_best_condition_a = vm.valid_pre_loss == best_valid_loss
             is_best_condition_b = epoch >= self.earliest_best
             if is_best_condition_a and is_best_condition_b:
-                with self.name_tracker.set_context("epoch", "best"):
+                with self.name_tracker.set_context("epoch", f"best_ep{epoch+1}"):
                     self.out_model.write(model=model,
                                          epoch="best",
                                          best_loss=best_valid_loss,
