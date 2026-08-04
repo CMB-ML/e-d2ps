@@ -16,7 +16,7 @@ from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
-from d2ps_nn.models.attenuated_bn import set_bn_alpha
+from d2ps_nn.models.attenuated_bn import set_bn_alpha, _AttenuatedBNMixin
 
 
 logger = logging.getLogger(__name__)
@@ -139,6 +139,10 @@ class TrainingExecutor(BaseD2PSExecutor):
         vm0 = self.validate(model, train_infer_dataloader, valid_dataloader, loss_function, post, epoch=-1)
         logger.info(f"WARM-START GATE pre-train valid_pre: {vm0.valid_pre_loss:.02e}")
         # exit()
+
+        n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
+        n_bn  = sum(1 for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d) and not isinstance(m, _AttenuatedBNMixin))
+        logger.info(f"norm audit: {n_abn} attenuated BN (alpha={[m.alpha for m in model.modules() if isinstance(m, _AttenuatedBNMixin)][:3]}), {n_bn} plain BN")
 
         best_valid_loss = initial_best_loss
         for epoch in range(start_epoch, self.n_epochs):
