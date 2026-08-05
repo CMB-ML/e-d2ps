@@ -136,6 +136,23 @@ class PredictExecutor(BaseD2PSExecutor):
         logger.info("model_best.pth not found; 'best' resolves to %s", concrete)
         return "best", concrete
 
+    def _find_latest_best_checkpoint(self, model_dir: Path) -> str:
+        """Return the epoch token for the highest-numbered model_best_ep checkpoint,
+        e.g. 'best_ep14' or 'best_ep_114' — whichever the file on disk uses.
+        Derived from the actual filename so it round-trips through model_{epoch}.pth.
+        """
+        pattern = re.compile(r"model_best_ep_?(\d+)\.pth$")   # tolerate optional underscore
+        best_path, best_ep = None, -1
+        for p in model_dir.glob("model_best_ep*.pth"):        # glob w/o underscore too
+            if (m := pattern.search(p.name)) and (ep := int(m.group(1))) > best_ep:
+                best_path, best_ep = p, ep
+        if best_path is None:
+            raise FileNotFoundError(
+                f"No 'best' checkpoint in {model_dir}: neither model_best.pth "
+                f"nor any model_best_ep##.pth was found."
+            )
+        return best_path.stem.removeprefix("model_")          # 'model_best_ep14' -> 'best_ep14'
+
     def process_split(self, split, epoch) -> None:
         dataset = self.set_up_dataset(split)
         dataloader = DataLoader(
@@ -177,21 +194,3 @@ class PredictExecutor(BaseD2PSExecutor):
         with self.name_tracker.set_context("style", self.lut_style):
             pos_enc_lut = self.in_pos_enc_lut.read() 
         return pos_enc_lut
-
-
-    def _find_latest_best_checkpoint(self, model_dir: Path) -> str:
-        """Given directory for trained models, return an epoch
-        string like 'best_ep_79' for the highest-numbered model_best_ep_##.pth.
-        Raises FileNotFoundError if none exist."""
-        pattern = re.compile(r"model_best_ep_(\d+)\.pth$")
-        epochs = [
-            int(m.group(1))
-            for p in model_dir.glob("model_best_ep_*.pth")
-            if (m := pattern.search(p.name))
-        ]
-        if not epochs:
-            raise FileNotFoundError(
-                f"No 'best' checkpoint in {model_dir}: neither model_best.pth "
-                f"nor any model_best_ep_##.pth was found."
-            )
-        return f"best_ep_{max(epochs)}"
