@@ -16,6 +16,7 @@ from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
+import types
 
 
 logger = logging.getLogger(__name__)
@@ -134,6 +135,22 @@ class TrainingExecutor(BaseD2PSExecutor):
             logger.warning(f"start_epoch {start_epoch} >= n_epochs {self.n_epochs}; no training will run.")
 
         best_valid_loss = initial_best_loss
+        
+        def _frozen_bn_train(self, mode: bool = True):
+            return self  # ignore model.train(); stay in eval
+
+        n_frozen = 0
+        for m in model.modules():
+            if isinstance(m, torch.nn.modules.batchnorm._BatchNorm):
+                m.eval()                                          # step 1: use loaded running mean/var, no updates
+                m.train = types.MethodType(_frozen_bn_train, m)   # survive model.train() in train_one_epoch
+                if m.weight is not None:
+                    m.weight.requires_grad_(False)                # step 2: freeze γ
+                if m.bias is not None:
+                    m.bias.requires_grad_(False)                  # step 2: freeze β
+                n_frozen += 1
+        logger.info(f"froze {n_frozen} BN layers fully (running stats + affine)")
+
         for epoch in range(start_epoch, self.n_epochs):
             tm:TrainMetrics = self.train_one_epoch(
                 model, train_dataloader, loss_function, optimizer, scheduler, epoch)
@@ -151,6 +168,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, optimizer=optimizer, best_loss=best_valid_loss, epoch="final")
+
 
     def build_dataloaders(self):
         train_split = self.splits.get("train")

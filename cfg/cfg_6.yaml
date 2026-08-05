@@ -1,6 +1,6 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
-  - config_d2ps
+  - config_abn_d2ps
   - job_sweep: ???
   - override pipeline: assembly_on_sims_sepprep
   - _self_
@@ -16,6 +16,6 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      job_sweep: r17
+      job_sweep: r22
 
 n_sims: ${n_sims_train}

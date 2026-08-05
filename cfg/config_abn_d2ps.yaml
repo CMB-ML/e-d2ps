@@ -14,10 +14,10 @@ defaults:
 
 dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_warm_aBN/aBN_${bn_alpha}_scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
+working_dir        : &wd "${features_type}2ps_freezeBN_warm/aBN_freeze_scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
 # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 
-model_name_base    : "aBN: ${bn_alpha} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
+model_name_base    : "aBN: freeze PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
 fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, ${model_name_base}"
 # fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${face_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
@@ -45,14 +45,14 @@ sigma_scale: 1
 ################################################################
 use_warmstart: true
 warmstart_path: "{root}/{dataset}/obs2ps_polyfit_drop2/drop_no_drop_scale_ps_none-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/F_Model/model_best_ep79.pth"
-bn_alpha: 0.1
+bn_alpha: 0.0
 
 n_sims_train_full: 1000   # 512
 
 # # Normal training scheme
 n_sims_train: 1000
 n_sims_train_infer: 200
-num_epochs: 200
+num_epochs: 300
 
 # dropout_rate: ???          # 9 layers + 2 for decoder
 # dropout_pos_enc: ???

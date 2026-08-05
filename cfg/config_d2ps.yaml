@@ -1,185 +1,185 @@
-# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
-defaults:
-  - local_system   : generic_lab
-  - file_system    : common_fs
-  - pipeline       : assembly_on_sims
-  - scenario       : scenario
-  - splits         : all
-  - model          : basic_d2ps_nn_l2
-  - model/patches  : toppatch
-  - model/analysis : simple_apo
-  - model/analysis/metrics    : metrics
-  - override hydra/job_logging: custom_log
-  - _self_
+# # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+# defaults:
+#   - local_system   : generic_lab
+#   - file_system    : common_fs
+#   - pipeline       : assembly_on_sims
+#   - scenario       : scenario
+#   - splits         : all
+#   - model          : basic_d2ps_nn_l2
+#   - model/patches  : toppatch
+#   - model/analysis : simple_apo
+#   - model/analysis/metrics    : metrics
+#   - override hydra/job_logging: custom_log
+#   - _self_
 
-dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
-# SimpleEncDec
-working_dir        : &wd "${features_type}2ps_polyfit_drop2/drop_${dropout_paradigm_name}_scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
-# working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
+# dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
+# # SimpleEncDec
+# working_dir        : &wd "${features_type}2ps_freezeBN/drop_${dropout_paradigm_name}_scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
+# # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 
-model_name_base    : "Dropout: ${dropout_paradigm_name} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
+# model_name_base    : "Dropout: ${dropout_paradigm_name} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
-fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, ${model_name_base}"
-# fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${face_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
+# fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, ${model_name_base}"
+# # fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${face_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
-trained_wd         : *wd
-prep_working_dir   : "d2ps-prep/"
-pl_fig_model_name  : "${features_type} to PS, On Planck, ${model_name_base}"
-
-
-pipeline:
-  raw:
-    assets_out:
-      ps_bundle:
-        handler: NpyHandler
-        path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
-  bundle_true: # Z_bundle.py / BundleTrueExecutor
-    assets_out:
-      ps_bundle:
-        handler: NpyHandler
-        path_template: "{root}/{dataset}/True/Analysis_Bundle/true_{split}.npy"
-sigma_scale: 1
+# trained_wd         : *wd
+# prep_working_dir   : "d2ps-prep/"
+# pl_fig_model_name  : "${features_type} to PS, On Planck, ${model_name_base}"
 
 
-################################################################
-#                                                              #
-################################################################
-# n_sims_train_full: 1000   # 128 (deliberate shortchange)
-n_sims_train_full: 1000   # 512
+# pipeline:
+#   raw:
+#     assets_out:
+#       ps_bundle:
+#         handler: NpyHandler
+#         path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
+#   bundle_true: # Z_bundle.py / BundleTrueExecutor
+#     assets_out:
+#       ps_bundle:
+#         handler: NpyHandler
+#         path_template: "{root}/{dataset}/True/Analysis_Bundle/true_{split}.npy"
+# sigma_scale: 1
 
-# # Normal training scheme
-n_sims_train: 1000
-n_sims_train_infer: 200
-num_epochs: 300
 
-dropout_rate: ???          # 9 layers + 2 for decoder
-dropout_pos_enc: ???
-dropout_type_enc: ???
-dropout_paradigm_name: ???
+# ################################################################
+# #                                                              #
+# ################################################################
+# # n_sims_train_full: 1000   # 128 (deliberate shortchange)
+# n_sims_train_full: 1000   # 512
 
-model_num: 1
-model_num_sweep: 1
+# # # Normal training scheme
+# n_sims_train: 1000
+# n_sims_train_infer: 200
+# num_epochs: 300
 
-scale_px: minmax_local
+# dropout_rate: ???          # 9 layers + 2 for decoder
+# dropout_pos_enc: ???
+# dropout_type_enc: ???
+# dropout_paradigm_name: ???
 
-scale_ps: meanstdv
+# model_num: 1
+# model_num_sweep: 1
 
-spectrum_layer_kind: polynomial  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
-return_mode: spectrum
-basis_kind: chebyshev
-degree: 18
-out_range: [-1, 1]
+# scale_px: minmax_local
 
-model_fn_template  : ${features_type}2ps_${nn_model}_${spectrum_layer_kind}${degree}_init_${model_num}
+# scale_ps: meanstdv
 
-use_pos_enc_lut: false
-use_pos_enc_lut_sweep: false
+# spectrum_layer_kind: polynomial  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
+# return_mode: spectrum
+# basis_kind: chebyshev
+# degree: 18
+# out_range: [-1, 1]
 
-optimizer: Adam
-adamw_wd : 0.01  # Due to interpolation, must be provided.
-# adamw_wd_sweep: 0.01
+# model_fn_template  : ${features_type}2ps_${nn_model}_${spectrum_layer_kind}${degree}_init_${model_num}
 
-learning_rate_start: 1e-8
+# use_pos_enc_lut: false
+# use_pos_enc_lut_sweep: false
 
-learning_rate_final: 2e-4
-# learning_rate_final_sweep: 2e-4
+# optimizer: Adam
+# adamw_wd : 0.01  # Due to interpolation, must be provided.
+# # adamw_wd_sweep: 0.01
 
-learning_rate_ramp_epochs: 0
-# learning_rate_ramp_epochs_sweep: 0
+# learning_rate_start: 1e-8
 
-## Models: Either 
-nn_model: SimpleEncDec
-px_arrange: cmbNNCS
-norm_kind: gn
-# norm_sweep: bn
-# Down reductions use X/m strings: X is max, m is avg; 
-#   order starts with first/top layer and fills down 
-#   XmX would be Max, Avg, Max, and the rest Avg
-down_reductions: mmmmmmmmm
-# down_reductions_sweep: mmmmmmm
-spatial_reduction: avg
-# spatial_reduction_sweep: avg
-activation: gelu
-# activation_sweep: relu
+# learning_rate_final: 2e-4
+# # learning_rate_final_sweep: 2e-4
 
-# ### Or
-# # nn_model: TLPEncAggDec
-# nn_model: TLPEnc2AggDec
-# px_arrange: channel
-# norm_kind: ???
-# # norm_sweep: none, bn, gn
-# norm_sweep: gn
-# down_reductions: ???
-# # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
-# # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
-# down_reductions_sweep: mmmmmmm, Xmmmmmm  # CMML2
-# down_reductions_sweep: mmmXmmm, mmmmmXm  # CMML3
-# spatial_reduction: ???
-# # spatial_reduction_sweep: avg, max
-# spatial_reduction_sweep: avg
-# activation: ???
-# # activation_sweep: relu, gelu
-# activation_sweep: gelu
+# learning_rate_ramp_epochs: 0
+# # learning_rate_ramp_epochs_sweep: 0
 
-# face_reduction: ???
-# face_reduction_sweep: avg
-
-### Or
-# nn_model: MobileViTCMBRegressor
+# ## Models: Either 
+# nn_model: SimpleEncDec
 # px_arrange: cmbNNCS
 # norm_kind: gn
+# # norm_sweep: bn
+# # Down reductions use X/m strings: X is max, m is avg; 
+# #   order starts with first/top layer and fills down 
+# #   XmX would be Max, Avg, Max, and the rest Avg
+# down_reductions: mmmmmmmmm
+# # down_reductions_sweep: mmmmmmm
+# spatial_reduction: avg
+# # spatial_reduction_sweep: avg
+# activation: gelu
+# # activation_sweep: relu
 
-################################################################
-#   Lesser-used set-up
-###############################################################
-n_sims: ???
+# # ### Or
+# # # nn_model: TLPEncAggDec
+# # nn_model: TLPEnc2AggDec
+# # px_arrange: channel
+# # norm_kind: ???
+# # # norm_sweep: none, bn, gn
+# # norm_sweep: gn
+# # down_reductions: ???
+# # # for X-m strings: X is max, m is avg; order starts with first/top layer and fills down
+# # # down_reductions_sweep: max, avg, X, Xm, XXm, mXX
+# # down_reductions_sweep: mmmmmmm, Xmmmmmm  # CMML2
+# # down_reductions_sweep: mmmXmmm, mmmmmXm  # CMML3
+# # spatial_reduction: ???
+# # # spatial_reduction_sweep: avg, max
+# # spatial_reduction_sweep: avg
+# # activation: ???
+# # # activation_sweep: relu, gelu
+# # activation_sweep: gelu
 
-splits:
-  Train:
-    n_sims: ${n_sims}
+# # face_reduction: ???
+# # face_reduction_sweep: avg
 
-planck_ds: PlanckAsDataset_${scenario.nside}
+# ### Or
+# # nn_model: MobileViTCMBRegressor
+# # px_arrange: cmbNNCS
+# # norm_kind: gn
 
-fig_type: ['pdf', 'png']
+# ################################################################
+# #   Lesser-used set-up
+# ###############################################################
+# n_sims: ???
 
-# Limit the number of simulations for which to generate figures
-n_show_cap           : 5
-n_show_treble_ell    : null
+# splits:
+#   Train:
+#     n_sims: ${n_sims}
 
-# Settings below this point are used for interpolation.
-# These are not to be used directly in the python
-# They are picked up from here and MAY be used elsewhere in the yamls.
-# In the scenario yaml
-nside              : 512
-lmax               : 1280
+# planck_ds: PlanckAsDataset_${scenario.nside}
 
-# Features type should be either "cmb" or "obs"
-# features_type      : cmb
-features_type      : obs
-detectors          : [100, 143, 217, 353]
-map_fields         : "I"
+# fig_type: ['pdf', 'png']
 
-# cosmo_param_names  : ["As", "H0", "ns", "ombh2", "omch2", "tau"]
-# pivot_scalar       : 0.002  # For WMAP, use 0.002. For Planck, use CAMB
-#                             # default of 0.05
-# log_As             : false  # This should match the source distribution
-#                             # Currently (WMAP), As is provided with mean 
-#                             # and standard deviation *not* log-scaled. 
-#                             # If we switch to Planck, change this to true
+# # Limit the number of simulations for which to generate figures
+# n_show_cap           : 5
+# n_show_treble_ell    : null
 
-track_grad_norm: False
+# # Settings below this point are used for interpolation.
+# # These are not to be used directly in the python
+# # They are picked up from here and MAY be used elsewhere in the yamls.
+# # In the scenario yaml
+# nside              : 512
+# lmax               : 1280
 
-# In the pipeline yamls
-# For prediction, postprocessing, power spectra generation:
-use_epochs           : ["best"]
-# For single simulation figures (maps & ps figures):
-use_epochs_imgs      : ${use_epochs}
-# For summary statistics:
-use_epochs_map_stats : ${use_epochs}
-# For summary statistics:
-use_epochs_ps_stats  : ${use_epochs}
+# # Features type should be either "cmb" or "obs"
+# # features_type      : cmb
+# features_type      : obs
+# detectors          : [100, 143, 217, 353]
+# map_fields         : "I"
 
-# Limit the number of simulations on which to do inference and postprocessing
-# In the splits yaml; null to run on all
-n_infer_cap           : null
-run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
+# # cosmo_param_names  : ["As", "H0", "ns", "ombh2", "omch2", "tau"]
+# # pivot_scalar       : 0.002  # For WMAP, use 0.002. For Planck, use CAMB
+# #                             # default of 0.05
+# # log_As             : false  # This should match the source distribution
+# #                             # Currently (WMAP), As is provided with mean 
+# #                             # and standard deviation *not* log-scaled. 
+# #                             # If we switch to Planck, change this to true
+
+# track_grad_norm: False
+
+# # In the pipeline yamls
+# # For prediction, postprocessing, power spectra generation:
+# use_epochs           : ["best"]
+# # For single simulation figures (maps & ps figures):
+# use_epochs_imgs      : ${use_epochs}
+# # For summary statistics:
+# use_epochs_map_stats : ${use_epochs}
+# # For summary statistics:
+# use_epochs_ps_stats  : ${use_epochs}
+
+# # Limit the number of simulations on which to do inference and postprocessing
+# # In the splits yaml; null to run on all
+# n_infer_cap           : null
+# run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
