@@ -39,7 +39,7 @@ class ModelInitExecutor(BaseD2PSExecutor):
                 logger.warning("Model already created. Skipping!")
                 return
         if self.norm_kind not in [None, "none", "None"] and not self.permit_bn_creation:
-            raise ValueError("Sorry to kill the run. Don't create a model with bn for others to load from.")
+            raise ValueError("Sorry to kill the run. Don't create a model with anything but [None, 'none', 'None'] for others to load from.")
 
         seed = self.seed_factory.get_seed(**dict(iter=self.model_iter))
 
