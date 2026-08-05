@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class AttBNTrainingExecutor(TrainingExecutor):
-    def __init__(self, cfg: DictConfig, stage_str="train_warmstart") -> None:
+    def __init__(self, cfg: DictConfig, stage_str="train") -> None:
         super().__init__(cfg, stage_str=stage_str)
 
         self.use_warmstart = cfg.use_warmstart
