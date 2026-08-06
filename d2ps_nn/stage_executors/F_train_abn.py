@@ -41,7 +41,7 @@ class AttBNTrainingExecutor(TrainingExecutor):
 
         return is_continuation, start_epoch, initial_best_loss
 
-    def _audit_norms(model):
+    def _audit_norms(self, model):
         n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
         n_bn  = sum(1 for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d) and not isinstance(m, _AttenuatedBNMixin))
         logger.info(f"norm audit: {n_abn} attenuated BN (alpha={[m.alpha for m in model.modules() if isinstance(m, _AttenuatedBNMixin)][:3]}), {n_bn} plain BN")

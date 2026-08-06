@@ -1,6 +1,6 @@
 defaults:
-  - config_d2ps
-  - job_sweep: ???
+  - config_abn_d2ps
+  - job_sweep: r22
   - override pipeline: assembly_on_planck_sepprep
   - override splits: "1-1"
   - _self_
@@ -20,6 +20,6 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      job_sweep: r17
+      learning_rate_final: 1e-4, 1e-5
 
 n_sims: ${n_sims_train}
