@@ -100,7 +100,7 @@ def run_5_make_models(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="cfg_6")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_6_abn")
 def run_6_train(cfg):
     if cfg.model.n_levels == 7 and cfg.nside == 512:
         raise ValueError("Don't make this mistake again, please.")
@@ -117,7 +117,7 @@ def run_6_train(cfg):
     ]
     run(cfg, pipes)
 
-@hydra.main(version_base=None, config_path="cfg", config_name="cfg_7")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_7_abn")
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
@@ -142,7 +142,7 @@ def run_8_prep_planck(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="cfg_9")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_9_abn")
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [

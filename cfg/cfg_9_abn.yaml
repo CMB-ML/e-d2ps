@@ -1,0 +1,25 @@
+defaults:
+  - config_abn_d2ps
+  - job_sweep: r22
+  - override pipeline: assembly_on_planck_sepprep
+  - override splits: "1-1"
+  - _self_
+
+splits:
+  name: 1850
+
+fig_model_name     : ${pl_fig_model_name}
+hydra:
+  mode: MULTIRUN
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
+                                                #   This is a minor bug, not worth fixing.
+  verbose      : false
+  sweeper:
+    params:
+      learning_rate_final: 1e-4, 1e-5
+
+n_sims: ${n_sims_train}

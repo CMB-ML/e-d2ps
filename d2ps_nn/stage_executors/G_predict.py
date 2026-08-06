@@ -66,6 +66,11 @@ class PredictExecutor(BaseD2PSExecutor):
         self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_model_asset, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
+        for model_epoch in self.model_epochs:
+            context_dict = dict(epoch=model_epoch)  
+            with self.name_tracker.set_contexts(context_dict):
+                logger.info(f"Will get model from {self.in_model_asset.path}")
+
         self.model = self.init_model()
         self.model.eval().to(self.device)
 
@@ -74,6 +79,7 @@ class PredictExecutor(BaseD2PSExecutor):
                 for split in self.splits:
                     context_dict = dict(split=split.name, epoch=model_epoch)
                     with self.name_tracker.set_contexts(context_dict):
+                        logger.info(f"Getting model from {self.in_model_asset.path}")
                         try:
                             self.in_model_asset.read(model=self.model, epoch=model_epoch)
                         except FileNotFoundError as e:
