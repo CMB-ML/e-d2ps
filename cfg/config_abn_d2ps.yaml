@@ -52,7 +52,7 @@ n_sims_train_full: 1000   # 512
 # # Normal training scheme
 n_sims_train: 1000
 n_sims_train_infer: 200
-num_epochs: 100
+num_epochs: 200
 
 # dropout_rate: ???          # 9 layers + 2 for decoder
 # dropout_pos_enc: ???
