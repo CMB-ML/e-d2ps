@@ -17,6 +17,21 @@ class AttBNTrainingExecutor(TrainingExecutor):
         self.use_warmstart = cfg.use_warmstart
         self.warmstart_path = cfg.get("warmstart_path", None)
         self.bn_alpha = cfg.model.train.get("bn_alpha", 0.0)
+        self.freeze_bn_affine = cfg.model.train.get("freeze_bn_affine", False)
+
+    def _prepare_model(self, model):
+        set_bn_alpha(model, self.bn_alpha)
+        if self.freeze_bn_affine:
+            n = 0
+            for m in model.modules():
+                if isinstance(m, _AttenuatedBNMixin):
+                    if m.weight is not None:
+                        m.weight.requires_grad_(False)
+                    if m.bias is not None:
+                        m.bias.requires_grad_(False)
+                    n += 1
+            logger.info(f"froze affine (gamma/beta) on {n} attenuated BN layers")
+        self._audit_norms(model)
 
     def prep_training_state(self, model, optimizer, scheduler):
         if not self.use_warmstart:
@@ -31,8 +46,8 @@ class AttBNTrainingExecutor(TrainingExecutor):
         warmstart_path = self.name_tracker.path(path_template=self.warmstart_path)
         self.in_resume_model.handler.read(path=warmstart_path, model=model, strict=False)
 
-        set_bn_alpha(model, self.bn_alpha)
-        _audit_norms(model)
+        # set_bn_alpha(model, self.bn_alpha)
+        # _audit_norms(model)
 
         with self.name_tracker.set_context("epoch", "init"):
             self.out_model.write(model=model, epoch="init")
@@ -41,8 +56,21 @@ class AttBNTrainingExecutor(TrainingExecutor):
 
         return is_continuation, start_epoch, initial_best_loss
 
+    def _prepare_model(self, model):
+        set_bn_alpha(model, self.bn_alpha)
+        if self.freeze_bn_affine:
+            n = 0
+            for m in model.modules():
+                if isinstance(m, _AttenuatedBNMixin):
+                    if m.weight is not None:
+                        m.weight.requires_grad_(False)
+                    if m.bias is not None:
+                        m.bias.requires_grad_(False)
+                    n += 1
+            logger.info(f"froze affine (gamma/beta) on {n} attenuated BN layers")
+        self._audit_norms(model)
 
-def _audit_norms(model):
-    n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
-    n_bn  = sum(1 for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d) and not isinstance(m, _AttenuatedBNMixin))
-    logger.info(f"norm audit: {n_abn} attenuated BN (alpha={[m.alpha for m in model.modules() if isinstance(m, _AttenuatedBNMixin)][:3]}), {n_bn} plain BN")
+    def _audit_norms(self, model):
+        n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
+        n_bn  = sum(1 for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d) and not isinstance(m, _AttenuatedBNMixin))
+        logger.info(f"norm audit: {n_abn} attenuated BN (alpha={[m.alpha for m in model.modules() if isinstance(m, _AttenuatedBNMixin)][:3]}), {n_bn} plain BN")

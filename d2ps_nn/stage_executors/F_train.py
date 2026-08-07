@@ -106,6 +106,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
+        self._prepare_model(model)
 
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
@@ -151,6 +152,10 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, optimizer=optimizer, best_loss=best_valid_loss, epoch="final")
+
+    def _prepare_model(self, model):
+        """Hook: structural model prep (alpha, freezing) that must precede optimizer construction."""
+        pass
 
     def build_dataloaders(self):
         train_split = self.splits.get("train")
@@ -226,9 +231,11 @@ class TrainingExecutor(BaseD2PSExecutor):
     
     def get_optimizer(self, model):
         if self.optimizer == "Adam":
-            optim_dict = dict(lr=self.lr_final)
-            optimizer = torch.optim.Adam(model.parameters(), **optim_dict)
-
+            trainable = [p for p in model.parameters() if p.requires_grad]
+            n_total = sum(1 for _ in model.parameters())
+            optim_dict = dict(lr=self.lr_final, n_trainable=len(trainable), n_frozen=n_total - len(trainable))
+            optimizer = torch.optim.Adam(trainable, lr=self.lr_final)
+            
         elif self.optimizer == "AdamW":
             if self.adamw_wd is None:
                 raise ValueError(
