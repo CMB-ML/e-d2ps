@@ -17,6 +17,6 @@ hydra:
   sweeper:
     params:
       # job_sweep: r22  #, r11, r12
-      learning_rate_final: 1e-3, 1e-5, 1e-7
+      learning_rate_final: 1e-4
 
 n_sims: ${n_sims_train}

@@ -107,8 +107,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
         model = self.init_model()
-        # TEMP: alpha=0 warm-start probe — remove before commit
-        set_bn_alpha(model, 0.0)
+        # # TEMP: alpha=0 warm-start probe — remove before commit
+        # set_bn_alpha(model, 0.0)
 
         loss_function = get_loss(self.loss_key, self.ells)
         loss_function = loss_function.to(self.device)
