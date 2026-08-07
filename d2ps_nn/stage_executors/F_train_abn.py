@@ -3,7 +3,7 @@ import logging
 import torch
 from omegaconf import DictConfig
 
-from d2ps_nn.stage_executors.F_train import TrainingExecutor
+from d2ps_nn.stage_executors.F_train import TrainingExecutor, get_loss, evaluate
 from d2ps_nn.models.attenuated_bn import set_bn_alpha, _AttenuatedBNMixin
 
 
@@ -46,29 +46,22 @@ class AttBNTrainingExecutor(TrainingExecutor):
         warmstart_path = self.name_tracker.path(path_template=self.warmstart_path)
         self.in_resume_model.handler.read(path=warmstart_path, model=model, strict=False)
 
-        # set_bn_alpha(model, self.bn_alpha)
-        # _audit_norms(model)
-
         with self.name_tracker.set_context("epoch", "init"):
             self.out_model.write(model=model, epoch="init")
+
+        self._warmstart_gate(model)
 
         is_continuation, start_epoch, initial_best_loss = False, 0, None
 
         return is_continuation, start_epoch, initial_best_loss
 
-    def _prepare_model(self, model):
-        set_bn_alpha(model, self.bn_alpha)
-        if self.freeze_bn_affine:
-            n = 0
-            for m in model.modules():
-                if isinstance(m, _AttenuatedBNMixin):
-                    if m.weight is not None:
-                        m.weight.requires_grad_(False)
-                    if m.bias is not None:
-                        m.bias.requires_grad_(False)
-                    n += 1
-            logger.info(f"froze affine (gamma/beta) on {n} attenuated BN layers")
-        self._audit_norms(model)
+    def _warmstart_gate(self, model):
+        loss_function = get_loss(self.loss_key, self.ells).to(self.device)
+        valid_dl = self._make_dataloader(
+            self.set_up_dataset(self.splits.get("valid")), shuffle=False, label="gate")
+        pre, _ = evaluate(model=model, dataloader=valid_dl, loss_function=loss_function,
+                        post=self.scale_ps.postprocess, device=self.device, dtype=self.dtype)
+        logger.info(f"WARM-START GATE pre-train valid_pre: {pre:.02e}")
 
     def _audit_norms(self, model):
         n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
