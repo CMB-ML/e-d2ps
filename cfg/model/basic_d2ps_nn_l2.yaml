@@ -62,6 +62,7 @@ train:
   optimizer         : ${optimizer}
   adamw_wd          : ${adamw_wd}
   bn_alpha          : ${bn_alpha}
+  bn_momentum       : ${BNm}
   freeze_bn_affine  : ${freeze_bn_affine}  # I think this always needs to be true, unless greater instability is wanted.
 
   # Epochs

@@ -19,8 +19,23 @@ class AttBNTrainingExecutor(TrainingExecutor):
         self.bn_alpha = cfg.model.train.get("bn_alpha", 0.0)
         self.freeze_bn_affine = cfg.model.train.get("freeze_bn_affine", False)
 
+        raw = cfg.model.train.get("bn_momentum", 0.1)
+        if raw is None or (isinstance(raw, str) and raw.strip().lower() == "none"):
+            self.bn_momentum = None          # PyTorch cumulative average
+        else:
+            self.bn_momentum = float(raw)
+
     def _prepare_model(self, model):
         set_bn_alpha(model, self.bn_alpha)
+
+        for m in model.modules():
+            # if isinstance(m, _AttenuatedBNMixin):
+            #     m.momentum = self.bn_momentum
+            if isinstance(m, torch.nn.modules.batchnorm._BatchNorm):
+                m.momentum = self.bn_momentum
+        logger.info(f"set bn momentum to {self.bn_momentum!r} (None = cumulative) "
+                    f"on attenuated BN layers")
+
         if self.freeze_bn_affine:
             n = 0
             for m in model.modules():
@@ -32,6 +47,7 @@ class AttBNTrainingExecutor(TrainingExecutor):
                     n += 1
             logger.info(f"froze affine (gamma/beta) on {n} attenuated BN layers")
         self._audit_norms(model)
+        self._log_bn_stat_norms(model, "at init, pre-load")        
 
     def prep_training_state(self, model, optimizer, scheduler):
         if not self.use_warmstart:
@@ -45,6 +61,7 @@ class AttBNTrainingExecutor(TrainingExecutor):
         
         warmstart_path = self.name_tracker.path(path_template=self.warmstart_path)
         self.in_resume_model.handler.read(path=warmstart_path, model=model, strict=False)
+        self._log_bn_stat_norms(model, "after warmstart load")
 
         with self.name_tracker.set_context("epoch", "init"):
             self.out_model.write(model=model, epoch="init")
@@ -65,6 +82,24 @@ class AttBNTrainingExecutor(TrainingExecutor):
         return pre
 
     def _audit_norms(self, model):
-        n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
-        n_bn  = sum(1 for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d) and not isinstance(m, _AttenuatedBNMixin))
-        logger.info(f"norm audit: {n_abn} attenuated BN (alpha={[m.alpha for m in model.modules() if isinstance(m, _AttenuatedBNMixin)][:3]}), {n_bn} plain BN")
+        abns = [m for m in model.modules() if isinstance(m, _AttenuatedBNMixin)]
+        n_bn  = sum(1 for m in model.modules()
+                if isinstance(m, torch.nn.BatchNorm2d) and not isinstance(m, _AttenuatedBNMixin))
+        logger.info(
+            f"norm audit: {len(abns)} attenuated BN "
+            f"(alpha={[m.alpha for m in abns][:3]}, momentum={[m.momentum for m in abns][:3]}), "
+            f"{n_bn} plain BN"
+        )
+
+    def _log_bn_stat_norms(self, model, tag):
+        abns = [m for m in model.modules() if isinstance(m, torch.nn.modules.batchnorm._BatchNorm)]
+        if not abns:
+            return
+        rm = sum(float(m.running_mean.norm()) for m in abns)
+        rv = sum(float(m.running_var.norm()) for m in abns)
+        logger.info(f"BN stat norms [{tag}]: sum|running_mean|={rm:.6g}  sum|running_var|={rv:.6g}")
+
+    def record_and_checkpoint(self, model, optimizer, epoch, tm, vm, best_valid_loss):
+        if (epoch + 1) % 10 == 0:
+            self._log_bn_stat_norms(model, f"epoch {epoch + 1}")
+        super().record_and_checkpoint(model, optimizer, epoch, tm, vm, best_valid_loss)
