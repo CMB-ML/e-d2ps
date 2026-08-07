@@ -49,9 +49,9 @@ class AttBNTrainingExecutor(TrainingExecutor):
         with self.name_tracker.set_context("epoch", "init"):
             self.out_model.write(model=model, epoch="init")
 
-        self._warmstart_gate(model)
+        initial_best_loss = self._warmstart_gate(model)
 
-        is_continuation, start_epoch, initial_best_loss = False, 0, None
+        is_continuation, start_epoch = False, 0
 
         return is_continuation, start_epoch, initial_best_loss
 
@@ -60,8 +60,9 @@ class AttBNTrainingExecutor(TrainingExecutor):
         valid_dl = self._make_dataloader(
             self.set_up_dataset(self.splits.get("valid")), shuffle=False, label="gate")
         pre, _ = evaluate(model=model, dataloader=valid_dl, loss_function=loss_function,
-                        post=self.scale_ps.postprocess, device=self.device, dtype=self.dtype)
+                          post=self.scale_ps.postprocess, device=self.device, dtype=self.dtype)
         logger.info(f"WARM-START GATE pre-train valid_pre: {pre:.02e}")
+        return pre
 
     def _audit_norms(self, model):
         n_abn = sum(1 for m in model.modules() if isinstance(m, _AttenuatedBNMixin))
