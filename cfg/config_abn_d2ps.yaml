@@ -14,7 +14,7 @@ defaults:
 
 dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_BNm/BNm_${bn_momentum}-freeze_${freeze_bn_affine}-scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
+working_dir        : &wd "${features_type}2ps_BNm_wildhare1/BNm_${bn_momentum}-freeze_${freeze_bn_affine}-scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
 # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 
 model_name_base    : "BNm: ${bn_momentum} Freeze BN Affine: ${freeze_bn_affine} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
