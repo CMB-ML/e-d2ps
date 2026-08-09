@@ -5,8 +5,8 @@ scale_px: minmax_global
 optimizer: AdamW
 norm_kind: bn
 activation: gelu
-down_reductions: XXXXXXXXX
-spatial_reduction: max
+down_reductions: mmmmmmmmm
+spatial_reduction: avg
 dropout_pos_enc: post_pool
 dropout_type_enc: drop2d
 dropout_rate: 0.1
