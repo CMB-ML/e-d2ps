@@ -9,7 +9,7 @@ down_reductions: XXXXXXXXX
 spatial_reduction: max
 # dropout_pos_enc: post_pool
 # dropout_type_enc: drop2d
-# dropout_rate: 0.0
+dropout_rate: 0.0
 # dropout_paradigm_name: no_drop
 learning_rate_final: 1e-3
 freeze_bn_affine: false
