@@ -64,6 +64,8 @@ train:
   bn_alpha          : ${bn_alpha}
   bn_momentum       : ${bn_momentum}
   freeze_bn_affine  : ${freeze_bn_affine}
+  bn_recompute_epochs: ${bn_recompute_epochs}
+  bn_recompute_max_batches: ${bn_recompute_max_batches}
 
   # Epochs
   n_epochs          : ${num_epochs}

@@ -16,6 +16,7 @@ from d2ps_nn.utils.loss import get_loss
 from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
+from d2ps_nn.models.bn_recompute import recompute_bn_stats
 
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,22 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.track_grad_norm = cfg.get("track_grad_norm", False)
         self.n_epoch_digits = len(str(self.n_epochs))
 
+        raw_momentum = cfg.model.train.get("bn_momentum", 0.1)
+        if raw_momentum is None or (
+            isinstance(raw_momentum, str) and raw_momentum.strip().lower() == "none"
+        ):
+            self.bn_momentum = None
+        else:
+            self.bn_momentum = float(raw_momentum)
+ 
+        # Fully recompute BN running stats over the training set after each of
+        # the first N epochs. Needed from scratch, where a low momentum leaves
+        # buffers uncalibrated for many epochs. 0 disables.
+        self.bn_recompute_epochs = int(cfg.model.train.get("bn_recompute_epochs", 0))
+        self.bn_recompute_max_batches = cfg.model.train.get(
+            "bn_recompute_max_batches", None
+        )
+
     def get_pos_enc_lut(self):
         if not self.use_pos_enc_lut:
             return None
@@ -154,8 +171,33 @@ class TrainingExecutor(BaseD2PSExecutor):
             self.out_model.write(model=model, optimizer=optimizer, best_loss=best_valid_loss, epoch="final")
 
     def _prepare_model(self, model):
-        """Hook: structural model prep (alpha, freezing) that must precede optimizer construction."""
-        pass
+        """
+        Structural model prep that must precede optimizer construction
+        (get_optimizer reads requires_grad). Subclasses should call super().
+        """
+        bns = [m for m in model.modules()
+               if isinstance(m, torch.nn.modules.batchnorm._BatchNorm)]
+        if bns:
+            for m in bns:
+                m.momentum = self.bn_momentum
+            logger.info(
+                f"set bn momentum to {self.bn_momentum!r} (None = cumulative) "
+                f"on {len(bns)} BatchNorm layer(s)"
+            )
+
+    def _log_bn_stat_norms(self, model, tag):
+        """Summed norms of BN running stats; identical values across epochs
+        prove the buffers are frozen."""
+        bns = [m for m in model.modules()
+               if isinstance(m, torch.nn.modules.batchnorm._BatchNorm)]
+        if not bns:
+            return
+        rm = sum(float(m.running_mean.norm()) for m in bns)
+        rv = sum(float(m.running_var.norm()) for m in bns)
+        logger.info(
+            f"BN stat norms [{tag}]: sum|running_mean|={rm:.6g}  "
+            f"sum|running_var|={rv:.6g}"
+        )
 
     def build_dataloaders(self):
         train_split = self.splits.get("train")
@@ -359,7 +401,25 @@ class TrainingExecutor(BaseD2PSExecutor):
         else:
             mean_gn = None
             max_gn = None
-        return TrainMetrics(batch_loss=batch_loss, mean_grad_norm=mean_gn, max_grad_norm=max_gn)
+ 
+        if epoch < self.bn_recompute_epochs:
+            self._log_bn_stat_norms(model, f"ep {epoch + 1} pre-recompute")
+            n_used = recompute_bn_stats(
+                model,
+                train_dataloader,
+                device=self.device,
+                dtype=self.dtype,
+                max_batches=self.bn_recompute_max_batches,
+            )
+            logger.info(
+                f"recomputed BN running stats over {n_used} batches "
+                f"(epoch {epoch + 1} of first {self.bn_recompute_epochs})"
+            )
+            self._log_bn_stat_norms(model, f"ep {epoch + 1} post-recompute")
+ 
+        return TrainMetrics(batch_loss=batch_loss,
+                            mean_grad_norm=mean_gn,
+                            max_grad_norm=max_gn)
 
     def validate(self, model, train_infer_dataloader, valid_dataloader, loss_function, post, epoch):
         model.eval()

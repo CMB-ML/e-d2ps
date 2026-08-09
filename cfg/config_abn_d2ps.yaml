@@ -48,6 +48,8 @@ use_warmstart: false
 bn_alpha: ???
 freeze_bn_affine: ???
 bn_momentum: ???
+bn_recompute_epochs: 10
+bn_recompute_max_batches: null
 
 n_sims_train_full: 1000   # 512
 
