@@ -67,14 +67,14 @@ train:
 
   # Epochs
   n_epochs          : ${num_epochs}
-  restart_epoch     : 100  # Set to null to create a new model, or give a checkpoint number
+  restart_epoch     : null  # Set to null to create a new model, or give a checkpoint number
 
   # Checkpointing
-  earliest_best     : 0   # Earliest epoch to save the best model
+  earliest_best     : 10  # Earliest epoch to save the best model
                           #   when debugging with small datasets and low total epochs, 
                           #   set to 0 to allow finding a best model at the very start
   checkpoint_every  : 50  # checkpoint every this number of epochs
-  extra_check       : []  # Extra checkpoints to save
+  extra_check       : [10]  # Extra checkpoints to save
   # Above will output checkpoints at epochs 1, 2, 3, 5, 7, 9, 10, 15, 20, ...
 
   # loss: l1
