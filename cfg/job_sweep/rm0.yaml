@@ -13,5 +13,5 @@ dropout_rate: 0.0
 dropout_paradigm_name: no_drop
 learning_rate_final: 1e-3
 freeze_bn_affine: false
-bn_momentum: 0.01
+bn_momentum: 0.004
 bn_alpha: 0.0
