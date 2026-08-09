@@ -14,10 +14,10 @@ defaults:
 
 dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
 # SimpleEncDec
-working_dir        : &wd "${features_type}2ps_warm_aBN3/aBN_${bn_alpha}-BNm_${BNm}-freeze_${freeze_bn_affine}-scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
+working_dir        : &wd "${features_type}2ps_BNm/BNm_${bn_momentum}-freeze_${freeze_bn_affine}-scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
 # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 
-model_name_base    : "aBN: ${bn_alpha} freeze_affine: ${freeze_bn_affine} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
+model_name_base    : "BNm: ${bn_momentum} Freeze BN Affine: ${freeze_bn_affine} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
 fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, ${model_name_base}"
 # fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${face_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
@@ -43,18 +43,18 @@ sigma_scale: 1
 ################################################################
 #                                                              #
 ################################################################
-use_warmstart: true
-warmstart_path: "{root}/{dataset}/obs2ps_polyfit_drop2/drop_no_drop_scale_ps_none-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/F_Model/model_best_ep79.pth"
+use_warmstart: false
+# warmstart_path: "{root}/{dataset}/obs2ps_polyfit_drop2/drop_no_drop_scale_ps_none-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/F_Model/model_best_ep79.pth"
 bn_alpha: ???
-freeze_bn_affine: true
-BNm: 0.0
+freeze_bn_affine: ???
+bn_momentum: ???
 
 n_sims_train_full: 1000   # 512
 
 # # Normal training scheme
 n_sims_train: 1000
 n_sims_train_infer: 200
-num_epochs: 50
+num_epochs: 100
 
 # dropout_rate: ???          # 9 layers + 2 for decoder
 # dropout_pos_enc: ???
@@ -64,9 +64,9 @@ num_epochs: 50
 model_num: 1
 model_num_sweep: 1
 
-scale_px: minmax_local
+scale_px: ???
 
-scale_ps: meanstdv
+scale_ps: ???
 
 spectrum_layer_kind: polynomial  # 'identity' (spectrum), 'poylnomial', or 'cosmo_param'
 return_mode: spectrum
@@ -79,31 +79,30 @@ model_fn_template  : ${features_type}2ps_${nn_model}_${spectrum_layer_kind}${deg
 use_pos_enc_lut: false
 use_pos_enc_lut_sweep: false
 
-optimizer: Adam
+optimizer: ???
 adamw_wd : 0.01  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.01
 
-learning_rate_start: 1e-8
-
-learning_rate_final: 2e-4
+learning_rate_final: ???
 # learning_rate_final_sweep: 2e-4
 
+learning_rate_start: 1e-8  # With rate ramp epochs=0, this is inconsequential
 learning_rate_ramp_epochs: 0
 # learning_rate_ramp_epochs_sweep: 0
 
 ## Models: Either 
 nn_model: SimpleEncDec
 px_arrange: cmbNNCS
-norm_kind: gn
+norm_kind: ???
 # norm_sweep: bn
 # Down reductions use X/m strings: X is max, m is avg; 
 #   order starts with first/top layer and fills down 
 #   XmX would be Max, Avg, Max, and the rest Avg
-down_reductions: mmmmmmmmm
+down_reductions: ???
 # down_reductions_sweep: mmmmmmm
-spatial_reduction: avg
+spatial_reduction: ???
 # spatial_reduction_sweep: avg
-activation: gelu
+activation: ???
 # activation_sweep: relu
 
 # ### Or

@@ -4,6 +4,7 @@ defaults:
   - _self_
 
 hydra:
+  mode: MULTIRUN
   sweeper:
     params:
       run_inference_on: test, valid, train

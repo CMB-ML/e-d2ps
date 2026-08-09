@@ -1,12 +1,12 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
   - config_abn_d2ps
-  - job_sweep: r22
+  - job_sweep: rm0
   - override pipeline: assembly_on_sims_sepprep
   - _self_
 
 hydra:
-  mode: MULTIRUN
+  # mode: MULTIRUN
   run:
     dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
   sweep:
@@ -14,11 +14,12 @@ hydra:
     subdir     : ${hydra.job.num}               # Subsequent jobs will include duplicate logs for all previous jobs. 
                                                 #   This is a minor bug, not worth fixing.
   verbose      : false
-  sweeper:
-    params:
-      learning_rate_final: 1e-4
-      freeze_bn_affine: true, false
-      bn_alpha: 0.0
+  # sweeper:
+  #   params:
+  #     learning_rate_final: 1e-3
+  #     freeze_bn_affine: false
+  #     bn_momentum: 0.004
+  #     bn_alpha: 0.0
       # learning_rate_final: 1e-4, 1e-5
       # freeze_bn_affine: true, false
       # bn_alpha: 0.0, 0.1
