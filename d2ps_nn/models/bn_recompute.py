@@ -2,6 +2,8 @@ import logging
 
 import torch
 import torch.nn as nn
+from tqdm import tqdm
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,8 @@ def recompute_bn_stats(model, dataloader, device, dtype, max_batches=None):
 
     n = 0
     try:
-        for features, _ in dataloader:
+        total = len(dataloader) if max_batches is None else min(max_batches, len(dataloader))
+        for features, _ in tqdm(dataloader, total=total, desc="BN recompute", leave=False):
             if max_batches is not None and n >= max_batches:
                 break
             model(features.to(device=device, dtype=dtype))
