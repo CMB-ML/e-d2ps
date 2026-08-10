@@ -178,39 +178,43 @@ class BatchNormCheckExecutor(BaseD2PSExecutor):
 
         post = self.scale_ps.postprocess
 
-        # # Test 1: recompute buffers over full train, weights frozen
-        # logger.info("\n\n\nRunning Test 1...")
-        # model = self.init_model()
-        # with self.name_tracker.set_context("epoch", "best"):
-        #     record = self.in_resume_model.read(model=model, epoch="best")
-        # if isinstance(record, dict):
-        #     logger.info(f"Loaded 'best' checkpoint: epoch={record.get('epoch')} "
-        #                 f"best_loss={record.get('best_loss')}")
+        # Test 1: recompute buffers over full train, weights frozen
+        logger.info("\n\n\nRunning Test 1...")
+        model = self.init_model()
+        with self.name_tracker.set_context("epoch", "best"):
+            model_path = self.in_resume_model.path
+            logger.info(f"Loaded model: {model_path}")
+            record = self.in_resume_model.read(model=model, epoch="best")
+        if isinstance(record, dict):
+            logger.info(f"Loaded checkpoint: epoch={record.get('epoch')} "
+                        f"best_loss={record.get('best_loss')}")
             
-        # # baseline: online EMA buffers as saved at "best" (epoch 75)
-        # model.eval()
-        # base_val_pre, base_val_pst = evaluate(model, valid_dataloader,       loss_function, post, self.device, self.dtype)
-        # base_trn_pre, base_trn_pst = evaluate(model, train_infer_dataloader, loss_function, post, self.device, self.dtype)
+        # baseline: online EMA buffers as saved at "best" (epoch 75)
+        model.eval()
+        base_val_pre, base_val_pst = evaluate(model, valid_dataloader,       loss_function, post, self.device, self.dtype)
+        base_trn_pre, base_trn_pst = evaluate(model, train_infer_dataloader, loss_function, post, self.device, self.dtype)
 
-        # # deployable buffers: recompute over full training data, weights frozen
-        # reset_bn(model, cumulative=True)
-        # recompute_bn(model, train_dataloader, self.device, self.dtype)
-        # rcmp_val_pre, rcmp_val_pst = evaluate(model, valid_dataloader,       loss_function, post, self.device, self.dtype)
-        # rcmp_trn_pre, rcmp_trn_pst = evaluate(model, train_infer_dataloader, loss_function, post, self.device, self.dtype)
+        # deployable buffers: recompute over full training data, weights frozen
+        reset_bn(model, cumulative=True)
+        recompute_bn(model, train_dataloader, self.device, self.dtype)
+        rcmp_val_pre, rcmp_val_pst = evaluate(model, valid_dataloader,       loss_function, post, self.device, self.dtype)
+        rcmp_trn_pre, rcmp_trn_pst = evaluate(model, train_infer_dataloader, loss_function, post, self.device, self.dtype)
 
-        # logger.info(
-        #     "Test 1 (recompute buffers, weights frozen):\n"
-        #     f"  val   pre : base={base_val_pre:.4e}  recomp={rcmp_val_pre:.4e}\n"
-        #     f"  val   post: base={base_val_pst:.4e}  recomp={rcmp_val_pst:.4e}\n"
-        #     f"  train pre : base={base_trn_pre:.4e}  recomp={rcmp_trn_pre:.4e}\n"
-        #     f"  train post: base={base_trn_pst:.4e}  recomp={rcmp_trn_pst:.4e}"
-        # )
+        logger.info(
+            "Test 1 (recompute buffers, weights frozen):\n"
+            f"  val   pre : base={base_val_pre:.4e}  recomp={rcmp_val_pre:.4e}\n"
+            f"  val   post: base={base_val_pst:.4e}  recomp={rcmp_val_pst:.4e}\n"
+            f"  train pre : base={base_trn_pre:.4e}  recomp={rcmp_trn_pre:.4e}\n"
+            f"  train post: base={base_trn_pst:.4e}  recomp={rcmp_trn_pst:.4e}"
+        )
 
         # Test 2: buffer redraw spread (error bar; keep none of these models)
         logger.info("\n\n\nRunning Test 2...")
         base_model = self.init_model()
         with self.name_tracker.set_context("epoch", "best"):
             self.in_resume_model.read(model=base_model, epoch="best")
+            model_path = self.in_resume_model.path
+            logger.info(f"Loaded model: {model_path}")
 
         draws_pre, draws_pst = redraw_spread(
             base_model, train_dataset, valid_dataloader,
@@ -224,6 +228,55 @@ class BatchNormCheckExecutor(BaseD2PSExecutor):
                     f"min={draws_pre.min():.4e} max={draws_pre.max():.4e}")
         logger.info(f"redraw val post: mean={draws_pst.mean():.4e} std={draws_pst.std():.4e} "
                     f"min={draws_pst.min():.4e} max={draws_pst.max():.4e}")
+
+
+        # Test 3: 
+        logger.info("\n\n\nRunning Test 3...")
+        model3 = self.init_model()
+        with self.name_tracker.set_context("epoch", self.restart_epoch):
+            model_path = self.in_resume_model.path
+            logger.info(f"Loaded model: {model_path}")
+            rec3 = self.in_resume_model.read(model=model3, epoch=self.restart_epoch)
+        logger.info(f"Test 3 loaded checkpoint: epoch={rec3.get('epoch')}")
+
+        # Give it good buffers first, so eval mode is not handicapped by
+        # staleness -- we want the mode difference, not a buffer artifact.
+        reset_bn(model3, cumulative=True)
+        recompute_bn(model3, train_dataloader, self.device, self.dtype)
+        rm_before, rv_before = bn_buffer_checksum(model3)
+
+        # (a) eval mode: running stats (dataset-wide)
+        ev_trn_pre, ev_trn_pst = evaluate(
+            model3, train_infer_dataloader, loss_function, post,
+            self.device, self.dtype)
+        ev_val_pre, ev_val_pst = evaluate(
+            model3, valid_dataloader, loss_function, post,
+            self.device, self.dtype)
+
+        # (b) train mode: per-batch stats, same weights, buffers untouched
+        tm_trn_pre, tm_trn_pst = evaluate_train_mode(
+            model3, train_infer_dataloader, loss_function, post,
+            self.device, self.dtype)
+        tm_val_pre, tm_val_pst = evaluate_train_mode(
+            model3, valid_dataloader, loss_function, post,
+            self.device, self.dtype)
+
+        rm_after, rv_after = bn_buffer_checksum(model3)
+        logger.info(
+            f"buffer checksum before={rm_before:.6g}/{rv_before:.6g}  "
+            f"after={rm_after:.6g}/{rv_after:.6g}  "
+            f"(must match -- train-mode eval must not update buffers)"
+        )
+
+        logger.info(
+            "Test 3 (same weights, recomputed buffers; only BN mode differs):\n"
+            f"  train  eval-mode (running stats): {ev_trn_pre:.4e}\n"
+            f"  train train-mode (batch stats)  : {tm_trn_pre:.4e}"
+            f"   -> ratio {ev_trn_pre / tm_trn_pre:.2f}x\n"
+            f"  valid  eval-mode (running stats): {ev_val_pre:.4e}\n"
+            f"  valid train-mode (batch stats)  : {tm_val_pre:.4e}"
+            f"   -> ratio {ev_val_pre / tm_val_pre:.2f}x"
+        )
 
     def set_up_dataset(self, split: Split, early_stop: int=None) -> None:
         context = dict(px_arrange=self.px_arrange, scale=self.scale_px)
@@ -336,3 +389,65 @@ def _get_global_grad_norm(model, norm_type=2.0):
     if not vals:
         return 0.0
     return torch.norm(torch.stack(vals), norm_type).item()
+
+
+# =============================================================================
+# Test 3: train-mode (batch stats) vs eval-mode (running stats)
+#
+# Same weights, same data, no parameter updates. The ONLY difference is which
+# statistics normalize the activations. This isolates the functional gap
+# between the two modes from every other confound:
+#   - no within-epoch weight movement (weights are frozen)
+#   - no stale buffers (recomputed first)
+#   - same dataset, same batches, same order
+#
+# Add these two functions at module level, then the block inside execute().
+# =============================================================================
+
+
+@torch.no_grad()
+def evaluate_train_mode(model, dataloader, loss_function, post, device, dtype):
+    """
+    Loss with BN normalizing by CURRENT-BATCH statistics, weights frozen.
+
+    Mirrors how `Batch Loss` is computed during training, but at fixed weights.
+    BN running stats would normally be updated by a train-mode forward pass, so
+    momentum is forced to 0.0 for the duration to leave the buffers untouched.
+    Dropout is kept OFF (model.eval()) so only the BN mode differs.
+    """
+    bns = _bn_modules(model)
+    saved = [(m.momentum, m.training) for m in bns]
+
+    model.eval()                 # dropout off
+    for m in bns:
+        m.momentum = 0.0         # train-mode forward, but do NOT touch buffers
+        m.train()                # use batch statistics
+
+    pre_loss = 0.0
+    pst_loss = 0.0
+    n_batches = 0
+    try:
+        for features, label in tqdm(dataloader, leave=False):
+            features = features.to(device=device, dtype=dtype)
+            label = label.to(device=device, dtype=dtype)
+            output = model(features)
+            pre_loss += loss_function(output, label).item()
+            pst_loss += loss_function(post(output), post(label)).item()
+            n_batches += 1
+    finally:
+        for m, (mom, was_training) in zip(bns, saved):
+            m.momentum = mom
+            m.train(was_training)
+        model.eval()
+
+    return pre_loss / n_batches, pst_loss / n_batches
+
+
+@torch.no_grad()
+def bn_buffer_checksum(model):
+    """Summed norms of BN running stats -- to verify train-mode eval left them
+    unchanged."""
+    bns = _bn_modules(model)
+    rm = sum(float(m.running_mean.norm()) for m in bns)
+    rv = sum(float(m.running_var.norm()) for m in bns)
+    return rm, rv
