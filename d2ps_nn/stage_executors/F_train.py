@@ -375,6 +375,9 @@ class TrainingExecutor(BaseD2PSExecutor):
         
         return is_continuation, start_epoch, initial_best_loss
 
+    train_metrics_cls = TrainMetrics
+    valid_metrics_cls = ValidMetrics
+
     def build_loss_schema(self) -> RecordSchema:
         """The scalar, one-row-per-epoch record.
  
