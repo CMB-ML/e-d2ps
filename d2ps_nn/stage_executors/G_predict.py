@@ -66,32 +66,57 @@ class PredictExecutor(BaseD2PSExecutor):
         self._model_epochs = get_epochs_with_best(self._model_epochs, self.in_model_asset, self.name_tracker)
         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        for model_epoch in self.model_epochs:
-            context_dict = dict(epoch=model_epoch)  
-            with self.name_tracker.set_contexts(context_dict):
-                logger.info(f"Will get model from {self.in_model_asset.path}")
-
         self.model = self.init_model()
         self.model.eval().to(self.device)
 
-        with torch.no_grad():  # We don't need gradients for prediction
-            for model_epoch in self.model_epochs:
+        with torch.no_grad():
+            for requested_epoch in self.model_epochs:
+                label, concrete = self._resolve_epoch(requested_epoch)
+                with self.name_tracker.set_context("epoch", concrete):
+                    self.in_model_asset.read(model=self.model, epoch=concrete)
+                logger.info("Model loaded: %s (labeled '%s')", concrete, label)
+
                 for split in self.splits:
-                    context_dict = dict(split=split.name, epoch=model_epoch)
-                    with self.name_tracker.set_contexts(context_dict):
-                        logger.info(f"Getting model from {self.in_model_asset.path}")
-                        try:
-                            self.in_model_asset.read(model=self.model, epoch=model_epoch)
-                        except FileNotFoundError as e:
-                            if model_epoch != "best":
-                                raise  # numbered / final / init / explicit best_ep## have no fallback
-                            model_dir = self.in_model_asset.path.parent
-                            fallback_epoch = self._find_latest_best_checkpoint(model_dir)
-                            logger.info(
-                                "model_best.pth not found; falling back to %s", fallback_epoch
-                            )
-                            self.in_model_asset.read(model=self.model, epoch=fallback_epoch)
-                        self.process_split(split, model_epoch)
+                    with self.name_tracker.set_contexts(dict(split=split.name, epoch=label)):
+                        self.process_split(split, label)
+
+    def _resolve_epoch(self, requested_epoch: str) -> tuple[str, str]:
+        """Map a requested epoch to (label, concrete).
+
+        label    -> what outputs are tagged with (the request; stable for downstream)
+        concrete -> which checkpoint file actually gets loaded
+
+        Identical for everything except "best", which prefers an explicit
+        model_best.pth and otherwise resolves to the newest model_best_ep_##.pth.
+        """
+        if requested_epoch != "best":
+            return requested_epoch, requested_epoch
+
+        with self.name_tracker.set_context("epoch", "best"):
+            if self.in_model_asset.path.exists():
+                return "best", "best"
+            model_dir = self.in_model_asset.path.parent
+
+        concrete = self._find_latest_best_checkpoint(model_dir)
+        logger.info("model_best.pth not found; 'best' resolves to %s", concrete)
+        return "best", concrete
+
+    def _find_latest_best_checkpoint(self, model_dir: Path) -> str:
+        """Return the epoch token for the highest-numbered model_best_ep checkpoint,
+        e.g. 'best_ep14' or 'best_ep_114' — whichever the file on disk uses.
+        Derived from the actual filename so it round-trips through model_{epoch}.pth.
+        """
+        pattern = re.compile(r"model_best_ep_?(\d+)\.pth$")   # tolerate optional underscore
+        best_path, best_ep = None, -1
+        for p in model_dir.glob("model_best_ep*.pth"):        # glob w/o underscore too
+            if (m := pattern.search(p.name)) and (ep := int(m.group(1))) > best_ep:
+                best_path, best_ep = p, ep
+        if best_path is None:
+            raise FileNotFoundError(
+                f"No 'best' checkpoint in {model_dir}: neither model_best.pth "
+                f"nor any model_best_ep##.pth was found."
+            )
+        return best_path.stem.removeprefix("model_")          # 'model_best_ep14' -> 'best_ep14'
 
     def process_split(self, split, epoch) -> None:
         dataset = self.set_up_dataset(split)
@@ -134,21 +159,3 @@ class PredictExecutor(BaseD2PSExecutor):
         with self.name_tracker.set_context("style", self.lut_style):
             pos_enc_lut = self.in_pos_enc_lut.read() 
         return pos_enc_lut
-
-
-    def _find_latest_best_checkpoint(self, model_dir: Path) -> str:
-        """Given directory for trained models, return an epoch
-        string like 'best_ep79' for the highest-numbered model_best_ep##.pth.
-        Raises FileNotFoundError if none exist."""
-        pattern = re.compile(r"model_best_ep(\d+)\.pth$")
-        epochs = [
-            int(m.group(1))
-            for p in model_dir.glob("model_best_ep*.pth")
-            if (m := pattern.search(p.name))
-        ]
-        if not epochs:
-            raise FileNotFoundError(
-                f"No 'best' checkpoint in {model_dir}: neither model_best.pth "
-                f"nor any model_best_ep##.pth was found."
-            )
-        return f"best_ep{max(epochs)}"
