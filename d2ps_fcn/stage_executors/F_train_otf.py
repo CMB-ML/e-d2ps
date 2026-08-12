@@ -50,8 +50,8 @@ def _fmt_diag(vals):
 
 class TrainOTFExecutor(BaseOTFExecutor):
     def __init__(self, cfg: DictConfig, stage_str="train_otf") -> None:
+        raise NotImplementedError("Fix the loss record header order.")  # Search for this raise below.
         super().__init__(cfg, stage_str=stage_str)
-
         # Assets
         self.in_valid_map:     Asset = self.assets_in["valid_map"]
         self.in_map_stats:     Asset = self.assets_in["cmb_stats"]
@@ -179,6 +179,8 @@ class TrainOTFExecutor(BaseOTFExecutor):
 
         loss_function = torch.nn.MSELoss(reduction='mean').to(self.device)
         optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate)
+
+        raise NotImplementedError("Fix the loss record header order.")
 
         loss_record_headers = [
             'Epoch', 'Batch Loss',
