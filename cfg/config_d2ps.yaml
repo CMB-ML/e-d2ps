@@ -40,6 +40,8 @@ pipeline:
         path_template: "{root}/{dataset}/True/Analysis_Bundle/true_{split}.npy"
 sigma_scale: 1
 
+bn_momentum: 0.1
+bn_alpha: 0.0
 
 ################################################################
 #                                                              #
