@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset
-from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
+from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler, NpzHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from d2ps_nn.models import BaseD2PSExecutor
 from d2ps_nn.utils.loss import get_loss
@@ -17,6 +17,9 @@ from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
 from d2ps_nn.models.bn_recompute import recompute_bn_stats
+from d2ps_nn.utils.metrics_record import ColumnSpec, RecordSchema, metric, specs_from
+from d2ps_nn.utils.ell_metrics_recorder import EllMetricsRecorder
+from d2ps_nn.utils.metrics_record import EllStatsAccumulator
 
 
 logger = logging.getLogger(__name__)
@@ -24,17 +27,22 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class TrainMetrics:
-    batch_loss: float
-    mean_grad_norm: Optional[float]
-    max_grad_norm: Optional[float]
-
-
+    batch_loss:     float           = metric("Batch Loss")
+    mean_grad_norm: Optional[float] = metric("Mean Grad Norm", enabled_by="track_grad_norm")
+    max_grad_norm:  Optional[float] = metric("Max Grad Norm",  enabled_by="track_grad_norm")
+  
 @dataclass(frozen=True)
 class ValidMetrics:
-    train_pre_loss:float
-    valid_pre_loss:float
-    train_pst_loss:float
-    valid_pst_loss:float
+    valid_pre_loss: float = metric("Validation Pre Loss")
+    train_pre_loss: float = metric("Training Pre Loss")
+    valid_pst_loss: float = metric("Validation Loss")
+    train_pst_loss: float = metric("Training Loss")
+
+# Two columns that come from neither of the Metrics dataclass. Declared here so 
+# they live in the same ordered list as everything else rather than being
+# spliced in by hand at two separate call sites.
+EPOCH_COLUMN = ColumnSpec(name="epoch", header="Epoch")
+LR_COLUMN = ColumnSpec(name="learning_rate", header="Learning Rate")
 
 
 class TrainingExecutor(BaseD2PSExecutor):
@@ -44,8 +52,12 @@ class TrainingExecutor(BaseD2PSExecutor):
         # What comes out
         self.out_model: Asset = self.assets_out["model"]
         self.out_loss_record: Asset = self.assets_out["loss_record"]
+        self.out_ell_record: Asset = self.assets_out["ell_record"]
+        self.out_trgt_stats: Asset = self.assets_out["trgt_stats"]
         out_model_handler: PyTorchModel
         out_loss_record: AppendingCsvHandler
+        out_ell_record: AppendingCsvHandler
+        out_trgt_stats: NpzHandler
 
         # What goes in
         self.in_trgt_asset: Asset = self.assets_in["cmb_ps"]
@@ -95,6 +107,14 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         self.track_grad_norm = cfg.get("track_grad_norm", False)
         self.n_epoch_digits = len(str(self.n_epochs))
+
+        self.ell_recorder = EllMetricsRecorder(
+            enabled=cfg.model.train.get("track_ell_metrics", False),
+            ells=self.ells,
+            record_asset=self.out_ell_record,
+            ref_asset=self.out_trgt_stats,
+            device=self.device,
+        )
 
         raw_momentum = cfg.model.train.get("bn_momentum", 0.1)
         if raw_momentum is None or (
@@ -338,7 +358,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             else:
                 initial_best_loss = None
                 logger.warning("Restarting without a stored best loss; 'best' checkpoints "
-                            "will be judged only against epochs from this run.")
+                               "will be judged only against epochs from this run.")
             is_continuation = True
         elif self.random_init:
             logger.info(f"Starting new, randomly initialized model.")
@@ -355,22 +375,25 @@ class TrainingExecutor(BaseD2PSExecutor):
         
         return is_continuation, start_epoch, initial_best_loss
 
+    def build_loss_schema(self) -> RecordSchema:
+        """The scalar, one-row-per-epoch record.
+ 
+        enabled_by is resolved against self, so track_grad_norm drops those
+        columns from the header and the row together.
+        """
+        specs = ([EPOCH_COLUMN]
+                 + specs_from(self.train_metrics_cls, self.valid_metrics_cls)
+                 + [LR_COLUMN])
+        return RecordSchema(specs, flags=self)
+ 
     def set_up_loss_record(self, is_continuation):
+        self.loss_schema = self.build_loss_schema()
         if is_continuation:
             self.out_loss_record.start()  # New lines will be added, naively
                                           #  Naively = appended; if resuming, manual cleaning may be needed.
         else:
-            loss_record_headers = ['Epoch', 
-                                   'Batch Loss', 
-                                   'Validation Pre Loss', 
-                                   'Training Pre Loss', 
-                                   'Validation Loss', 
-                                   'Training Loss', 
-                                   'Learning Rate']
-            if self.track_grad_norm:
-                loss_record_headers.append('Mean Grad Norm')
-                loss_record_headers.append('Max Grad Norm')
-            self.out_loss_record.write(data=loss_record_headers)
+            self.out_loss_record.write(data=self.loss_schema.headers())
+        self.ell_recorder.begin_run(is_continuation)  # no-op when disabled
 
     def train_one_epoch(self, model, train_dataloader, loss_function, optimizer, scheduler, epoch):
         epoch_grad_norm = []
@@ -380,16 +403,16 @@ class TrainingExecutor(BaseD2PSExecutor):
             for train_features, train_label in pbar:
                 train_features = train_features.to(device=self.device, dtype=self.dtype)
                 train_label = train_label.to(device=self.device, dtype=self.dtype)
-
+ 
                 optimizer.zero_grad()
                 
                 output = model(train_features)
                 batch_train_loss = loss_function(output, train_label)
                 batch_train_loss.backward()
-
+ 
                 if self.track_grad_norm:
                     epoch_grad_norm.append(_get_global_grad_norm(model))
-
+ 
                 optimizer.step()
                 scheduler.step()
                 pbar.set_postfix({'Loss': batch_train_loss.item()})
@@ -423,6 +446,11 @@ class TrainingExecutor(BaseD2PSExecutor):
 
     def validate(self, model, train_infer_dataloader, valid_dataloader, loss_function, post, epoch):
         model.eval()
+ 
+        # None when per-ell tracking is off, which evaluate() reads as
+        # "don't accumulate".
+        ell_acc = self.ell_recorder.new_accumulator()
+ 
         with torch.no_grad():
             train_pre, train_pst = evaluate(
                 model=model,
@@ -437,7 +465,11 @@ class TrainingExecutor(BaseD2PSExecutor):
                 f"train_{self.scale_ps.pre_name}: {train_pre:.02e} | "
                 f"train_{self.scale_ps.post_name}: {train_pst:.02e}"
             )
-
+ 
+            # Per-ell diagnostics come from the validation pass only: it is the
+            # fixed set the reference sidecar describes. train_infer is also
+            # fixed, but it is a different set, and mixing the two would make
+            # the drift check meaningless.
             valid_pre, valid_pst = evaluate(
                 model=model,
                 dataloader=valid_dataloader,
@@ -445,15 +477,15 @@ class TrainingExecutor(BaseD2PSExecutor):
                 post=post,
                 device=self.device,
                 dtype=self.dtype,
+                ell_accumulator=ell_acc,
             )
             # This is logged in record_and_checkpoint
-
+ 
         return ValidMetrics(
             train_pre_loss=train_pre, train_pst_loss=train_pst,
             valid_pre_loss=valid_pre, valid_pst_loss=valid_pst
         )
 
-    # record_and_checkpoint(model, optimizer, epoch, tm, vm, all_valid_pre_loss)
     def record_and_checkpoint(self, model, optimizer, epoch, 
                               tm: TrainMetrics, vm: ValidMetrics,
                               best_valid_loss):
@@ -464,21 +496,15 @@ class TrainingExecutor(BaseD2PSExecutor):
                 f"valid_{self.scale_ps.post_name}: {vm.valid_pst_loss:.02e}"
                 f"{note_min_loss}"
             )
-
-            record_line = [
-                epoch + 1, 
-                tm.batch_loss, 
-                vm.valid_pre_loss, 
-                vm.train_pre_loss, 
-                vm.valid_pst_loss, 
-                vm.train_pst_loss,
-                optimizer.param_groups[0]["lr"]            
-                ]
-            if self.track_grad_norm:
-                record_line.append(tm.mean_grad_norm)
-                record_line.append(tm.max_grad_norm)
-            self.out_loss_record.append(record_line)
-
+ 
+            extras = {"epoch": epoch + 1,
+                      "learning_rate": optimizer.param_groups[0]["lr"]}
+            self.out_loss_record.append(self.loss_schema.row(tm, vm, extras))
+ 
+            # Writes the epoch row, and on the first pass establishes the
+            # reference sidecar; on later passes checks against it.
+            self.ell_recorder.record(epoch)
+ 
             is_best_condition_a = vm.valid_pre_loss == best_valid_loss
             is_best_condition_b = epoch >= self.earliest_best
             if is_best_condition_a and is_best_condition_b:
@@ -488,7 +514,7 @@ class TrainingExecutor(BaseD2PSExecutor):
                                          best_loss=best_valid_loss,
                                          optimizer=optimizer
                                          )
-
+ 
             # Checkpoint every so many epochs
             condition_a = (epoch + 1) in self.extra_check
             condition_b = (epoch + 1) % self.checkpoint == 0
@@ -499,29 +525,37 @@ class TrainingExecutor(BaseD2PSExecutor):
                                          best_loss=best_valid_loss,
                                          epoch=epoch + 1)
 
-def evaluate(model, dataloader, loss_function, post, device, dtype):
+
+def evaluate(model, dataloader, loss_function, post, device, dtype,
+             ell_accumulator: Optional[EllStatsAccumulator] = None):
     pre_loss = 0.0
     pst_loss = 0.0
-
+ 
     model.eval()
-
-    with torch.inference_mode():
+ 
+    # inference_mode tags its outputs as inference tensors, which cannot be
+    # read back out afterwards; fall back to no_grad when accumulating.
+    ctx = torch.no_grad() if ell_accumulator is not None else torch.inference_mode()
+ 
+    with ctx:
         for features, label in tqdm(dataloader, leave=False):
             features = features.to(device=device, dtype=dtype)
             label = label.to(device=device, dtype=dtype)
-
+ 
             output = model(features)
-
+            output_pst = post(output)
+            label_pst = post(label)
+ 
             pre_loss += loss_function(output, label).item()
-            pst_loss += loss_function(
-                post(output),
-                post(label),
-            ).item()
-
+            pst_loss += loss_function(output_pst, label_pst).item()
+ 
+            if ell_accumulator is not None:
+                ell_accumulator.update(output_pst, label_pst)
+ 
     n_batches = len(dataloader)
     return pre_loss / n_batches, pst_loss / n_batches
-
-
+ 
+ 
 def _get_global_grad_norm(model, norm_type=2.0):
     vals = [
         p.grad.detach().norm(norm_type)
@@ -531,3 +565,4 @@ def _get_global_grad_norm(model, norm_type=2.0):
     if not vals:
         return 0.0
     return torch.norm(torch.stack(vals), norm_type).item()
+ 
