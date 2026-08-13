@@ -79,9 +79,27 @@ class EllMetricsRecorder:
 
         have_assets = record_asset is not None and ref_asset is not None
         self.enabled = bool(enabled) and have_assets and self.n_ells > 0
-        if bool(enabled) and not self.enabled:
+
+        # Announce the state either way. A recorder that is off produces no
+        # files and no rows, which is indistinguishable from one that is broken
+        # unless it says so.
+        if self.enabled:
+            logger.info(f"per-ell tracking ENABLED for {self.n_ells} ells")
+        elif not bool(enabled):
+            logger.info(
+                "per-ell tracking DISABLED (enabled=False); no ell records will "
+                "be written. Check the config key this flag is read from."
+            )
+        else:
+            reasons = []
+            if record_asset is None:
+                reasons.append("no record asset")
+            if ref_asset is None:
+                reasons.append("no reference asset")
+            if self.n_ells == 0:
+                reasons.append("empty ell grid")
             logger.warning(
-                "per-ell tracking requested but assets or ells are missing; disabling"
+                f"per-ell tracking requested but disabled: {', '.join(reasons)}"
             )
 
         self._epoch_schema: Optional[RecordSchema] = None
@@ -100,6 +118,9 @@ class EllMetricsRecorder:
         header = self._epoch_schema.headers(leading=("Epoch", "N"))
 
         if is_continuation:
+            # start() only points the handler at the path; it neither creates
+            # the file nor writes a header. Continuing a run whose ell record
+            # does not already exist therefore yields a headerless file.
             self._record_asset.start()
             self._reference = self._load_reference()
             if self._reference is None:
