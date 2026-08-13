@@ -547,7 +547,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             # Writes the epoch row, and on the first pass establishes the
             # reference sidecar; on later passes checks against it.
             self.ell_recorder.record(epoch)
-            self.pl_recorder.record(epoch)
+            self.pl_recorder.record(model, self.pl_obs, epoch)
 
             is_best_condition_a = vm.valid_pre_loss == best_valid_loss
             is_best_condition_b = epoch >= self.earliest_best
