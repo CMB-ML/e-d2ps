@@ -224,7 +224,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             all_valid_pst_loss.append(vm.valid_pst_loss)
 
             best_valid_loss = min(all_valid_pre_loss)
-            self.record_and_checkpoint(model, optimizer, epoch, tm, vm, best_valid_loss)
+            self.record_and_checkpoint(model, optimizer, epoch, tm, vm, best_valid_loss, post)
 
         with self.name_tracker.set_context("epoch", "final"):
             self.out_model.write(model=model, optimizer=optimizer, best_loss=best_valid_loss, epoch="final")
@@ -531,7 +531,7 @@ class TrainingExecutor(BaseD2PSExecutor):
 
     def record_and_checkpoint(self, model, optimizer, epoch, 
                               tm: TrainMetrics, vm: ValidMetrics,
-                              best_valid_loss):
+                              best_valid_loss, post):
             note_min_loss = " *" if vm.valid_pre_loss == best_valid_loss else ""
             logger.info(
                 f"Epoch {epoch + 1:<{self.n_epoch_digits}} "
@@ -547,7 +547,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             # Writes the epoch row, and on the first pass establishes the
             # reference sidecar; on later passes checks against it.
             self.ell_recorder.record(epoch)
-            self.pl_recorder.record(model, self.pl_obs, epoch)
+            self.pl_recorder.record(model, self.pl_obs, post, epoch)
 
             is_best_condition_a = vm.valid_pre_loss == best_valid_loss
             is_best_condition_b = epoch >= self.earliest_best
