@@ -50,6 +50,7 @@ freeze_bn_affine: ???
 bn_momentum: ???
 bn_recompute_epochs: ${num_epochs}
 bn_recompute_max_batches: null
+track_ell_metrics: true
 
 n_sims_train_full: 1000   # 512
 

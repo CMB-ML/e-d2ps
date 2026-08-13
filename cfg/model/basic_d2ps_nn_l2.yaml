@@ -66,6 +66,7 @@ train:
   freeze_bn_affine  : ${freeze_bn_affine}
   bn_recompute_epochs: ${bn_recompute_epochs}
   bn_recompute_max_batches: ${bn_recompute_max_batches}
+  track_ell_metrics: ${track_ell_metrics}
 
   # Epochs
   n_epochs          : ${num_epochs}
