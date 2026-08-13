@@ -3,7 +3,7 @@
 scale_ps: none
 scale_px: minmax_global
 optimizer: Adam
-norm_kind: bn
+norm_kind: abn
 activation: gelu
 down_reductions: XXXXXXXXX
 spatial_reduction: max
