@@ -108,6 +108,12 @@ model_init:
       path_template: "{root}/{dataset}/${prep_working_dir}{stage}/${model_fn_template}.pth"
   dir_name: F_Model_Init
 
+planck_data:
+  assets_out:
+    obs_maps:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/d2ps-prep/D_Prep_Observs_Planck/Test/sim0000/obs_prep_{freq}_${px_arrange}_${model.scale_px}.npy"
+
 train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingExecutor
   assets_out:
     model: 
@@ -119,6 +125,9 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     other_record:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/{record_type}_record.csv"
+    pl_record:
+      handler: AppendingCsvHandler
+      path_template: "{root}/{dataset}/{working}{stage}/pl_record.csv"
     ell_record:
       handler: AppendingCsvHandler
       path_template: "{root}/{dataset}/{working}{stage}/ell_record.csv"
@@ -129,6 +138,7 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     cmb_ps: {stage: preprocess_spectra}
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
+    pl_obs: {stage: planck_data, orig_name: obs_maps}
     resume_model: {stage: train, orig_name: model}
     initial_model: {stage: model_init, orig_name: model}
     pos_enc_lut: {stage: make_pos_enc_lut}

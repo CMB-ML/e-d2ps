@@ -19,6 +19,7 @@ from d2ps_nn.utils.ps_scale import make_ps_processor
 from d2ps_nn.models.bn_recompute import recompute_bn_stats
 from d2ps_nn.utils.metrics_record import ColumnSpec, RecordSchema, metric, specs_from
 from d2ps_nn.utils.ell_metrics_recorder import EllMetricsRecorder
+from d2ps_nn.utils.planck_recorder import PlanckRecorder
 from d2ps_nn.utils.metrics_record import EllStatsAccumulator
 
 
@@ -49,6 +50,8 @@ class TrainingExecutor(BaseD2PSExecutor):
     def __init__(self, cfg: DictConfig, stage_str="train") -> None:
         super().__init__(cfg, stage_str=stage_str)
 
+        self.cf_planck = cfg.get("cf_planck", False)
+
         # What comes out
         self.out_model: Asset = self.assets_out["model"]
         self.out_loss_record: Asset = self.assets_out["loss_record"]
@@ -59,11 +62,17 @@ class TrainingExecutor(BaseD2PSExecutor):
         out_ell_record: AppendingCsvHandler
         out_trgt_stats: NpzHandler
 
+        if self.cf_planck:
+            self.out_pl_record: Asset = self.assets_out["pl_record"]
+
         # What goes in
         self.in_trgt_asset: Asset = self.assets_in["cmb_ps"]
         self.in_feat_asset = FeatureAsset.select(self.assets_in, 
                                                  cfg.features_type, 
                                                  self.instrument)
+        self.pl_obs = None
+        if self.cf_planck:
+            self.in_planck_obs: Asset = self.assets_in["pl_obs"]
         self.in_resume_model: Asset = self.assets_in["resume_model"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
@@ -115,6 +124,11 @@ class TrainingExecutor(BaseD2PSExecutor):
             ref_asset=self.out_trgt_stats,
             device=self.device,
         )
+        self.pl_recorder = PlanckRecorder(
+            enabled=self.cf_planck,
+            ells=self.ells,
+            record_asset=self.out_pl_record if self.cf_planck else None,
+        )
 
         raw_momentum = cfg.model.train.get("bn_momentum", 0.1)
         if raw_momentum is None or (
@@ -139,8 +153,33 @@ class TrainingExecutor(BaseD2PSExecutor):
             pos_enc_lut = self.in_pos_enc_lut.read() 
         return pos_enc_lut
 
+    def set_up_planck(self):
+            n_dets = len(self.instrument.dets)
+            for i, freq in enumerate(self.instrument.dets.keys()):
+                with self.name_tracker.set_context("freq", freq):
+                    this_map = self.in_planck_obs.read()
+                    if self.pl_obs is None:
+                        self.pl_obs = np.ndarray((n_dets, this_map.shape[1], this_map.shape[2]))
+                    self.pl_obs[i] = this_map[0]
+
+            # (n_dets, H, W) is ONE example, so add the batch dim here.
+            #
+            # WARNING: the training dataloader applies px_arrange and appends the
+            # positional-encoding LUT before the model sees a feature. The raw stack
+            # below does neither. If your model expects either, feed it this and you
+            # get a shape error at best, plausible-looking garbage at worst.
+            if self.use_pos_enc_lut:
+                raise NotImplementedError
+            self.pl_obs = torch.from_numpy(self.pl_obs).unsqueeze(0)
+            logger.info(f"Loaded Planck comparison maps: feature tensor {tuple(self.pl_obs.shape)}")
+
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        if self.cf_planck:
+            self.set_up_planck()
+        else:
+            logger.warning("Skipped Planck comparison maps. Kinda goes against the point, but you do you.")
 
         model = self.init_model()
         self._prepare_model(model)
@@ -397,6 +436,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         else:
             self.out_loss_record.write(data=self.loss_schema.headers())
         self.ell_recorder.begin_run(is_continuation)  # no-op when disabled
+        self.pl_recorder.begin_run(is_continuation)
 
     def train_one_epoch(self, model, train_dataloader, loss_function, optimizer, scheduler, epoch):
         epoch_grad_norm = []
@@ -507,7 +547,8 @@ class TrainingExecutor(BaseD2PSExecutor):
             # Writes the epoch row, and on the first pass establishes the
             # reference sidecar; on later passes checks against it.
             self.ell_recorder.record(epoch)
- 
+            self.pl_recorder.record(epoch)
+
             is_best_condition_a = vm.valid_pre_loss == best_valid_loss
             is_best_condition_b = epoch >= self.earliest_best
             if is_best_condition_a and is_best_condition_b:
