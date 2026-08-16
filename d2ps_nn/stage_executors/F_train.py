@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 from dataclasses import dataclass
+import types
 
 from tqdm import tqdm
 import numpy as np
@@ -209,6 +210,21 @@ class TrainingExecutor(BaseD2PSExecutor):
 
         if start_epoch >= self.n_epochs:
             logger.warning(f"start_epoch {start_epoch} >= n_epochs {self.n_epochs}; no training will run.")
+
+        def _frozen_bn_train(self, mode: bool = True):
+            return self  # ignore model.train(); stay in eval
+
+        n_frozen = 0
+        for m in model.modules():
+            if isinstance(m, torch.nn.modules.batchnorm._BatchNorm):
+                m.eval()                                          # step 1: use loaded running mean/var, no updates
+                m.train = types.MethodType(_frozen_bn_train, m)   # survive model.train() in train_one_epoch
+                if m.weight is not None:
+                    m.weight.requires_grad_(False)                # step 2: freeze γ
+                if m.bias is not None:
+                    m.bias.requires_grad_(False)                  # step 2: freeze β
+                n_frozen += 1
+        logger.info(f"froze {n_frozen} BN layers fully (running stats + affine)")
 
         best_valid_loss = initial_best_loss
         for epoch in range(start_epoch, self.n_epochs):
