@@ -17,7 +17,7 @@ dataset_name       : "${map_fields}_${scenario.nside}_1850_broad_dist"
 working_dir        : &wd "${features_type}2ps_pl_record_w-bn_recalc_cont/drop_${dropout_paradigm_name}_scale_ps_${scale_ps}-scale_px_${scale_px}-optimizer_${optimizer}-lr_${learning_rate_final}-norm_${norm_kind}-activation_${activation}-down_${down_reductions}-spat_${spatial_reduction}/"
 # working_dir        : &wd "${features_type}2ps_train/${nn_model}_Nsims-${n_sims}_lr-${learning_rate_final}_lre-${learning_rate_ramp_epochs}_${optimizer}_wd-${adamw_wd}_sps-${scale_ps}_spx-${model.scale_px}_pe-${use_pos_enc_lut}_en-${norm_kind}_${activation}_r1-${down_reductions}_r2-${spatial_reduction}_r3-${face_reduction}_${model_num}/"
 
-model_name_base    : "Dropout: ${dropout_paradigm_name} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
+model_name_base    : "BNm: ${bn_momentum} Freeze BN Affine: ${freeze_bn_affine} Dropout: ${dropout_paradigm_name} PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
 
 fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, ${model_name_base}"
 # fig_model_name     : "${features_type} to PS, \n Nsims: ${n_sims}, PS Scale:${scale_ps} px Scale:${model.scale_px}, Pos. Enc.: ${use_pos_enc_lut} \n ${nn_model} with dr-${down_reductions}, sr-${spatial_reduction}, fr-${face_reduction}, en-${norm_kind}, ${activation}, Model Init ${model_num} \n ${optimizer}, lr: ${learning_rate_final}, lr-epochs: ${learning_rate_ramp_epochs} wd: ${adamw_wd}"
@@ -89,8 +89,7 @@ optimizer: Adam
 adamw_wd : 0.01  # Due to interpolation, must be provided.
 # adamw_wd_sweep: 0.01
 
-learning_rate_start: 1e-8
-
+learning_rate_start: 1e-8  # With rate ramp epochs=0, this is inconsequential
 learning_rate_final: 2e-4
 # learning_rate_final_sweep: 2e-4
 
