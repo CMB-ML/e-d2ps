@@ -100,6 +100,7 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
                     with self.name_tracker.set_context("sim_num", sim):
                         ps_pred = self.in_ps_pred.read()
                         ps_thry = self.in_ps_thry.read(use_alt_path=use_alt_path)
+                        ps_thry = ps_thry['TT']
                     all_theory_ps[sim] = ps_thry[:show_max_l]
                     # TODO: Fix this. Patch exists to handle Realization Power Spectra,
                     #       which are produced using a different way of defining ells

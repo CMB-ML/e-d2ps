@@ -195,7 +195,7 @@ def process_target(task_target: TaskTarget, stat_funcs):
     except OSError as e:
         return {'error': f"Could not read pred data from {pred.path}. Error: {str(e)}", **res}
 
-    true_data = true_data[task_target.ells]
+    true_data = true_data['TT'][task_target.ells]
     # TODO: Fix this. Patch exists to handle Realization Power Spectra,
     #       which are produced using a different way of defining ells
     #       (thye use lmax; this later method uses use_ells)
