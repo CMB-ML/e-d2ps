@@ -57,6 +57,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.out_loss_record: Asset = self.assets_out["loss_record"]
         self.out_ell_record: Asset = self.assets_out["ell_record"]
         self.out_trgt_stats: Asset = self.assets_out["trgt_stats"]
+        self.out_val_preds: Asset = self.assets_out["predictions"]
         out_model_handler: PyTorchModel
         out_loss_record: AppendingCsvHandler
         out_ell_record: AppendingCsvHandler
@@ -129,6 +130,8 @@ class TrainingExecutor(BaseD2PSExecutor):
             ells=self.ells,
             record_asset=self.out_pl_record if self.cf_planck else None,
         )
+
+        self.keep_valid_preds = cfg.model.train.get("track_val_preds", False)
 
         raw_momentum = cfg.model.train.get("bn_momentum", 0.1)
         if raw_momentum is None or (
@@ -493,7 +496,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         # None when per-ell tracking is off, which evaluate() reads as
         # "don't accumulate".
         ell_acc = self.ell_recorder.new_accumulator()
- 
+        pred_collector = _PredCollector()
+
         with torch.no_grad():
             train_pre, train_pst = evaluate(
                 model=model,
@@ -521,8 +525,13 @@ class TrainingExecutor(BaseD2PSExecutor):
                 device=self.device,
                 dtype=self.dtype,
                 ell_accumulator=ell_acc,
+                pred_collector=pred_collector
             )
-            # This is logged in record_and_checkpoint
+
+            val_preds = pred_collector.result()
+            if val_preds is not None:
+                with self.name_tracker.set_context("epoch", f"{epoch+1:0{self.n_epoch_digits}d}"):
+                    self.out_val_preds.write(data=val_preds)
  
         return ValidMetrics(
             train_pre_loss=train_pre, train_pst_loss=train_pst,
@@ -570,8 +579,25 @@ class TrainingExecutor(BaseD2PSExecutor):
                                          epoch=epoch + 1)
 
 
+class _PredCollector:
+    """Retain per-batch validation predictions for one pass, cat at the end."""
+    def __init__(self):
+        self._chunks = []
+
+    def update(self, output_pst):
+        # .cpu() per batch so GPU memory stays flat -- the ell=1280 cat blowup
+        # you flagged in the OTF code, avoided.
+        self._chunks.append(output_pst.detach().to("cpu"))
+
+    def result(self):
+        if not self._chunks:
+            return None
+        return torch.cat(self._chunks, dim=0).numpy()   # (n_valid, n_ells)
+
+
 def evaluate(model, dataloader, loss_function, post, device, dtype,
-             ell_accumulator: Optional[EllStatsAccumulator] = None):
+             ell_accumulator: Optional[EllStatsAccumulator] = None,
+             pred_collector: Optional[_PredCollector] = None):
     pre_loss = 0.0
     pst_loss = 0.0
  
@@ -579,8 +605,9 @@ def evaluate(model, dataloader, loss_function, post, device, dtype,
  
     # inference_mode tags its outputs as inference tensors, which cannot be
     # read back out afterwards; fall back to no_grad when accumulating.
-    ctx = torch.no_grad() if ell_accumulator is not None else torch.inference_mode()
- 
+    retain = ell_accumulator is not None or pred_collector is not None
+    ctx = torch.no_grad() if retain else torch.inference_mode()
+
     with ctx:
         for features, label in tqdm(dataloader, leave=False):
             features = features.to(device=device, dtype=dtype)
@@ -595,6 +622,8 @@ def evaluate(model, dataloader, loss_function, post, device, dtype,
  
             if ell_accumulator is not None:
                 ell_accumulator.update(output_pst, label_pst)
+            if pred_collector is not None:
+                pred_collector.update(output_pst)
  
     n_batches = len(dataloader)
     return pre_loss / n_batches, pst_loss / n_batches

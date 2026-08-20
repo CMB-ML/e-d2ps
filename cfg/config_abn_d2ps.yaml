@@ -51,6 +51,7 @@ bn_momentum: ???
 bn_recompute_epochs: ${num_epochs}
 bn_recompute_max_batches: null
 track_ell_metrics: true
+track_val_preds: true
 
 n_sims_train_full: 1000   # 512
 

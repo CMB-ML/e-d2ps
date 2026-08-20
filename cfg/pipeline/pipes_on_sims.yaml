@@ -134,6 +134,9 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     trgt_stats:
       handler: NpzHandler
       path_template: "{root}/{dataset}/{working}{stage}/trgt_stats.npz"  # Contains, ell, mean, std for target
+    predictions:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{working}{stage}_Preds/preds_ep{epoch}.npy"
   assets_in:
     cmb_ps: {stage: preprocess_spectra}
     cmb_map: {stage: preprocess_maps}

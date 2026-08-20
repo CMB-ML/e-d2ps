@@ -66,8 +66,8 @@ train:
   freeze_bn_affine  : ${freeze_bn_affine}
   bn_recompute_epochs: ${bn_recompute_epochs}
   bn_recompute_max_batches: ${bn_recompute_max_batches}
-  track_ell_metrics: ${track_ell_metrics}
-
+  track_ell_metrics : ${track_ell_metrics}
+  track_val_preds   : ${track_val_preds}
   # Epochs
   n_epochs          : ${num_epochs}
   restart_epoch     : null  # Set to null to create a new model, or give a checkpoint number
