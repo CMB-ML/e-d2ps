@@ -132,6 +132,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         )
 
         self.keep_valid_preds = cfg.model.train.get("track_val_preds", False)
+        if self.keep_valid_preds:
+            logger.info("Validation predictions will be recorded per epoch.")
 
         raw_momentum = cfg.model.train.get("bn_momentum", 0.1)
         if raw_momentum is None or (
@@ -496,7 +498,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         # None when per-ell tracking is off, which evaluate() reads as
         # "don't accumulate".
         ell_acc = self.ell_recorder.new_accumulator()
-        pred_collector = _PredCollector()
+        pred_collector = _PredCollector() if self.keep_valid_preds else None
 
         with torch.no_grad():
             train_pre, train_pst = evaluate(
