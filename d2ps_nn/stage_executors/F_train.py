@@ -200,6 +200,8 @@ class TrainingExecutor(BaseD2PSExecutor):
         else:
             logger.warning("Skipped Planck comparison maps. Kinda goes against the point, but you do you.")
 
+        train_dataloader, train_infer_dataloader, valid_dataloader = self.build_dataloaders()
+
         model = self.init_model()
         self._prepare_model(model)
 
@@ -207,7 +209,6 @@ class TrainingExecutor(BaseD2PSExecutor):
         loss_function = loss_function.to(self.device)
         logger.info(f"Loss: {self.loss_key}")
 
-        train_dataloader, train_infer_dataloader, valid_dataloader = self.build_dataloaders()
         optimizer, scheduler = self.build_optimization(model, len(train_dataloader))
 
         # Initialize for training
@@ -655,4 +656,3 @@ def _get_global_grad_norm(model, norm_type=2.0):
     if not vals:
         return 0.0
     return torch.norm(torch.stack(vals), norm_type).item()
- 
