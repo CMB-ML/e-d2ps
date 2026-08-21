@@ -85,6 +85,18 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
     - valid
     - test
 
+preprocess_mask: # D2_preprocess_mask.py / PreprocessMaskExecutor
+  assets_out:
+    mask:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/mask_{px_arrange}.npy"
+  assets_in:
+    mask: {stage: make_mask}
+    lut: {stage: make_lut}
+  dir_name: D_Prep_Observs
+  splits:
+    - train
+
 preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_out:
     cmb_ps:
@@ -147,6 +159,7 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}
+    mask: {stage: preprocess_mask}
   splits:
     - train
     - valid
@@ -187,6 +200,7 @@ predict: &final_inference # G_predict.py / PredictExecutor
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
     model: {stage: train}
+    mask: {stage: preprocess_mask}
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}

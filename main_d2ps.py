@@ -27,6 +27,7 @@ from d2ps_nn.ex import (
     FindPxMapStatsExecutor,
     FindSpectraStatsExecutor,
     PreprocessMapsExecutor,
+    PreprocessMaskExecutor,
     PreprocessSpectraExecutor,
 
     ModelInitExecutor,
@@ -76,7 +77,8 @@ def run_2_prelim_ps(cfg):
 def run_3_prep_px(cfg):
     logger.info(f"Running prep_px in {__file__}")
     pipes = [
-        PreprocessMapsExecutor,
+        # PreprocessMapsExecutor,
+        PreprocessMaskExecutor
     ]
     run(cfg, pipes)
 
@@ -188,6 +190,6 @@ if __name__ == "__main__":
     # run_4_prep_ps()
     # run_5_make_models()
     run_6_train()
-    # run_7_infer()
+    run_7_infer()
     # run_8_prep_planck()
-    # run_9_run_planck()
+    run_9_run_planck()

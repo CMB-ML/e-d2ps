@@ -39,6 +39,7 @@ class PredictExecutor(BaseD2PSExecutor):
                                                  self.instrument)
         self.in_model_asset: Asset = self.assets_in["model"]
         self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
+        self.in_mask: Asset = self.assets_in["mask"]
         in_obs_map_handler: HealpyMap
         in_model_handler: PyTorchModel
 
@@ -149,13 +150,25 @@ class PredictExecutor(BaseD2PSExecutor):
             feature_path_template=obs_path_template,
             feature_handler=self.in_feat_asset.handler,
             px_arrange=self.px_arrange,
-            pos_enc_lut=self.get_pos_enc_lut()
+            pos_enc_lut=self.get_pos_enc_lut(),
+            mask=self.get_mask()
             )
         return dataset
 
     def get_pos_enc_lut(self):
         if not self.use_pos_enc_lut:
+            logger.info("No positional encoding will be used.")
             return None
         with self.name_tracker.set_context("style", self.lut_style):
             pos_enc_lut = self.in_pos_enc_lut.read() 
+            logger.info("Positional encoding will be used.")
         return pos_enc_lut
+
+    def get_mask(self):
+        if not self.use_mask:
+            logger.info("Features will not be masked.")
+            return None
+        with self.name_tracker.set_context("px_arrange", self.px_arrange):
+            mask = self.in_mask.read()
+            logger.info("Features will be masked.")
+        return mask

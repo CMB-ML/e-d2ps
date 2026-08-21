@@ -43,6 +43,7 @@ n_init_features: 16
 # n_levels: 7  # For 128
 n_levels: 9  # For 512
 note: null
+mask_features: ${mask_features}
 
 preprocess:
   n_workers : 50

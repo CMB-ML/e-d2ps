@@ -77,6 +77,7 @@ class TrainingExecutor(BaseD2PSExecutor):
         self.in_resume_model: Asset = self.assets_in["resume_model"]
         self.in_initial_model: Asset = self.assets_in["initial_model"]
         self.in_pos_enc_lut: Asset = self.assets_in["pos_enc_lut"]
+        self.in_mask: Asset = self.assets_in["mask"]
         in_trgt_handler: NumpyMap
         in_feat_handler: NumpyMap
         in_pos_enc_lut_handler: NumpyMap
@@ -151,12 +152,25 @@ class TrainingExecutor(BaseD2PSExecutor):
             "bn_recompute_max_batches", None
         )
 
+        self.use_mask = cfg.model.mask_features
+
     def get_pos_enc_lut(self):
         if not self.use_pos_enc_lut:
+            logger.info("No positional encoding will be used.")
             return None
         with self.name_tracker.set_context("style", self.lut_style):
             pos_enc_lut = self.in_pos_enc_lut.read() 
+            logger.info("Positional encoding will be used.")
         return pos_enc_lut
+
+    def get_mask(self):
+        if not self.use_mask:
+            logger.info("Features will not be masked.")
+            return None
+        with self.name_tracker.set_context("px_arrange", self.px_arrange):
+            mask = self.in_mask.read()
+            logger.info("Features will be masked.")
+        return mask
 
     def set_up_planck(self):
             n_dets = len(self.instrument.dets)
@@ -306,7 +320,8 @@ class TrainingExecutor(BaseD2PSExecutor):
             feature_path_template=feat_path_template,
             feature_handler=self.in_feat_asset.handler,
             px_arrange=self.px_arrange,
-            pos_enc_lut=self.get_pos_enc_lut()
+            pos_enc_lut=self.get_pos_enc_lut(),
+            mask=self.get_mask()
         )
         logger.info(f"Dataset: {dataset_params}")
 

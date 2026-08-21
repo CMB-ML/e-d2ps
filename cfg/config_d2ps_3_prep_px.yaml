@@ -15,6 +15,6 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      scale_px: minmax_global, minmax_local
+      scale_px: minmax_global  #, minmax_local
 
 n_sims: ${n_sims_train}
