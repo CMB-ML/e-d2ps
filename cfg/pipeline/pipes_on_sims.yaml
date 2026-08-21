@@ -202,7 +202,9 @@ predict: &final_inference # G_predict.py / PredictExecutor
     cmb_map: {stage: preprocess_maps}
     obs_maps: {stage: preprocess_maps}
     model: {stage: train}
-    mask: {stage: preprocess_mask}
+    mask:
+      stage: preprocess_mask
+      working: ${prep_working_dir}
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}
