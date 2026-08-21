@@ -159,7 +159,9 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}
-    mask: {stage: preprocess_mask}
+    mask:
+      stage: preprocess_mask
+      working: ${prep_working_dir}
   splits:
     - train
     - valid
