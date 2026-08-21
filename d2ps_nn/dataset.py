@@ -150,7 +150,8 @@ class TestDataset(Dataset):
                  feature_path_template,
                  feature_handler,
                  px_arrange=None,
-                 pos_enc_lut=None
+                 pos_enc_lut=None,
+                 mask=None
                  ):
         self.feature_assembler, self.cat_axis = get_feature_assembler(px_arrange)
         self.n_sims = n_sims
@@ -159,6 +160,7 @@ class TestDataset(Dataset):
         self.feature_handler = feature_handler
         self.n_map_fields:int = len(map_fields)
         self.pos_enc_lut = torch.as_tensor(pos_enc_lut) if pos_enc_lut is not None else None
+        self.mask = torch.as_tensor(mask) if mask is not None else None
 
     def __len__(self):
         return self.n_sims
@@ -169,7 +171,10 @@ class TestDataset(Dataset):
                                                  handler=self.feature_handler,
                                                  n_fields=self.n_map_fields,
                                                  sim_idx=sim_idx)
-        
+
+        if self.mask is not None:
+            features_tensor = self.mask * features_tensor
+
         if self.pos_enc_lut is not None:
             features_tensor = torch.cat([features_tensor, self.pos_enc_lut], dim=self.cat_axis)
 
