@@ -1,11 +1,11 @@
 import logging
-
-from tqdm import tqdm
-
 from functools import partial
+
+import numpy as np
+from omegaconf import DictConfig, ListConfig
 import torch
 from torch.utils.data import DataLoader
-from omegaconf import DictConfig, ListConfig
+from tqdm import tqdm
 
 from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler
@@ -276,6 +276,27 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         logger.info("Spectrum layer created!")
 
         return layer
+
+    def get_pos_enc_lut(self):
+        if not self.use_pos_enc_lut:
+            logger.info("No positional encoding will be used.")
+            return None
+        with self.name_tracker.set_context("style", self.lut_style):
+            pos_enc_lut = self.in_pos_enc_lut.read() 
+            logger.info("Positional encoding will be used.")
+        return pos_enc_lut
+
+    def get_mask(self):
+        if not self.use_mask:
+            logger.info("Features will not be masked.")
+            return None
+        logger.info("Features will be masked.")
+        with self.name_tracker.set_context("px_arrange", self.px_arrange):
+            mask = 1 - self.in_mask.read()
+        f_sky = mask / mask.size
+        is_hard_mask = np.all((mask == 0) | (mask == 1))
+        print(f"Unmasked sky fraction is {f_sky:.3f} and it is {'not ' if not is_hard_mask else ''}a hard mask.")
+        return mask
 
 
     # def init_simple(self):
