@@ -155,21 +155,3 @@ class PredictExecutor(BaseD2PSExecutor):
             mask=self.get_mask()
             )
         return dataset
-
-    def get_pos_enc_lut(self):
-        if not self.use_pos_enc_lut:
-            logger.info("No positional encoding will be used.")
-            return None
-        with self.name_tracker.set_context("style", self.lut_style):
-            pos_enc_lut = self.in_pos_enc_lut.read() 
-            logger.info("Positional encoding will be used.")
-        return pos_enc_lut
-
-    def get_mask(self):
-        if not self.use_mask:
-            logger.info("Features will not be masked.")
-            return None
-        with self.name_tracker.set_context("px_arrange", self.px_arrange):
-            mask = self.in_mask.read()
-            logger.info("Features will be masked.")
-        return mask
