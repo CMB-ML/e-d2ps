@@ -1,0 +1,116 @@
+"""
+For use with comparison methods.
+"""
+import logging
+
+from omegaconf import DictConfig
+
+from cmbml.core import Asset, BaseStageExecutor
+from d2ps_nn.utils.parse_ell_list import parse_ells
+import d2ps_nn.utils.degree_selection as ds
+
+
+logger = logging.getLogger(__name__)
+
+
+class GetPolyDegreeExecutor(BaseStageExecutor):
+    """
+    Goal: Bundle together power spectra for external analysis.
+
+    Use a dataset to iterate through patches (instead of simulations).
+    """
+    def __init__(self, cfg: DictConfig, stage_str="find_sm_degree") -> None:
+        super().__init__(cfg, stage_str)
+        self.out_deg_cfg: Asset = self.assets_out["deg_cfg"]
+        self.in_pred: Asset = self.assets_in["ps_pred_bundle"]
+        self.in_thry: Asset = self.assets_in["ps_thry_bundle"]
+
+        self.cleaning_model = cfg.cleaning_model
+        self.do_smooth = cfg.do_smooth
+
+        self.use_ells = cfg.model.use_ells
+        self.ells = parse_ells(self.use_ells)
+
+        self.sm_basis_kind = cfg.get("sm_basis_kind", None)
+        if self.sm_basis_kind is None:
+            msg = f"No smoothing choice specified."
+            logger.warning(msg)
+            raise ValueError(msg)
+        self.deg_range = cfg.get("sm_deg_range", None)
+        if self.deg_range is None:
+            msg = f"No degree range specified."
+            logger.warning(msg)
+            raise ValueError(msg)
+        elif len(self.deg_range) != 2:
+            msg = f"Degree range must be a pair of values (min, max). Got {self.deg_range}"
+            logger.warning(msg)
+            raise ValueError(msg)
+        elif self.deg_range[0] > self.deg_range[1]:
+            msg = f"Degree range min > max. Got {self.deg_range}"
+            logger.warning(msg)
+            raise ValueError(msg)
+        elif self.deg_range[0] < 1:
+            msg = f"Degree range min must be >=1. Got {self.deg_range}"
+            logger.warning(msg)
+            raise ValueError(msg)
+        self.criterion = cfg.get("sm_criterion", None)
+        if self.criterion is None:
+            msg = f"No criterion specified."
+            logger.warning(msg)
+            raise ValueError(msg)
+        self.score_ell_max = cfg.get("sm_score_ell_max", None)
+
+    def execute(self) -> None:
+        logger.debug(f"Running {self.__class__.__name__} execute()")
+        if self.model_epochs in [[""], ["best"]]:
+            use_epoch = self.model_epochs[0]
+        elif len(self.model_epochs) != 1:
+            if "best" not in self.model_epochs:
+                msg = f"Epochs not recognized. Epochs: f{self.model_epochs}"
+                logger.warning(msg)
+                raise NotImplementedError(msg)
+            else:
+                logger.warning("Multiple epochs specified. Executor will use only 'best'.")
+                use_epoch = "best"
+        else:
+            msg = f"Epochs not recognized. Epochs: f{self.model_epochs}"
+            logger.warning(msg)
+            raise NotImplementedError(msg)
+
+        try:
+            split = self.splits['Valid']
+        except KeyError:
+            raise ValueError(f"Getting the best polynomial degree is locked to Validation data.")
+
+        lo, hi = self.deg_range
+
+        model = self.cleaning_model
+        if self.do_smooth:
+            context = dict(epoch=use_epoch, split=split.name)
+            with self.name_tracker.set_contexts(context):
+                pred = self.in_pred.read()
+                thry = self.in_thry.read()
+            sweeps = ds.sweep_smoothing(
+                            self.ells, pred, thry,
+                            smoother=self.sm_basis_kind,
+                            model=model,
+                            split=split.name,
+                            degrees=range(lo, hi + 1))
+            sel = ds.select_from_sweeps(
+                {model: sweeps},
+                criterion=self.criterion,
+                ell_max={model: self.score_ell_max},
+                use_ells=self.use_ells,
+                epoch=use_epoch
+            )
+        else:
+            sel = ds.DegreeSelection(degrees={model: None}, 
+                                     score_curves={model: {}},
+                                     use_ells=self.use_ells,
+                                     score_ell_max={model: None},
+                                     criterion=None,
+                                     smoother=None,
+                                     selection_split=split.name, 
+                                     epoch=use_epoch
+                                     )    
+        self.out_deg_cfg.write(data=sel.to_dict())

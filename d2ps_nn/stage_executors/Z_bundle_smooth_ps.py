@@ -1,14 +1,12 @@
 import logging
 
 import numpy as np
-from sklearn.pipeline import Pipeline
 from omegaconf import DictConfig
 
 from cmbml.core import Split, Asset, BaseStageExecutor
-from cmbml.core.asset_handlers import TextPowerSpectrum, NumpyPowerSpectrum, DictCambPowerSpectrum
-from d2ps_nn.utils.get_epochs import get_epochs_with_best
 from d2ps_nn.utils.parse_ell_list import parse_ells
-from d2ps_nn.utils.polyfit_tools import setup_skl_pipeline, scale_ell
+import d2ps_nn.utils.degree_selection as ds
+import d2ps_nn.utils.smoothing as sm
 
 
 logger = logging.getLogger(__name__)
@@ -24,43 +22,66 @@ class BundleSmoothExecutor(BaseStageExecutor):
         super().__init__(cfg, stage_str)
         self.out_ps: Asset = self.assets_out["ps_bundle"]
         self.in_ps: Asset = self.assets_in["pred"]
+        self.in_deg_cfg: Asset = self.assets_in["deg_cfg"]
 
-        self.ells = parse_ells(cfg.model.use_ells)
+        self.cleaning_model = cfg.cleaning_model
+        self.do_smooth = cfg.do_smooth
 
-        self.spectra_kind = ""
-        self.basis_kind = cfg.sm_basis_kind
-        self.degree = cfg.sm_degree
-        self.skl_pipeline = None
-        self.scaled_ell_range = tuple(cfg.out_range)
+        self.use_ells = cfg.model.use_ells
+        self.ells = parse_ells(self.use_ells)
+
+        self.sm_basis_kind = cfg.get("sm_basis_kind", None)
+        self.smoother = None
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
-        epoch_iter = [None] if self.model_epochs is None else self.model_epochs
-        self.skl_pipeline = setup_skl_pipeline(self.basis_kind, self.degree)
-        self.prepped_ell = scale_ell(self.ells, out_range=self.scaled_ell_range)
+
+        self.set_up_smoother()
 
         for split in self.splits:
-            for epoch in epoch_iter:
+            for epoch in self.model_epochs:
                 context = dict(split=split.name, epoch=epoch)
                 with self.name_tracker.set_contexts(context):
                     self.process(split)
-            logger.info(f"Done bundling {split.name} {self.spectra_kind} spectra.")
+            logger.info(f"Done bundling {split.name} spectra.")
+
+    def set_up_smoother(self):
+        deg_cfg = self.in_deg_cfg.read()
+        sel = ds.DegreeSelection.from_dict(deg_cfg)
+        degree = sel.degree_for(self.cleaning_model)
+
+        if degree is None:                    # unsmoothed model (obs2ps): nothing to check
+            if self.do_smooth:
+                raise ValueError("Smoothing degree not found, but Hydra says to smooth.")
+                # This could happen if the pipeline is run out of order or the saved file
+                #   has been modified.
+            self.smoother = None
+            return
+        if not self.do_smooth:
+            raise ValueError(f"Config says not to smooth, but the artifact carries "
+                             f"degree {degree} for {self.cleaning_model!r}.")
+        
+        if sel.use_ells != self.use_ells:
+            raise ValueError(f"degree chosen over ells {sel.use_ells!r}, applying over {self.use_ells!r}")
+        if sel.smoother != self.sm_basis_kind:
+            raise ValueError(f"degree chosen with {sel.smoother!r}, applying with {self.sm_basis_kind!r}")
+
+        self.smoother = sm.make_smoother(sel.smoother, degree=degree)
 
     def process(self, split: Split) -> None:
-        data = self.in_ps.read()
-        data = np.atleast_2d(data)
+        pred = self.in_ps.read()
+        pred = np.atleast_2d(pred)
 
-        sm = []
-        for i in range(data.shape[0]):
-            sm.append(self.smooth(data[i]))
+        if self.smoother is None:
+            self.out_ps.write(data=pred)
+            return
 
-        result = np.array(sm)
+        # Reset counter
+        self.smoother.ill_conditioned_count = 0
+        result = sm.smooth_ensemble(self.smoother, self.ells, pred)
+        if getattr(self.smoother, "ill_conditioned_count", 0):
+            logger.warning(f"{self.smoother.ill_conditioned_count} ill-conditioned fits at degree {self.smoother.degree}")
         self.out_ps.write(data=result)
-
-    def smooth(self, cmb_ps) -> np.ndarray:
-        fit_model: Pipeline = self.skl_pipeline.fit(self.prepped_ell, cmb_ps)
-        pred = fit_model.predict(self.prepped_ell)
-        return pred
 
 
 class BundleSmoothTrueExecutor(BundleSmoothExecutor):

@@ -537,16 +537,30 @@ bundle_pred: # Z_bundle.py / BundlePredExecutor
   dir_name: Analysis_Bundle
   make_stage_log: False
 
+find_sm_degree:
+  assets_out:
+    deg_cfg:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/degree.yaml"
+  assets_in:
+    ps_pred_bundle: {stage: bundle_pred, orig_name: ps_bundle}
+    ps_thry_bundle: {stage: bundle_true, orig_name: ps_bundle}
+  splits:
+    - valid
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Bundle
+  make_stage_log: False
+
 bundle_smooth:
   assets_out:
     ps_bundle:
       handler: NpyHandler
-      path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}_smooth_${sm_basis_kind}_${sm_degree}_${out_range}.npy"
+      path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}_smooth.npy"
   assets_in:
     pred: {stage: bundle_pred, orig_name: ps_bundle}
     real: {stage: bundle_real, orig_name: ps_bundle}
-  splits:
-    - ${splits.run_inference_on}
+    deg_cfg: {stage: find_sm_degree}
+  splits: ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_Bundle
   make_stage_log: False
