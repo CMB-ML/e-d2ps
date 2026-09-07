@@ -22,6 +22,7 @@ from d2ps_nn.ex import (
     ErrorAnalysisExecutor,
     ShowPredictionsWithChiSquareExecutor,
     BundlePredExecutor,
+    GetPolyDegreeExecutor,
     BundleSmoothExecutor,
     BundleSmoothTrueExecutor,
     BundleTrueExecutor,
@@ -79,6 +80,7 @@ def run_real(cfg):
         # MaskCreatorExecutor,
         # BundlePredExecutor,
         # BundleTrueExecutor,
+        GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
@@ -101,10 +103,11 @@ def run_real(cfg):
 def run_cmbnncs(cfg):
     pipes = [
         # BundlePredExecutor,
+        GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         # NewMetricExecutor,
-        NewMetricSmExecutor,
-        ShowPredictionsCloudsExecutor
+        # NewMetricSmExecutor,
+        # ShowPredictionsCloudsExecutor
         # PowerSpectrumAnalysisExecutor,
         # PerSplitAnalysis,
         # ShowChiSquare,
@@ -122,6 +125,7 @@ def run_cmbnncs(cfg):
 def run_d2ps_comp(cfg):
     pipes = [
         # BundlePredExecutor,
+        GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
@@ -144,9 +148,10 @@ def run_d2ps_comp(cfg):
 def run_pyilc(cfg):
     pipes = [
         # BundlePredExecutor,
+        GetPolyDegreeExecutor,
         BundleSmoothExecutor,
-        NewMetricSmExecutor,
-        ShowPredictionsCloudsExecutor
+        # NewMetricSmExecutor,
+        # ShowPredictionsCloudsExecutor
         # PowerSpectrumAnalysisExecutor,
         # PerSplitAnalysis,
         # ShowChiSquare,
@@ -225,11 +230,13 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_sm_theory()
-    run_real()
-    # run_real_pl()
-    # run_d2ps_comp()
-    # run_cmbnncs()
-    # run_cmbnncs_planck()
+    # run_real()
     # run_pyilc()
+    # run_cmbnncs()
+    run_d2ps_comp()
+
+    # run_real_pl()
+    # run_cmbnncs_planck()
     # run_pyilc_planck()
+
+    # run_sm_theory()

@@ -2,7 +2,10 @@ defaults:
   - config_pred_ps_base
   - _self_
 
-working_dir : "PyILC_CNILC/"
+cleaning_model : "PyILC_CNILC"
+working_dir : "${cleaning_model}/"
 fig_model_name: "PyILC Spectra"
 n_show_cap           : 10
 use_epochs           : [""]
+do_smooth            : true
+sm_score_ell_max     : null

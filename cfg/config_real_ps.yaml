@@ -3,8 +3,8 @@ defaults:
   - file_system    : common_fs
   - pipeline       : assembly_surr_real_ps
   - scenario       : scenario
-  - splits         : all_2000
-  # - splits         : all
+  # - splits         : all_2000
+  - splits         : all
   - model          : basic_d2ps_nn_l2
   - model/sim      : sim
   - model/analysis : basic_analysis
@@ -12,10 +12,27 @@ defaults:
   - override hydra/job_logging: custom_log
   - _self_
 
+dataset_name: "${map_fields}_${scenario.nside}_${splits.name}_broad_dist"
+cleaning_model: "Realization_PS"
+fig_model_name: "Realization Spectra"
+working_dir : "Real_PS/"
+
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  verbose          : false
+
+fig_type      : png
+
 sigma_scale: 1
-sm_basis_kind: chebyshev
-sm_degree: 60
-out_range: [-1, 1]
+sm_basis_kind: "polyfit"  # Use np.polyfit, the fastest by ~4x.
+                          # Alternatives (chebyshev, legendre, monomial) use scikit-learn.
+                          # Results agree to ~10 decimal places. 
+sm_deg_range: [4,30]
+sm_criterion: "mean_r2"
+use_epochs           : [""]
+do_smooth            : true
+sm_score_ell_max     : null
 
 pipeline:
   raw:
@@ -48,15 +65,6 @@ pipeline:
     assets_in:
       ps: {stage: make_real_ps, orig_name: auto_real}
 
-dataset_name: "${map_fields}_${scenario.nside}_${splits.name}"
-working_dir : "Real_PS/"
-hydra:
-  run:
-    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
-  verbose          : false
-
-fig_model_name: "Realization Spectra"
-fig_type      : png
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
 # They are picked up from here and MAY be used elsewhere in the yamls.
@@ -68,7 +76,6 @@ map_fields     : "I"
 lmax           : 1280
 
 # For prediction, postprocessing, power spectra generation:
-use_epochs           : ["best"]
 # For single simulation figures (maps & ps figures):
 use_epochs_imgs      : ${use_epochs}
 # For summary statistics:
@@ -81,4 +88,4 @@ n_show_cap           : 10
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : test  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : [test, valid]  # Either "test" ("train" should work, but is not recommended)

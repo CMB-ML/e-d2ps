@@ -2,11 +2,14 @@ defaults:
   - config_pred_ps_base
   - _self_
 
-# d2ps
-working_dir : "cmb2ps_TLPEnc2AggDec_train_coefs2/Nsims-2000_lr-0.0001_Adam_wd-0.0_sps-None_spx-local_meanstdv_pe-False_en-gn_gelu_r1-mXX_r2-avg_chebyshev18_1/"
+cleaning_model: "obs2ps"
+working_dir: "obs2ps_use_mask_inv_test/drop_no_drop_scale_ps_none-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/"
 fig_model_name: "d2ps"
 n_show_cap           : 10
-use_epochs           : ["final"]
+use_epochs           : ["best"]
+
+do_smooth            : false
+sm_score_ell_max     : null
 
 pipeline:
   predict:
