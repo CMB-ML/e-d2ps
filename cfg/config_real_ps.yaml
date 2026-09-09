@@ -40,30 +40,9 @@ pipeline:
       ps_bundle:
         handler: NpyHandler
         path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
-  ps_analysis:
-    assets_in:
-      auto_pred: {stage: make_real_ps, orig_name: auto_real}
-  per_split_analysis:
-    assets_in:
-      ps_pred: {stage: make_real_ps, orig_name: auto_real}
-  show_predictions:
-    assets_in:
-      ps_pred: {stage: make_real_ps, orig_name: auto_real}
-  show_predictions_bw:
-    assets_in:
-      ps_pred: {stage: make_real_ps, orig_name: auto_real}
-  show_predictions_indiv:
-    assets_in:
-      ps_pred: {stage: make_real_ps, orig_name: auto_real}
-  error_analysis:
-    assets_in:
-      ps_pred: {stage: make_real_ps, orig_name: auto_real}
-  show_predictions_error_analysis:
-    assets_in:
-      ps_pred: {stage: make_real_ps, orig_name: auto_real}
   bundle_pred:
     assets_in:
-      ps: {stage: make_real_ps, orig_name: auto_real}
+      ps: ${pipeline.bundle_real.assets_in.ps}
 
 # Settings below this point are used for interpolation.
 # These are not to be used directly in the python
@@ -88,4 +67,4 @@ n_show_cap           : 10
 # Limit the number of simulations on which to do inference and postprocessing
 # In the splits yaml; null to run on all
 n_infer_cap           : null
-run_inference_on      : [test, valid]  # Either "test" ("train" should work, but is not recommended)
+run_inference_on      : [test, valid]

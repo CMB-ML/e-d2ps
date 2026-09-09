@@ -6,3 +6,6 @@ defaults:
   - pipe_sim_analysis
   - pipe_model_analysis
   - pipes_on_sims
+  - pipes_plot_process
+  - pipes_bundling
+  - pipes_plot_results

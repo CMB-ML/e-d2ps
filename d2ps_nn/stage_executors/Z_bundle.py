@@ -112,19 +112,19 @@ class BundleTrueExecutor(BundleExecutor):
 
         super().process(split)
 
-class BundleRealExecutor(BundleExecutor):
-    def __init__(self, cfg: DictConfig) -> None:
-        super().__init__(cfg, stage_str="bundle_real")
-        self.spectra_kind = "realization"
+# class BundleRealExecutor(BundleExecutor):
+#     def __init__(self, cfg: DictConfig) -> None:
+#         super().__init__(cfg, stage_str="bundle_real")
+#         self.spectra_kind = "realization"
 
-    def execute(self) -> None:
-        logger.debug(f"Running {self.__class__.__name__} execute()")
+#     def execute(self) -> None:
+#         logger.debug(f"Running {self.__class__.__name__} execute()")
 
-        for split in self.splits:
-            context = dict(split=split.name)
-            with self.name_tracker.set_contexts(context):
-                self.process(split)
-            logger.info(f"Done bundling {split.name} {self.spectra_kind} spectra.")
+#         for split in self.splits:
+#             context = dict(split=split.name)
+#             with self.name_tracker.set_contexts(context):
+#                 self.process(split)
+#             logger.info(f"Done bundling {split.name} {self.spectra_kind} spectra.")
 
 
 def trim_tt_to_target_ells(

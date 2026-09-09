@@ -77,11 +77,12 @@ def run_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        # MaskCreatorExecutor,
-        # BundlePredExecutor,
-        # BundleTrueExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
+        MaskCreatorExecutor,
+        MakeRealPowerSpectrumExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
         # ShowPredictionsCloudsExecutor,
@@ -230,10 +231,10 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_real()
+    run_real()
     # run_pyilc()
     # run_cmbnncs()
-    run_d2ps_comp()
+    # run_d2ps_comp()
 
     # run_real_pl()
     # run_cmbnncs_planck()
