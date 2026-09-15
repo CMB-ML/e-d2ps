@@ -27,7 +27,8 @@ bundle_pred: # Z_bundle.py / BundlePredExecutor
       handler: NpyHandler
       path_template: "{root}/{dataset}/{working}{stage}/pred_{split}_{epoch}.npy"
   assets_in:
-    ps: {stage: predict, orig_name: cmb_ps}
+    # ps: {stage: predict, orig_name: cmb_ps}
+    ps: ???
   splits: ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
   dir_name: &bundle_pred Analysis_Bundle
@@ -70,3 +71,16 @@ bundle_smooth:
   epochs: ${use_epochs_ps_stats}
   dir_name: *bundle_pred
   make_stage_log: False
+
+generate_metrics:
+  assets_out:
+    per_ell_metric:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{working}{stage}/metric_{metric}_{split}_{epoch}.npy"
+  assets_in:
+    pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Metrics
+  make_stage_log: True

@@ -31,19 +31,19 @@ from d2ps_nn.ex import (
     PreprocessSpectraExecutor,
 
     ModelInitExecutor,
-    CheckGPULoadExecutor,
+    # CheckGPULoadExecutor,
     OverfitTrainingExecutor,
-    RelativeUpdatePlotExecutor,
+    # RelativeUpdatePlotExecutor,
     LRFindingTrainingExecutor,
-    LearningRatePlotExecutor,
+    # LearningRatePlotExecutor,
     TrainingExecutor,
-    LossPlotExecutor,
-    LossDeltaPlotExecutor,
+    # LossPlotExecutor,
+    # LossDeltaPlotExecutor,
     PredictExecutor,
-    ShowPredictionsPeaksExecutor,
+    # ShowPredictionsPeaksExecutor,
     BundlePredExecutor, 
     BundleTrueExecutor,
-    ShowTrebleEll,
+    # ShowTrebleEll,
     NewMetricExecutor,
     ShowPredictionsCloudsExecutor
     )
@@ -113,8 +113,8 @@ def run_6_train(cfg):
         # LRFindingTrainingExecutor,
         # LearningRatePlotExecutor,
         TrainingExecutor,
-        LossPlotExecutor,
-        LossDeltaPlotExecutor
+        # LossPlotExecutor,
+        # LossDeltaPlotExecutor
     ]
     run(cfg, pipes)
 
@@ -123,10 +123,10 @@ def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         PredictExecutor,
-        ShowPredictionsPeaksExecutor,
+        # ShowPredictionsPeaksExecutor,
         BundlePredExecutor,
         BundleTrueExecutor,
-        ShowTrebleEll,
+        # ShowTrebleEll,
         NewMetricExecutor,
         ShowPredictionsCloudsExecutor
     ]
@@ -148,7 +148,7 @@ def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
              PredictExecutor,
-             ShowPredictionsPeaksExecutor,
+            #  ShowPredictionsPeaksExecutor,
              ]
     run(cfg, pipes)
 
@@ -190,6 +190,6 @@ if __name__ == "__main__":
     # run_4_prep_ps()
     # run_5_make_models()
     run_6_train()
-    run_7_infer()
+    # run_7_infer()
     # run_8_prep_planck()
-    run_9_run_planck()
+    # run_9_run_planck()

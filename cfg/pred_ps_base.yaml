@@ -1,0 +1,116 @@
+defaults:
+  - local_system   : generic_lab
+  - file_system    : common_fs
+  - pipeline       : assembly_surr_real_ps
+  - scenario       : scenario
+  - splits         : all
+  # - splits         : all_big
+  # - splits         : all_2000
+  # - splits         : "1-1"   # For on_Planck
+  - model          : basic_d2ps_nn_l2
+  # - model/sim      : sim  # Ensure ok to remove. Remove.
+  - model/analysis : basic_analysis
+  - model/analysis/metrics : metrics
+  - override hydra/job_logging: custom_log
+  - _self_
+
+dataset_name: "${map_fields}_${scenario.nside}_${splits.name}_broad_dist"
+
+# For interpolation into model_runs
+real_cleaning_model   : "Realization_PS"
+real_working_dir      : "Real_PS/"
+real_fig_model_name   : "Realization Spectra"
+real_use_epochs       : [""]
+real_use_epoch        : ""
+real_sm_epoch         : ""
+real_do_smooth        : true
+real_sm_score_ell_max : null
+real_bundle_pred_src  : {stage: make_real_ps, orig_name: auto_real}
+
+pyilc_cleaning_model   : "PyILC_CNILC"
+pyilc_working_dir      : "${pyilc_cleaning_model}/"
+pyilc_fig_model_name   : "PyILC Spectra"
+pyilc_use_epochs       : [""]
+pyilc_use_epoch        : ""
+pyilc_sm_epoch         : ""
+pyilc_do_smooth        : true
+pyilc_sm_score_ell_max : null
+pyilc_bundle_pred_src  : {stage: make_pred_ps, orig_name: auto_pred}
+
+cmbnncs_cleaning_model   : "cmbNNCS_UNet8"
+cmbnncs_working_dir      : "${cmbnncs_cleaning_model}/"
+cmbnncs_fig_model_name   : "cmbNNCS Spectra"
+cmbnncs_use_epochs       : ["best"]
+cmbnncs_use_epoch        : "best"
+cmbnncs_sm_epoch         : "best"
+cmbnncs_do_smooth        : true
+cmbnncs_sm_score_ell_max : 500
+cmbnncs_bundle_pred_src  : {stage: make_pred_ps, orig_name: auto_pred}
+
+obs2ps_cleaning_model   : "obs2ps"
+obs2ps_working_dir      : "obs2ps_use_mask_inv_test/drop_no_drop_scale_ps_none-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/"
+obs2ps_fig_model_name   : "d2ps"
+obs2ps_use_epochs       : ["best"]
+obs2ps_use_epoch        : "best"
+obs2ps_sm_epoch         : null
+obs2ps_do_smooth        : false
+obs2ps_sm_score_ell_max : null
+obs2ps_bundle_pred_src  : {stage: predict, orig_name: cmb_ps}
+
+# cleaning_model   : ${model.cleaning.cleaning_model}
+working_dir      : ${model.cleaning.working_dir}
+# fig_model_name   : ${model.cleaning.fig_model_name}
+use_epochs       : ${model.cleaning.use_epochs}
+# do_smooth        : ${model.cleaning.do_smooth}
+# sm_epoch         : ${model.cleaning.sm_epoch}
+# sm_score_ell_max : ${model.cleaning.sm_score_ell_max}
+
+pipeline:
+  bundle_pred:
+    assets_in:
+      ps: ${model.cleaning.bundle_pred_src}
+
+# Settings below this point are used for interpolation.
+# These are not to be used directly in the python
+# They are picked up from here and MAY be used elsewhere in the yamls.
+# In the scenario yaml
+nside          : 512
+detectors      : [100, 143, 217, 353]
+map_fields     : "I"
+
+lmax           : 1280
+
+# For prediction, postprocessing, power spectra generation:
+# For single simulation figures (maps & ps figures):
+use_epochs_imgs      : ${use_epochs}
+# For summary statistics:
+use_epochs_map_stats : ${use_epochs}
+# For summary statistics:
+use_epochs_ps_stats  : ${use_epochs}
+
+# Limit the number of simulations on which to do inference and postprocessing
+# In the splits yaml; null to run on all
+n_infer_cap           : null
+run_inference_on      : [test, valid]  # Either "test" ("train" should work, but is not recommended)
+fig_type              : [png, pdf]
+
+# Analysis smoothing details
+sm_basis_kind: "polyfit"  # Use np.polyfit, the fastest by ~4x.
+                          # Alternatives (chebyshev, legendre, monomial) use scikit-learn.
+                          # Results agree to ~10 decimal places. 
+sm_deg_range: [4,30]
+sm_criterion: "mean_r2"
+
+# Analysis details
+metrics_to_use: ["mse", "rel_err", "abs_rel_err_pct", "thry_var", "tension", "R2"]
+
+# Figures detail
+n_show_cap : 10
+sigma_scale: 1
+
+# Hydra
+hydra:
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  verbose          : false
+

@@ -1,0 +1,9 @@
+defaults:
+  - pred_ps_base
+  - model/cleaning@models.real_ps: real_ps
+  - model/cleaning@models.pyilc: pyilc
+  - model/cleaning@models.cmbnncs: cmbnncs
+  - model/cleaning@models.obs2ps: obs2ps
+  - _self_
+
+working_dir: "PolyModel_Figs"

@@ -53,27 +53,6 @@ pipeline:
       ps_bundle:
         handler: NpyHandler
         path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
-  ps_analysis:
-    assets_in:
-      auto_pred: {stage: make_pred_ps, orig_name: auto_pred}
-  per_split_analysis:
-    assets_in:
-      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
-  show_predictions:
-    assets_in:
-      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
-  show_predictions_bw:
-    assets_in:
-      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
-  show_predictions_indiv:
-    assets_in:
-      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
-  error_analysis:
-    assets_in:
-      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
-  show_predictions_error_analysis:
-    assets_in:
-      ps_pred: {stage: make_pred_ps, orig_name: auto_pred}
   bundle_pred:
     assets_in:
       ps: {stage: make_pred_ps, orig_name: auto_pred}

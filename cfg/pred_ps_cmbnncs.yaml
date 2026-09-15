@@ -1,0 +1,3 @@
+defaults:
+  - pred_ps_base
+  - model/cleaning: cmbnncs

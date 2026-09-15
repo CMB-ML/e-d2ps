@@ -29,7 +29,6 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
 
         self.in_ps_pred: Asset = self.assets_in["ps_pred"]
         self.in_ps_thry: Asset = self.assets_in["ps_thry"]
-        self.in_report: Asset = self.assets_in["report"]
         in_ps_prep_handler: TextPowerSpectrum
         in_ps_thry_handler: CambPowerSpectrum
         in_report_handler: PandasCsvHandler
@@ -56,9 +55,6 @@ class ShowIndivPredictionsExecutor(BaseStageExecutor):
     def process_split(self, split: Split) -> None:
         show_max_l = self.display_lmax
         use_alt_path = True if split.ps_fidu_fixed else False
-
-        report_data = self.in_report.read()
-        report_data['epoch'] = report_data['epoch'].astype(str)  # Ensure epoch is string for comparison
 
         for epoch in self.model_epochs:
             show_sims = set(range(self.first_n))

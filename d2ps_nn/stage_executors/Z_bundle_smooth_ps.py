@@ -24,8 +24,8 @@ class BundleSmoothExecutor(BaseStageExecutor):
         self.in_ps: Asset = self.assets_in["pred"]
         self.in_deg_cfg: Asset = self.assets_in["deg_cfg"]
 
-        self.cleaning_model = cfg.cleaning_model
-        self.do_smooth = cfg.do_smooth
+        self.cleaning_model = cfg.model.cleaning.cleaning_model
+        self.do_smooth = cfg.model.cleaning.do_smooth
 
         self.use_ells = cfg.model.use_ells
         self.ells = parse_ells(self.use_ells)

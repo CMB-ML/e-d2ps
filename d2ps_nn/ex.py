@@ -25,30 +25,33 @@ from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
 from .stage_executors.J_ps_error_analysis import ErrorAnalysisExecutor
 from .stage_executors.K_per_split_analysis import PerSplitAnalysis
 
-from .stage_executors._check_model_size import CheckGPULoadExecutor
-from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
-from .stage_executors._loss_summary import LossSummaryExecutor
-from .stage_executors._loss_plot import LossPlotExecutor, LossDeltaPlotExecutor, LearningRatePlotExecutor
-from .stage_executors._rel_update_plot import RelativeUpdatePlotExecutor
-from .stage_executors._show_predictions import ShowPredictionsExecutor
-from .stage_executors._show_predictions_peaks import ShowPredictionsPeaksExecutor
-from .stage_executors._show_predictions_bw import ShowBWPredictionsExecutor
-from .stage_executors._show_predictions_indiv import ShowIndivPredictionsExecutor
-from .stage_executors._show_predictions_error_analysis import ShowPredictionsWithChiSquareExecutor
+# from .stage_executors._check_model_size import CheckGPULoadExecutor
+# from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor
+# from .stage_executors._loss_summary import LossSummaryExecutor
+# from .stage_executors._loss_plot import LossPlotExecutor, LossDeltaPlotExecutor, LearningRatePlotExecutor
+# from .stage_executors._rel_update_plot import RelativeUpdatePlotExecutor
+# from .stage_executors._show_predictions import ShowPredictionsExecutor
+# from .stage_executors._show_predictions_peaks import ShowPredictionsPeaksExecutor
+# from .stage_executors._show_predictions_bw import ShowBWPredictionsExecutor
+# from .stage_executors._show_predictions_indiv import ShowIndivPredictionsExecutor
+# from .stage_executors._show_predictions_error_analysis import ShowPredictionsWithChiSquareExecutor
 
-from .stage_executors.__show_rel_err_old import ShowRelativeError
-from .stage_executors.__show_cosmic_fractions import ShowCosmicFractions
-from .stage_executors.__show_chi_sq import ShowChiSquare
+# from .stage_executors.__show_rel_err_old import ShowRelativeError
+# from .stage_executors.__show_cosmic_fractions import ShowCosmicFractions
+# from .stage_executors.__show_chi_sq import ShowChiSquare
 
-from .stage_executors.__show_petroff_like import ShowPetroffSingle
-from .stage_executors.__show_petroff_like import ShowPetroffSet
-from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
+# from .stage_executors.__show_petroff_like import ShowPetroffSingle
+# from .stage_executors.__show_petroff_like import ShowPetroffSet
+# from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
 
 from .stage_executors.Y_get_best_poly_deg import GetPolyDegreeExecutor
 from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor
 from .stage_executors.Z_bundle_maps import BundleMapsExecutor
-from .stage_executors._show_treble_ell import ShowTrebleEll
+# from .stage_executors._show_treble_ell import ShowTrebleEll
 from .stage_executors.Z_bundle_smooth_ps import BundleSmoothExecutor, BundleSmoothTrueExecutor
 
 from .stage_executors._new_metric import NewMetricExecutor, NewMetricSmExecutor
 from .stage_executors._cloud import ShowPredictionsCloudsExecutor
+
+from .stage_executors.ZZ_get_metrics import GetMetricsExecutor
+from .stage_executors.ZZZ_base_figs import BaseFigsExecutor

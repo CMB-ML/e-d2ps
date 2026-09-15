@@ -11,54 +11,32 @@ from cmbml.analysis.ex import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn.ex import (
-    PowerSpectrumAnalysisExecutor,
-    PerSplitAnalysis,
-    ShowChiSquare,
-    ShowRelativeError,
-    ShowCosmicFractions,
-    ShowPredictionsExecutor,
-    ShowBWPredictionsExecutor,
-    ShowIndivPredictionsExecutor,
-    ErrorAnalysisExecutor,
-    ShowPredictionsWithChiSquareExecutor,
+    # PowerSpectrumAnalysisExecutor,
+    # PerSplitAnalysis,
+    # ShowChiSquare,
+    # ShowRelativeError,
+    # ShowCosmicFractions,
+    # ShowPredictionsExecutor,
+    # ShowBWPredictionsExecutor,
+    # ShowIndivPredictionsExecutor,
+    # ErrorAnalysisExecutor,
+    # ShowPredictionsWithChiSquareExecutor,
     BundlePredExecutor,
     GetPolyDegreeExecutor,
     BundleSmoothExecutor,
     BundleSmoothTrueExecutor,
+    GetMetricsExecutor,
     BundleTrueExecutor,
-    NewMetricExecutor,
-    NewMetricSmExecutor,
+    BaseFigsExecutor
+    # NewMetricExecutor,
+    # NewMetricSmExecutor,
     # NewMetricSmTrueExecutor,
-    ShowPredictionsCloudsExecutor
+    # ShowPredictionsCloudsExecutor
 )
 
 
 logger = logging.getLogger(__name__)
 
-
-# @hydra.main(version_base=None, config_path="cfg", config_name="config_thry_sm_ps")
-# def run_thry_sm_baseline(cfg):
-#     # print(OmegaConf.to_yaml(cfg))
-
-#     pipes = [
-#         # MaskCreatorExecutor,
-#         # BundlePredExecutor,
-#         BundleSmoothExecutor,
-#         # NewMetricExecutor,
-#         NewMetricSmExecutor,
-#         # MakeRealPowerSpectrumExecutor,
-#         # PowerSpectrumAnalysisExecutor,
-#         # PerSplitAnalysis,
-#         # ShowChiSquare,
-#         # ShowRelativeError,
-#         # ShowCosmicFractions,
-#         # ShowPredictionsExecutor,
-#         # ShowBWPredictionsExecutor,
-#         # ShowIndivPredictionsExecutor,
-#         # ErrorAnalysisExecutor,
-#         # ShowPredictionsWithChiSquareExecutor,
-#     ]
-#     run(cfg, pipes)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_true_sm_ps")
 def run_sm_theory(cfg):
@@ -66,23 +44,24 @@ def run_sm_theory(cfg):
 
     pipes = [
         BundleSmoothTrueExecutor,
-        NewMetricSmExecutor,
-        ShowPredictionsCloudsExecutor
+        # NewMetricSmExecutor,
+        # ShowPredictionsCloudsExecutor
     ]
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_real_ps")
-def run_real(cfg):
+@hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_real")
+def run_bundle_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        MaskCreatorExecutor,
-        MakeRealPowerSpectrumExecutor,
+        # MaskCreatorExecutor,
+        # MakeRealPowerSpectrumExecutor,
         BundleTrueExecutor,
         BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetMetricsExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
         # ShowPredictionsCloudsExecutor,
@@ -100,12 +79,39 @@ def run_real(cfg):
     ]
     run(cfg, pipes)
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_cmbnncs")
-def run_cmbnncs(cfg):
+
+@hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_pyilc")
+def run_bundle_pyilc(cfg):
     pipes = [
-        # BundlePredExecutor,
+        # BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
+        GetMetricsExecutor,
+        # NewMetricSmExecutor,
+        # ShowPredictionsCloudsExecutor
+        # PowerSpectrumAnalysisExecutor,
+        # PerSplitAnalysis,
+        # ShowChiSquare,
+        # ShowRelativeError,
+        # ShowCosmicFractions,
+        # ShowPredictionsExecutor,
+        # ShowBWPredictionsExecutor,
+        # ShowIndivPredictionsExecutor,
+        # ErrorAnalysisExecutor,
+        # ShowPredictionsWithChiSquareExecutor,
+    ]
+    run(cfg, pipes)
+
+
+@hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_cmbnncs")
+def run_bundle_cmbnncs(cfg):
+    pipes = [
+        # BundleTrueExecutor,
+        BundlePredExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetMetricsExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
         # ShowPredictionsCloudsExecutor
@@ -122,12 +128,15 @@ def run_cmbnncs(cfg):
     ]
     run(cfg, pipes)
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_other_comp")
-def run_d2ps_comp(cfg):
+
+@hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_obs2ps")
+def run_bundle_d2ps(cfg):
     pipes = [
-        # BundlePredExecutor,
+        # BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
+        GetMetricsExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
         # ShowPredictionsCloudsExecutor
@@ -145,33 +154,20 @@ def run_d2ps_comp(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_pyilc")
-def run_pyilc(cfg):
+@hydra.main(version_base=None, config_path="cfg", config_name="produce_figs")
+def run_all_model_analysis(cfg):
     pipes = [
-        # BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        BaseFigsExecutor
     ]
     run(cfg, pipes)
+
 
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config_real_ps_planck")
 def run_real_pl(cfg):
     pipes = [
         MakeRealPowerSpectrumExecutor,
-        ShowPredictionsExecutor,
+        # ShowPredictionsExecutor,
         BundlePredExecutor
         ]
     run(cfg, pipes)
@@ -179,7 +175,7 @@ def run_real_pl(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_cmbnncs_pl")
 def run_cmbnncs_planck(cfg):
     pipes = [
-        ShowPredictionsExecutor,
+        # ShowPredictionsExecutor,
         BundlePredExecutor
         ]
     run(cfg, pipes)
@@ -187,7 +183,7 @@ def run_cmbnncs_planck(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_pyilc_pl")
 def run_pyilc_planck(cfg):
     pipes = [
-        ShowPredictionsExecutor,
+        # ShowPredictionsExecutor,
         BundlePredExecutor
         ]
     run(cfg, pipes)
@@ -231,10 +227,12 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_real()
-    # run_pyilc()
-    # run_cmbnncs()
-    # run_d2ps_comp()
+    # run_bundle_real()
+    # run_bundle_pyilc()
+    # run_bundle_cmbnncs()
+    # run_bundle_d2ps()
+
+    run_all_model_analysis()
 
     # run_real_pl()
     # run_cmbnncs_planck()

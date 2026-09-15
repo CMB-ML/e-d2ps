@@ -25,9 +25,13 @@ class GetPolyDegreeExecutor(BaseStageExecutor):
         self.in_pred: Asset = self.assets_in["ps_pred_bundle"]
         self.in_thry: Asset = self.assets_in["ps_thry_bundle"]
 
-        self.cleaning_model = cfg.cleaning_model
-        self.do_smooth = cfg.do_smooth
+        # Per model details
+        self.cleaning_model = cfg.model.cleaning.cleaning_model
+        self.do_smooth = cfg.model.cleaning.do_smooth
+        self.score_ell_max = cfg.model.cleaning.get("sm_score_ell_max", None)
+        self.sm_epoch = cfg.model.cleaning.sm_epoch
 
+        # Other settings
         self.use_ells = cfg.model.use_ells
         self.ells = parse_ells(self.use_ells)
 
@@ -58,25 +62,9 @@ class GetPolyDegreeExecutor(BaseStageExecutor):
             msg = f"No criterion specified."
             logger.warning(msg)
             raise ValueError(msg)
-        self.score_ell_max = cfg.get("sm_score_ell_max", None)
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
-        if self.model_epochs in [[""], ["best"]]:
-            use_epoch = self.model_epochs[0]
-        elif len(self.model_epochs) != 1:
-            if "best" not in self.model_epochs:
-                msg = f"Epochs not recognized. Epochs: f{self.model_epochs}"
-                logger.warning(msg)
-                raise NotImplementedError(msg)
-            else:
-                logger.warning("Multiple epochs specified. Executor will use only 'best'.")
-                use_epoch = "best"
-        else:
-            msg = f"Epochs not recognized. Epochs: f{self.model_epochs}"
-            logger.warning(msg)
-            raise NotImplementedError(msg)
-
         try:
             split = self.splits['Valid']
         except KeyError:
@@ -86,7 +74,7 @@ class GetPolyDegreeExecutor(BaseStageExecutor):
 
         model = self.cleaning_model
         if self.do_smooth:
-            context = dict(epoch=use_epoch, split=split.name)
+            context = dict(epoch=self.sm_epoch, split=split.name)
             with self.name_tracker.set_contexts(context):
                 pred = self.in_pred.read()
                 thry = self.in_thry.read()
@@ -101,7 +89,7 @@ class GetPolyDegreeExecutor(BaseStageExecutor):
                 criterion=self.criterion,
                 ell_max={model: self.score_ell_max},
                 use_ells=self.use_ells,
-                epoch=use_epoch
+                epoch=self.sm_epoch
             )
         else:
             sel = ds.DegreeSelection(degrees={model: None}, 
@@ -111,6 +99,6 @@ class GetPolyDegreeExecutor(BaseStageExecutor):
                                      criterion=None,
                                      smoother=None,
                                      selection_split=split.name, 
-                                     epoch=use_epoch
+                                     epoch=self.sm_epoch
                                      )    
         self.out_deg_cfg.write(data=sel.to_dict())

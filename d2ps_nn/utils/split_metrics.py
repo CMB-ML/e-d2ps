@@ -391,6 +391,8 @@ def compute_metrics(pred, thry, ells, fsky=1.0):
     pv = pred.var(0, ddof=DDOF)
 
     out = dict(decomposition(pred, thry, ells))
+
+    # Note that the following are in addition to the metrics from lines 327-335
     out.update({
         # per-instance metrics, aggregated here
         "mse": squared_error(pred, thry).mean(0),

@@ -1,0 +1,95 @@
+show_predictions_indiv: # _show_predictions_indiv.py / ShowIndivPredictionsExecutor
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_E_indiv_pred_{split}_ep_{epoch}_{sim}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+show_predictions_peaks: # _show_predictions_peaks.py / ShowPredictionsPeaksExecutor
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_D_predictions_{split}_ep_{epoch}_peaks.{fig_type}"
+  assets_in:
+    ps_pred: {stage: predict, orig_name: cmb_ps}
+    ps_thry:
+      stage: make_theory_ps
+      orig_name: cmb_ps
+      working: Simulation_Working/
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+show_treble_ell: # _show_treble_ell.py / ShowTrebleEll
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_G_treble_{split}_ep_{epoch}.{fig_type}"
+  assets_in:
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    pred: {stage: bundle_pred, orig_name: ps_bundle}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+new_metric:
+  assets_out:
+    metric:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/metrics_{split}.txt"
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_H_{split}_{metric}.{fig_type}"
+  assets_in:
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    pred: {stage: bundle_pred, orig_name: ps_bundle}
+    bank: {stage: raw, orig_name: ps_bundle}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+new_metric_sm:
+  assets_out:
+    metric:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/metrics_{split}_sm.txt"
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_H_sm_{split}_{metric}.{fig_type}"
+  assets_in:
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    bank: {stage: raw, orig_name: ps_bundle}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
+
+show_predictions_clouds: # _clouds.py / ShowPredictionsCloudsExecutor
+  assets_out:
+    fig: 
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_L_predictions_{split}_ep_{epoch}_peaks_{norm}.{fig_type}"
+  assets_in:
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    pred_sm: {stage: bundle_smooth, orig_name: ps_bundle}
+    pred_ns: {stage: bundle_pred, orig_name: ps_bundle}
+  splits:
+    - ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: False
