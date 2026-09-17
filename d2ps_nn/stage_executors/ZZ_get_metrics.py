@@ -28,7 +28,7 @@ class GetMetricsExecutor(BaseStageExecutor):
         self.ells = parse_ells(cfg.model.use_ells)
         self.spectra_kind = ""
 
-        self.include_metrics = cfg.use_metrics
+        self.include_metrics = cfg.metrics_to_use
 
         self.sky_fraction = None
         if self.sky_fraction is not None:
