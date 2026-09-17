@@ -7,3 +7,4 @@ do_smooth        : ${real_do_smooth}
 sm_epoch         : ${real_sm_epoch}
 sm_score_ell_max : ${real_sm_score_ell_max}
 bundle_pred_src  : ${real_bundle_pred_src}
+fig_color        : ${real_fig_color}

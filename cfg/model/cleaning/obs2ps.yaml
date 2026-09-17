@@ -7,3 +7,4 @@ do_smooth        : ${obs2ps_do_smooth}
 sm_epoch         : ${obs2ps_sm_epoch}
 sm_score_ell_max : ${obs2ps_sm_score_ell_max}
 bundle_pred_src  : ${obs2ps_bundle_pred_src}
+fig_color        : ${obs2ps_fig_color}

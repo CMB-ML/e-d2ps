@@ -7,3 +7,4 @@ do_smooth        : ${cmbnncs_do_smooth}
 sm_epoch         : ${cmbnncs_sm_epoch}
 sm_score_ell_max : ${cmbnncs_sm_score_ell_max}
 bundle_pred_src  : ${cmbnncs_bundle_pred_src}
+fig_color        : ${cmbnncs_fig_color}

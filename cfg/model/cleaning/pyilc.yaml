@@ -7,3 +7,4 @@ do_smooth        : ${pyilc_do_smooth}
 sm_epoch         : ${pyilc_sm_epoch}
 sm_score_ell_max : ${pyilc_sm_score_ell_max}
 bundle_pred_src  : ${pyilc_bundle_pred_src}
+fig_color        : ${pyilc_fig_color}
