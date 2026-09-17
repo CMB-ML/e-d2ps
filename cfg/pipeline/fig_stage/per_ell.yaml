@@ -1,0 +1,9 @@
+assets_out:
+  fig:
+    handler: MPLFigure
+    path_template: "{root}/{dataset}/{working}{stage}/fig_L_{metric}_{split}.{fig_type}"
+assets_in:
+  per_ell_metric: {stage: generate_metrics}
+splits: ${splits.run_inference_on}
+dir_name: Analysis_Figures
+make_stage_log: True

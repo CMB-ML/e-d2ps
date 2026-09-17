@@ -1,16 +1,39 @@
-plot_base:
-  assets_out:
-    fig:
-      handler: MPLFigure
-      path_template: "{root}/{dataset}/{working}{stage}/fig_E_indiv_pred_{split}_ep_{epoch}_{sim}.{fig_type}"
-  assets_in:
-    ps_pred: {stage: bundle_pred, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
-    per_ell_metric: {stage: generate_metrics}
-  splits: ${splits.run_inference_on}
-  epochs: ${use_epochs_ps_stats}
-  dir_name: Analysis_Figures
-  make_stage_log: True
+defaults:
+  - /pipeline/fig_stage@plot_mse: per_ell
+  - /pipeline/fig_stage@plot_r2: per_ell
+  - /pipeline/fig_stage@plot_abs_rel_err_pct: per_ell
+  - _self_
+
+plot_mse:
+  metrics: ["mse"]
+  display:
+    ylim: [20, 2e6]
+plot_r2:
+  metrics: ["R2"]
+  display:
+    ylim: [0, 1]
+plot_abs_rel_err_pct:
+  metrics: abs_rel_err_pct
+  display:
+    ylim: [0, 20]
+
+# plot_compare_per_ell_metric:
+#   metrics:
+#     - mse
+#     - R2
+#     - abs_rel_err_pct
+#   assets_out:
+#     fig:
+#       handler: MPLFigure
+#       path_template: "{root}/{dataset}/{working}{stage}/fig_L_{metric}_{split}.{fig_type}"
+#   assets_in:
+#     ps_pred: {stage: bundle_pred, orig_name: ps_bundle}
+#     ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+#     per_ell_metric: {stage: generate_metrics}
+#   splits: ${splits.run_inference_on}
+#   epochs: ${use_epochs_ps_stats}
+#   dir_name: Analysis_Figures
+#   make_stage_log: True
 
 # show_predictions_indiv: # _show_predictions_indiv.py / ShowIndivPredictionsExecutor
 #   assets_out:
