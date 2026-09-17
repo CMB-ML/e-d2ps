@@ -30,7 +30,9 @@ argument (``metrics`` / ``preds`` / ``spectra``).
         ``{model: str}`` for the legend.
     display
         One dict for the quantity on the axes: ``xlabel``, ``ylabel``, and
-        optionally ``yscale``. Per-metric, so it changes with what is plotted.
+        optionally ``yscale`` and ``ylim``. Per-metric, so it changes with what
+        is plotted. Every axis property arrives by this one route, which is what
+        lets a pipeline stage override any of them with a single config block.
     figure
         One dict for the canvas: ``figsize``, ``dpi``. Per-run, so it is the
         same for every figure in a paper.
@@ -102,13 +104,15 @@ def _require_theory_style(theory_style):
 
 
 def _apply_display(ax, display):
-    """Set the axis labels and scale from a display dict."""
+    """Set the axis labels, scale, and limits from a display dict."""
     if "xlabel" in display:
         ax.set_xlabel(display["xlabel"])
     if "ylabel" in display:
         ax.set_ylabel(display["ylabel"])
     if display.get("yscale"):
         ax.set_yscale(display["yscale"])
+    if display.get("ylim") is not None:
+        ax.set_ylim(*display["ylim"])
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +143,7 @@ def is_fixed(arr):
 
 def plot_per_ell_metric(
     ells, metrics, metric, *, styles, labels, display, figure=None,
-    theory_metric=None, theory_style=None, ylim=None, title=None, ax=None,
+    theory_metric=None, theory_style=None, title=None, ax=None,
 ):
     """One per-ell metric for every model, on shared axes.
 
@@ -173,8 +177,6 @@ def plot_per_ell_metric(
         ax.plot(ells, met[metric], lw=1, label=labels[key], **line_style)
 
     _apply_display(ax, display)
-    if ylim is not None:
-        ax.set_ylim(*ylim)
     ax.legend(loc="best")
 
     if title:
@@ -186,7 +188,7 @@ def plot_per_ell_metric(
 def plot_model_vs_theory_with_tension(
     ells, preds, metrics, *, styles, labels, display, bottom_display,
     figure=None, theory=None, theory_style=None, bottom_key="tension",
-    dl_ylim=None, bottom_ylim=None, title=None, title_fontsize=14, ax=None,
+    title=None, title_fontsize=14, ax=None,
 ):
     """Prediction mean and 1-sigma against theory, with a second panel below.
 
@@ -261,13 +263,9 @@ def plot_model_vs_theory_with_tension(
         ax2.plot(ells, met[bottom_key], lw=1, label=labels[key], **line_style)
 
     _apply_display(ax1, display)
-    if dl_ylim is not None:
-        ax1.set_ylim(*dl_ylim)
     ax1.legend(loc="best")
 
     _apply_display(ax2, bottom_display)
-    if bottom_ylim is not None:
-        ax2.set_ylim(*bottom_ylim)
     if not single:
         ax2.legend(loc="best", fontsize=8)
 
@@ -279,7 +277,7 @@ def plot_model_vs_theory_with_tension(
 
 def plot_realization(
     ells, spectra, realization=0, *, styles, labels, display, figure=None,
-    theory=None, theory_style=None, ylim=None, title=None, ax=None,
+    theory=None, theory_style=None, title=None, ax=None,
 ):
     """One realization from each series.
 
@@ -322,8 +320,6 @@ def plot_realization(
                 label=labels[key], **line_style)
 
     _apply_display(ax, display)
-    if ylim is not None:
-        ax.set_ylim(*ylim)
     ax.legend(loc="best")
 
     if title:

@@ -27,7 +27,9 @@ from d2ps_nn.ex import (
     BundleSmoothTrueExecutor,
     GetMetricsExecutor,
     BundleTrueExecutor,
-    BaseFigsExecutor
+    ComparePerEllR2Executor,
+    ComparePerEllMSEExecutor,
+    ComparePerEllAbsRelErrPctExecutor
     # NewMetricExecutor,
     # NewMetricSmExecutor,
     # NewMetricSmTrueExecutor,
@@ -57,10 +59,10 @@ def run_bundle_real(cfg):
     pipes = [
         # MaskCreatorExecutor,
         # MakeRealPowerSpectrumExecutor,
-        BundleTrueExecutor,
-        BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
         GetMetricsExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
@@ -84,9 +86,9 @@ def run_bundle_real(cfg):
 def run_bundle_pyilc(cfg):
     pipes = [
         # BundleTrueExecutor,
-        BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
+        # BundlePredExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
         GetMetricsExecutor,
         # NewMetricSmExecutor,
         # ShowPredictionsCloudsExecutor
@@ -108,9 +110,9 @@ def run_bundle_pyilc(cfg):
 def run_bundle_cmbnncs(cfg):
     pipes = [
         # BundleTrueExecutor,
-        BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
+        # BundlePredExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
         GetMetricsExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
@@ -133,9 +135,9 @@ def run_bundle_cmbnncs(cfg):
 def run_bundle_d2ps(cfg):
     pipes = [
         # BundleTrueExecutor,
-        BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
+        # BundlePredExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
         GetMetricsExecutor,
         # NewMetricExecutor,
         # NewMetricSmExecutor,
@@ -157,7 +159,9 @@ def run_bundle_d2ps(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="produce_figs")
 def run_all_model_analysis(cfg):
     pipes = [
-        BaseFigsExecutor
+        ComparePerEllR2Executor,
+        ComparePerEllMSEExecutor,
+        ComparePerEllAbsRelErrPctExecutor
     ]
     run(cfg, pipes)
 

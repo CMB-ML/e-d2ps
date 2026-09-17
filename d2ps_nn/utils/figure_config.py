@@ -35,6 +35,18 @@ def _plain(value):
     return value
 
 
+def _merge(base, override):
+    """Override wins key by key. A null in the override is ignored, so a stage
+    can leave a key out of its block without having to spell it as absent.
+    """
+    out = dict(base)
+    if override:
+        for key, value in _plain(override).items():
+            if value is not None:
+                out[key] = value
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Per-model appearance
 # ---------------------------------------------------------------------------
@@ -68,13 +80,20 @@ def labels_for_models(models):
 # Per-quantity and per-run appearance
 # ---------------------------------------------------------------------------
 
-def display_for_metric(cfg_figs, metric):
-    """``{xlabel, ylabel, yscale}`` for one metric.
+def display_for_metric(cfg_figs, metric, override=None):
+    """``{xlabel, ylabel, yscale, ylim}`` for one metric.
 
     ``xlabel`` is always the multipole label: every figure here is against ell.
     A metric absent from ``metric_display`` falls back to its own name with a
     linear axis and warns, so adding a metric upstream produces a plottable if
     unpolished figure rather than a crash.
+
+    ``override`` is the stage's own ``display`` block, winning key by key. The
+    split is between what a quantity IS -- MSE spans decades, so it wants a log
+    axis whoever plots it -- and what this comparison needs, such as a limit
+    chosen because one method underperforms. The first belongs in
+    ``metric_display``, where the notebook sees it too; the second belongs in
+    the stage, where it stays with the run that wanted it.
     """
     cfg_figs = _plain(cfg_figs)
     table = cfg_figs.get("metric_display", {})
@@ -88,19 +107,20 @@ def display_for_metric(cfg_figs, metric):
         entry = {"ylabel": metric}
 
     display = {"xlabel": cfg_figs["axis_labels"]["ell"]}
-    for field in ("ylabel", "yscale"):
+    for field in ("ylabel", "yscale", "ylim"):
         if entry.get(field) is not None:
             display[field] = entry[field]
-    return display
+    return _merge(display, override)
 
 
-def display_for_dl(cfg_figs):
+def display_for_dl(cfg_figs, override=None):
     """``{xlabel, ylabel}`` for a spectrum panel, whose y-axis is D_ell."""
     cfg_figs = _plain(cfg_figs)
-    return {
+    display = {
         "xlabel": cfg_figs["axis_labels"]["ell"],
         "ylabel": cfg_figs["axis_labels"]["dl"],
     }
+    return _merge(display, override)
 
 
 def label_for_metric(cfg_figs, metric):
@@ -110,20 +130,15 @@ def label_for_metric(cfg_figs, metric):
     return entry.get("label", metric)
 
 
-def ylim_for_metric(cfg_figs, metric):
-    """Fixed y-limits for a metric, or None to autoscale."""
-    cfg_figs = _plain(cfg_figs)
-    entry = cfg_figs.get("metric_display", {}).get(metric) or {}
-    ylim = entry.get("ylim")
-    return tuple(ylim) if ylim is not None else None
-
-
-def figure_kwargs(cfg_figs, canvas="figure"):
+def figure_kwargs(cfg_figs, canvas="figure", override=None):
     """``{figsize, dpi}`` for the canvas named by ``canvas``.
 
     ``canvas`` selects among the sizes in config -- "figure" for a single panel,
     "figure_tall" for the two-panel layouts -- so figure size is a run-level
     decision made once rather than a default buried in a plotting function.
+
+    ``override`` is the stage's own ``figure`` block, for the figure that needs
+    a shape of its own.
     """
     cfg_figs = _plain(cfg_figs)
     try:
@@ -133,7 +148,9 @@ def figure_kwargs(cfg_figs, canvas="figure"):
             f"No {canvas!r} block in the figures config; "
             f"has {sorted(k for k in cfg_figs)}"
         ) from None
-    return {"figsize": tuple(block["figsize"]), "dpi": block["dpi"]}
+    kwargs = _merge({"figsize": block["figsize"], "dpi": block["dpi"]}, override)
+    kwargs["figsize"] = tuple(kwargs["figsize"])
+    return kwargs
 
 
 def theory_style(cfg_figs):
