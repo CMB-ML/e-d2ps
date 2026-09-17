@@ -4,6 +4,11 @@ defaults:
   - model/cleaning@models.pyilc: pyilc
   - model/cleaning@models.cmbnncs: cmbnncs
   - model/cleaning@models.obs2ps: obs2ps
+  - model/analysis/figures: figures
   - _self_
 
-working_dir: "PolyModel_Figs"
+working_dir: "Across_Model_Figs/"
+
+# Order and membership: omitted models are not loaded. A subset changes
+# autoscaled axis limits.
+model_order: ["real_ps", "pyilc", "cmbnncs", "obs2ps"]

@@ -26,6 +26,7 @@ real_sm_epoch         : ""
 real_do_smooth        : true
 real_sm_score_ell_max : null
 real_bundle_pred_src  : {stage: make_real_ps, orig_name: auto_real}
+real_fig_color        : "purple"
 
 pyilc_cleaning_model   : "PyILC_CNILC"
 pyilc_working_dir      : "${pyilc_cleaning_model}/"
@@ -36,6 +37,7 @@ pyilc_sm_epoch         : ""
 pyilc_do_smooth        : true
 pyilc_sm_score_ell_max : null
 pyilc_bundle_pred_src  : {stage: make_pred_ps, orig_name: auto_pred}
+pyilc_fig_color        : "green"
 
 cmbnncs_cleaning_model   : "cmbNNCS_UNet8"
 cmbnncs_working_dir      : "${cmbnncs_cleaning_model}/"
@@ -46,6 +48,7 @@ cmbnncs_sm_epoch         : "best"
 cmbnncs_do_smooth        : true
 cmbnncs_sm_score_ell_max : 500
 cmbnncs_bundle_pred_src  : {stage: make_pred_ps, orig_name: auto_pred}
+cmbnncs_fig_color        : "red"
 
 obs2ps_cleaning_model   : "obs2ps"
 obs2ps_working_dir      : "obs2ps_use_mask_inv_test/drop_no_drop_scale_ps_none-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/"
@@ -56,6 +59,7 @@ obs2ps_sm_epoch         : null
 obs2ps_do_smooth        : false
 obs2ps_sm_score_ell_max : null
 obs2ps_bundle_pred_src  : {stage: predict, orig_name: cmb_ps}
+obs2ps_fig_color        : "blue"
 
 # cleaning_model   : ${model.cleaning.cleaning_model}
 working_dir      : ${model.cleaning.working_dir}
@@ -102,7 +106,7 @@ sm_deg_range: [4,30]
 sm_criterion: "mean_r2"
 
 # Analysis details
-metrics_to_use: ["mse", "rel_err", "abs_rel_err_pct", "thry_var", "tension", "R2"]
+metrics_to_use: ["mse", "rel_err", "abs_rel_err_pct", "thry_var", "tension", "R2", "ceiling_r2", "loss_calib", "loss_bias"]
 
 # Figures detail
 n_show_cap : 10
