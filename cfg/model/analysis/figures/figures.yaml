@@ -26,7 +26,8 @@ axis_labels:
   dl: "$D_\\ell$ $[\\mu K_\\mathrm{CMB}^2]$"
 
 # Per-metric display. A metric absent from here still plots: it falls back to
-# its own name with a linear axis, and warns.
+# its own name with a linear axis, and warns. yscale and ylim defaults can be
+# overriden in pipeline yamls.
 #
 #   label   display name, for titles
 #   ylabel  y-axis label, normally the units
