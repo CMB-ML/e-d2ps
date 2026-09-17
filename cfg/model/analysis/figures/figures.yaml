@@ -1,0 +1,68 @@
+# Appearance for the analysis figures.
+#
+# The drawing layer (d2ps_nn/utils/figures.py) holds no visual defaults, so
+# everything it needs to style a figure comes from here. Per-model colour and
+# label are NOT here -- they live with each model in cfg/model/cleaning/, so a
+# model's appearance travels with the rest of its configuration.
+
+# Canvases. figure_kwargs(cfg, canvas=...) picks one.
+figure:
+  figsize: [8, 5]
+  dpi: 150
+
+figure_tall:          # two-panel layouts (model vs theory with tension)
+  figsize: [8, 10]
+  dpi: 150
+
+theory_style:
+  color: "black"
+  fill: "gray"
+  alpha: 0.4
+  line_label: "Theory"
+  band_label: "$\\pm \\sigma_{theory}$"
+
+axis_labels:
+  ell: "Multipole Moment $\\ell$"
+  dl: "$D_\\ell$ $[\\mu K_\\mathrm{CMB}^2]$"
+
+# Per-metric display. A metric absent from here still plots: it falls back to
+# its own name with a linear axis, and warns.
+#
+#   label   display name, for titles
+#   ylabel  y-axis label, normally the units
+#   yscale  omit for linear
+#   ylim    omit to autoscale
+metric_display:
+  mse:
+    label: "$MSE_\\ell$"
+    ylabel: "$\\mu K_\\mathrm{CMB}^4$"
+    yscale: log
+  rel_err:
+    label: "$RE_\\ell$ (signed)"
+    ylabel: "fraction"
+  abs_rel_err_pct:
+    label: "$RE_\\ell$"
+    ylabel: "$\\%$"
+  tension:
+    label: "Tension"
+    ylabel: "Tension"
+  R2:
+    label: "$R^2_\\ell$"
+    ylabel: "$R^2$"
+  ceiling_r2:
+    label: "$r^2_\\ell$"
+    ylabel: "$r^2$"
+  loss_calib:
+    label: "$(A-r)^2_\\ell$"
+    ylabel: "calibration loss"
+  loss_bias:
+    label: "$b^2_\\ell$"
+    ylabel: "bias loss"
+  thry_var:
+    label: "$\\sigma^2_{theory}$"
+    ylabel: "$\\mu K_\\mathrm{CMB}^4$"
+    yscale: log
+  pred_var:
+    label: "Variance $\\sigma^2$"
+    ylabel: "$\\mu K_\\mathrm{CMB}^4$"
+    yscale: log
