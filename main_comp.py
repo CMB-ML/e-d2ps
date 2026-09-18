@@ -11,45 +11,24 @@ from cmbml.analysis.ex import (
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn.ex import (
-    # PowerSpectrumAnalysisExecutor,
-    # PerSplitAnalysis,
-    # ShowChiSquare,
-    # ShowRelativeError,
-    # ShowCosmicFractions,
-    # ShowPredictionsExecutor,
-    # ShowBWPredictionsExecutor,
-    # ShowIndivPredictionsExecutor,
-    # ErrorAnalysisExecutor,
-    # ShowPredictionsWithChiSquareExecutor,
     BundlePredExecutor,
     GetPolyDegreeExecutor,
     BundleSmoothExecutor,
     BundleSmoothTrueExecutor,
     GetMetricsExecutor,
+    GetPerSimMetricsExecutor,
     BundleTrueExecutor,
     ComparePerEllR2Executor,
     ComparePerEllMSEExecutor,
-    ComparePerEllAbsRelErrPctExecutor
-    # NewMetricExecutor,
-    # NewMetricSmExecutor,
-    # NewMetricSmTrueExecutor,
-    # ShowPredictionsCloudsExecutor
+    ComparePerEllAbsRelErrPctExecutor,
+    ModelVsTheoryWithTensionExecutor,
+    ComparePerEllVarianceExecutor,
+    FixedRealizationFigsExecutor,
+    RankedRealizationFigsExecutor
 )
 
 
 logger = logging.getLogger(__name__)
-
-
-@hydra.main(version_base=None, config_path="cfg", config_name="config_true_sm_ps")
-def run_sm_theory(cfg):
-    # print(OmegaConf.to_yaml(cfg))
-
-    pipes = [
-        BundleSmoothTrueExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor
-    ]
-    run(cfg, pipes)
 
 
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_real")
@@ -64,20 +43,7 @@ def run_bundle_real(cfg):
         # GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
         GetMetricsExecutor,
-        # NewMetricExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor,
-        # MakeRealPowerSpectrumExecutor,
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -90,18 +56,7 @@ def run_bundle_pyilc(cfg):
         # GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
         GetMetricsExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -114,19 +69,7 @@ def run_bundle_cmbnncs(cfg):
         # GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
         GetMetricsExecutor,
-        # NewMetricExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -139,19 +82,7 @@ def run_bundle_d2ps(cfg):
         # GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
         GetMetricsExecutor,
-        # NewMetricExecutor,
-        # NewMetricSmExecutor,
-        # ShowPredictionsCloudsExecutor
-        # PowerSpectrumAnalysisExecutor,
-        # PerSplitAnalysis,
-        # ShowChiSquare,
-        # ShowRelativeError,
-        # ShowCosmicFractions,
-        # ShowPredictionsExecutor,
-        # ShowBWPredictionsExecutor,
-        # ShowIndivPredictionsExecutor,
-        # ErrorAnalysisExecutor,
-        # ShowPredictionsWithChiSquareExecutor,
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -159,37 +90,14 @@ def run_bundle_d2ps(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="produce_figs")
 def run_all_model_analysis(cfg):
     pipes = [
-        ComparePerEllR2Executor,
-        ComparePerEllMSEExecutor,
-        ComparePerEllAbsRelErrPctExecutor
+        # ComparePerEllR2Executor,
+        # ComparePerEllMSEExecutor,
+        # ComparePerEllAbsRelErrPctExecutor,
+        # ComparePerEllVarianceExecutor
+        # ModelVsTheoryWithTensionExecutor
+        # FixedRealizationFigsExecutor,
+        RankedRealizationFigsExecutor
     ]
-    run(cfg, pipes)
-
-
-
-@hydra.main(version_base=None, config_path="cfg", config_name="config_real_ps_planck")
-def run_real_pl(cfg):
-    pipes = [
-        MakeRealPowerSpectrumExecutor,
-        # ShowPredictionsExecutor,
-        BundlePredExecutor
-        ]
-    run(cfg, pipes)
-
-@hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_cmbnncs_pl")
-def run_cmbnncs_planck(cfg):
-    pipes = [
-        # ShowPredictionsExecutor,
-        BundlePredExecutor
-        ]
-    run(cfg, pipes)
-
-@hydra.main(version_base=None, config_path="cfg", config_name="config_pred_ps_pyilc_pl")
-def run_pyilc_planck(cfg):
-    pipes = [
-        # ShowPredictionsExecutor,
-        BundlePredExecutor
-        ]
     run(cfg, pipes)
 
 

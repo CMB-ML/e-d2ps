@@ -213,7 +213,10 @@ def plot_model_vs_theory_with_tension(
 
     missing = [k for k in keys if k not in metrics]
     if missing:
-        raise KeyError(f"metrics is missing entries for {missing}")
+        raise KeyError(
+            f"metrics is missing entries for {missing}; has {sorted(metrics)}. "
+            f"metrics should be {{model: {{metric_name: array}}}}, parallel to preds."
+        )
 
     if ax is None:
         fig, (ax1, ax2) = _new_figure(

@@ -54,8 +54,13 @@ from .stage_executors._new_metric import NewMetricExecutor, NewMetricSmExecutor
 from .stage_executors._cloud import ShowPredictionsCloudsExecutor
 
 from .stage_executors.ZZ_get_metrics import GetMetricsExecutor
+from .stage_executors.ZZ_per_sim_scalar_metrics import GetPerSimMetricsExecutor
 from .stage_executors.ZZZ_base_figs import (
     ComparePerEllAbsRelErrPctExecutor,
     ComparePerEllMSEExecutor,
-    ComparePerEllR2Executor
+    ComparePerEllR2Executor,
+    ModelVsTheoryWithTensionExecutor,
+    ComparePerEllVarianceExecutor,
+    FixedRealizationFigsExecutor,
+    RankedRealizationFigsExecutor
     )

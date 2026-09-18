@@ -121,6 +121,9 @@ class BaseFigsExecutor(BaseStageExecutor):
         self.cfg_figs = cfg.model.analysis.figures
         self.display_override = self.get_stage_element_silent("display")
         self.figure_override = self.get_stage_element_silent("figure")
+        # Two-panel figures need their own block for the lower axes; one
+        # display block cannot serve two panels with different quantities.
+        self.bottom_display_override = self.get_stage_element_silent("bottom_display")
 
         self.ells = parse_ells(cfg.model.use_ells)
 
@@ -235,6 +238,22 @@ class BaseFigsExecutor(BaseStageExecutor):
             metric = self.in_per_ell_metric.read()
         return metric
 
+    def get_rank_scores(self, split_name: str, model_key: str) -> np.ndarray:
+        """Per-sim scores for ranking, shape (N,).
+
+        Read from the artifact rather than recomputed, so the realization a
+        figure calls "worst" is worst by the same number a table would quote.
+        """
+        model = self.models[model_key]
+        context = dict(
+            split=split_name,
+            working=model.working_dir,
+            epoch=model.use_epoch,
+            metric=self.rank_metric,
+        )
+        with self.name_tracker.set_contexts(context):
+            return np.asarray(self.in_per_sim_metric.read())
+
     # ------------------------------------------------------------------
     # Output
     # ------------------------------------------------------------------
@@ -257,17 +276,29 @@ class BaseFigsExecutor(BaseStageExecutor):
             for fig_type in self.cfg.fig_type:
                 with self.name_tracker.set_context("fig_type", fig_type):
                     self.out_fig.write(fig=fig)
+                    logger.info(f"Wrote {self.out_fig.path}")
         plt.close(fig)
 
     # ------------------------------------------------------------------
     # Appearance, from config
     # ------------------------------------------------------------------
 
-    def styles(self, fill_alpha=None):
-        return fcfg.styles_for_models(self.models, fill_alpha=fill_alpha)
+    def styles(self, fill_alpha=None, only=None):
+        """Plot kwargs per model. ``only`` narrows to a subset, for the
+        single-model figures -- the figure functions reject a styles dict
+        carrying models that are not being drawn.
+        """
+        return fcfg.styles_for_models(self._subset(only), fill_alpha=fill_alpha)
 
-    def labels(self):
-        return fcfg.labels_for_models(self.models)
+    def labels(self, only=None):
+        return fcfg.labels_for_models(self._subset(only))
+
+    def _subset(self, only=None):
+        if only is None:
+            return self.models
+        if isinstance(only, str):
+            only = [only]
+        return {key: self.models[key] for key in only}
 
 
 class PerModelFigsExecutor(BaseFigsExecutor):
@@ -307,18 +338,28 @@ class ComparePerEllMetricExecutor(AllModelFigsExecutor):
     one. Per-figure appearance comes from the stage's optional 'display' and
     'figure' blocks, each merging over the defaults in model.analysis.figures.
     """
-
     def __init__(self, cfg: DictConfig, stage_str=None) -> None:
         if stage_str is None:
             raise NotImplementedError("This is a base class")
         super().__init__(cfg, stage_str=stage_str)
-        if not self.metrics_to_load or len(self.metrics_to_load) != 1:
+        self.metric = self.get_stage_element("metric")
+        if self.metric not in (self.metrics_to_load or []):
             raise ValueError(
-                f"{self.stage_str} plots one metric, but 'metrics' is "
-                f"{self.metrics_to_load}. Name exactly one, and add a stage per "
-                f"metric you want plotted."
+                f"{self.stage_str} plots {self.metric!r} but 'metrics' is "
+                f"{self.metrics_to_load}; add it to the load list."
             )
-        self.metric = self.metrics_to_load[0]
+
+    # def __init__(self, cfg: DictConfig, stage_str=None) -> None:
+    #     if stage_str is None:
+    #         raise NotImplementedError("This is a base class")
+    #     super().__init__(cfg, stage_str=stage_str)
+    #     if not self.metrics_to_load or len(self.metrics_to_load) != 1:
+    #         raise ValueError(
+    #             f"{self.stage_str} plots one metric, but 'metrics' is "
+    #             f"{self.metrics_to_load}. Name exactly one, and add a stage per "
+    #             f"metric you want plotted."
+    #         )
+    #     self.metric = self.metrics_to_load[0]
 
     def make_figures(self, data: FigData) -> None:
         for split in self.splits:
@@ -353,3 +394,169 @@ class ComparePerEllR2Executor(ComparePerEllMetricExecutor):
 class ComparePerEllAbsRelErrPctExecutor(ComparePerEllMetricExecutor):
     def __init__(self, cfg: DictConfig, stage_str="plot_abs_rel_err_pct"):
         super().__init__(cfg, stage_str=stage_str)
+
+
+class ModelVsTheoryWithTensionExecutor(PerModelFigsExecutor):
+    """One model's mean and 1-sigma against theory, with a metric panel below.
+
+    Per model rather than all-model: four overlapping sigma bands on one axis
+    obscure more than they show.
+
+    The stage names the lower panel's quantity with 'bottom_metric' rather than
+    taking it by position from 'metrics', so the load list and the panel choice
+    stay independent. 'metrics' must cover both pred_var (the band) and whatever
+    bottom_metric names.
+    """
+
+    def __init__(self, cfg: DictConfig, stage_str="model_vs_theory_tension"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.bottom_metric = self.get_stage_element("bottom_metric")
+        needed = {"pred_var", self.bottom_metric}
+        missing = needed - set(self.metrics_to_load or [])
+        if missing:
+            raise ValueError(
+                f"{self.stage_str} needs {sorted(needed)} but 'metrics' is "
+                f"{self.metrics_to_load}; add {sorted(missing)}."
+            )
+        self.band_alpha = self.get_stage_element_silent("band_alpha")
+
+    def make_figure(self, data: FigData, split_name: str, model_key: str):
+        return figs.plot_model_vs_theory_with_tension(
+            data.ells,
+            fcfg.preds_for(data, split_name, [model_key]),
+            fcfg.metrics_for(data, split_name, [model_key],
+                             ["pred_var", self.bottom_metric]),
+            styles=self.styles(fill_alpha=self.band_alpha, only=model_key),
+            labels=self.labels(only=model_key),
+            display=fcfg.display_for_dl(self.cfg_figs, self.display_override),
+            bottom_display=fcfg.display_for_metric(
+                self.cfg_figs, self.bottom_metric, self.bottom_display_override),
+            figure=fcfg.figure_kwargs(
+                self.cfg_figs, canvas="figure_tall", override=self.figure_override),
+            bottom_key=self.bottom_metric,
+            theory=data.thry[split_name],
+            theory_style=fcfg.theory_style(self.cfg_figs),
+            title=f"{self.models[model_key].fig_model_name} — {split_name}",
+        )
+
+
+class ComparePerEllVarianceExecutor(ComparePerEllMetricExecutor):
+    """pred_var for every model, with the theory variance as a reference line.
+
+    The notebook's variance figure: the same plot as the other per-ell metrics
+    plus a black thry_var line to compare against.
+
+    On a fixed-cosmology split the theory has no spread, so thry_var is
+    numerical residue rather than a variance. The reference line is dropped
+    there rather than drawn at 1e-11 on a log axis.
+    """
+
+    def __init__(self, cfg: DictConfig, stage_str="plot_variance"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.theory_metric = self.get_stage_element("theory_metric")
+        if self.theory_metric not in self.metrics_to_load:
+            raise ValueError(
+                f"{self.stage_str} draws {self.theory_metric!r} as its reference "
+                f"line but 'metrics' is {self.metrics_to_load}; add it."
+            )
+
+    def make_figure(self, data: FigData, split_name: str):
+        # thry_var is identical for every model -- same theory, same split --
+        # so it is read from whichever happens to be first. Read from the
+        # artifact rather than recomputed from data.thry, so the figure and the
+        # metrics file cannot disagree.
+        first = next(iter(self.models))
+        theory_metric = data.get(split_name, first, self.theory_metric)
+        if figs.is_fixed(data.thry[split_name]):
+            theory_metric = None
+
+        return figs.plot_per_ell_metric(
+            data.ells,
+            fcfg.metrics_for(data, split_name, self.models, self.metric),
+            self.metric,
+            styles=self.styles(),
+            labels=self.labels(),
+            display=fcfg.display_for_metric(
+                self.cfg_figs, self.metric, self.display_override),
+            figure=fcfg.figure_kwargs(
+                self.cfg_figs, override=self.figure_override),
+            theory_metric=theory_metric,
+            theory_style=fcfg.theory_style(self.cfg_figs),
+            title=f"{fcfg.label_for_metric(self.cfg_figs, self.metric)} — {split_name}",
+        )
+
+
+class RealizationFigsExecutor(PerModelFigsExecutor):
+    """One realization's spectrum against theory, per model.
+
+    Subclasses supply which realizations: fixed indices from config, or ranked
+    per model from the data. Output paths need a discriminator beyond split and
+    model, since each model emits several figures per split.
+    """
+    def __init__(self, cfg, stage_str=None):
+        if stage_str is None:
+            raise NotImplementedError("This class is intended as an abstract class.")
+        super().__init__(cfg, stage_str=stage_str)
+
+    def make_figures(self, data: FigData) -> None:
+        for split in self.splits:
+            for model_key, model_cfg in self.models.items():
+                for tag, idx in self.realizations(data, split.name, model_key):
+                    fig = self.make_figure(data, split.name, model_key, idx)
+                    self.save_fig(fig, split, model=model_cfg, realization=tag)
+
+    def realizations(self, data, split_name, model_key):
+        """[(path tag, index), ...] for this model and split."""
+        raise NotImplementedError
+
+    def make_figure(self, data: FigData, split_name: str, model_key: str, idx: int):
+        return figs.plot_realization(
+            data.ells,
+            {model_key: data.get(split_name, model_key, "pred")},
+            realization=idx,
+            styles=self.styles(only=model_key),
+            labels=self.labels(only=model_key),
+            display=fcfg.display_for_dl(self.cfg_figs, self.display_override),
+            figure=fcfg.figure_kwargs(self.cfg_figs, override=self.figure_override),
+            theory=data.thry[split_name],
+            theory_style=fcfg.theory_style(self.cfg_figs),
+            title=f"{self.models[model_key].fig_model_name} — {split_name} #{idx}",
+        )
+
+
+class FixedRealizationFigsExecutor(RealizationFigsExecutor):
+    """The same realization indices for every model, so panels are comparable."""
+
+    def __init__(self, cfg: DictConfig, stage_str="plot_realizations"):
+        super().__init__(cfg, stage_str=stage_str)
+        idxs = self.get_stage_element("realizations")
+        self.indices = [idxs] if isinstance(idxs, int) else list(idxs)
+
+    def realizations(self, data, split_name, model_key):
+        return [(f"sim{i:04d}", i) for i in self.indices]
+
+
+class RankedRealizationFigsExecutor(RealizationFigsExecutor):
+    """The N best and N worst realizations per model, by a per-sim metric.
+
+    Best and worst are tagged distinctly in the path so they can be shown
+    separately: eight traces on one axis leaves a reader unable to tell which
+    end is which.
+    """
+
+    def __init__(self, cfg: DictConfig, stage_str="plot_realizations_ranked"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.rank_metric = self.get_stage_element("rank_metric")
+        self.n_show = self.get_stage_element("n_show")
+        self.in_per_sim_metric = self.assets_in["per_sim_metric"]
+        self.rank_abs = bool(self.get_stage_element_silent("rank_abs"))
+
+    def realizations(self, data, split_name, model_key):
+        scores = self.get_rank_scores(split_name, model_key)
+        if self.rank_abs:
+            scores = np.abs(scores)
+        order = np.argsort(scores)           # ascending: best first
+        best = order[:self.n_show]
+        worst = order[-self.n_show:][::-1]   # worst first
+        return ([(f"best{i}_sim{idx:04d}", int(idx)) for i, idx in enumerate(best)] +
+                [(f"worst{i}_sim{idx:04d}", int(idx)) for i, idx in enumerate(worst)])

@@ -16,7 +16,7 @@ class GetMetricsExecutor(BaseStageExecutor):
     Goal: Calculate metrics to be used in the paper. Some metrics depend on 
     more information and are currently disabled.
     """
-    def __init__(self, cfg: DictConfig, stage_str="generate_metrics") -> None:
+    def __init__(self, cfg: DictConfig, stage_str="get_per_ell_metrics") -> None:
         super().__init__(cfg, stage_str=stage_str)
         self.out_metric: Asset = self.assets_out["per_ell_metric"]
         out_metric_handler: NpyHandler

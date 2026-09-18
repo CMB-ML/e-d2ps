@@ -5,17 +5,86 @@ defaults:
   - _self_
 
 plot_mse:
-  metrics: ["mse"]
+  metrics: "mse"
+  metric: "mse"
   display:
     ylim: [20, 2e6]
 plot_r2:
-  metrics: ["R2"]
+  metrics: "R2"
+  metric: "R2"
   display:
     ylim: [0, 1]
 plot_abs_rel_err_pct:
   metrics: abs_rel_err_pct
+  metric: abs_rel_err_pct
   display:
     ylim: [0, 20]
+
+plot_variance:
+  metrics: ["pred_var", "thry_var"]
+  metric: pred_var
+  theory_metric: thry_var
+  display:
+    ylim: [1e3, 1e6]
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_L_{metric}_{split}.{fig_type}"
+  assets_in:
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    per_ell_metric: {stage: get_per_ell_metrics}
+  splits: ${splits.run_inference_on}
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
+model_vs_theory_tension:
+  metrics:
+    - pred_var
+    - tension
+  bottom_metric: tension
+  band_alpha: 0.2
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_M_tall_panel_{split}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: bundle_pred, orig_name: ps_bundle}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    per_ell_metric: {stage: get_per_ell_metrics}
+  splits: ${splits.run_inference_on}
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
+plot_realizations:
+  realizations: [0, 1, 2]
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_R_fixed_{split}_{realization}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
+plot_realizations_ranked:
+  rank_metric: mse
+  n_show: 3
+  # rank_abs: True      # for a signed metric such as bias
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_R_{split}_{realization}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    per_sim_metric: {stage: get_per_sim_metrics}
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: True
 
 # plot_compare_per_ell_metric:
 #   metrics:
@@ -29,7 +98,7 @@ plot_abs_rel_err_pct:
 #   assets_in:
 #     ps_pred: {stage: bundle_pred, orig_name: ps_bundle}
 #     ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
-#     per_ell_metric: {stage: generate_metrics}
+#     per_ell_metric: {stage: get_per_ell_metrics}
 #   splits: ${splits.run_inference_on}
 #   epochs: ${use_epochs_ps_stats}
 #   dir_name: Analysis_Figures
