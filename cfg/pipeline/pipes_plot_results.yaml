@@ -86,6 +86,21 @@ plot_realizations_ranked:
   dir_name: Analysis_Figures
   make_stage_log: True
 
+plot_prediction_cloud:
+  band_alpha: 0.15
+  mark_peaks: True
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_C_cloud_{split}_{norm}.{fig_type}"
+  assets_in:
+    ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
 # plot_compare_per_ell_metric:
 #   metrics:
 #     - mse

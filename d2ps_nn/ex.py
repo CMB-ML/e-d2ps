@@ -62,5 +62,6 @@ from .stage_executors.ZZZ_base_figs import (
     ModelVsTheoryWithTensionExecutor,
     ComparePerEllVarianceExecutor,
     FixedRealizationFigsExecutor,
-    RankedRealizationFigsExecutor
+    RankedRealizationFigsExecutor,
+    PredictionCloudExecutor
     )

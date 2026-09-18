@@ -24,7 +24,8 @@ from d2ps_nn.ex import (
     ModelVsTheoryWithTensionExecutor,
     ComparePerEllVarianceExecutor,
     FixedRealizationFigsExecutor,
-    RankedRealizationFigsExecutor
+    RankedRealizationFigsExecutor,
+    PredictionCloudExecutor
 )
 
 
@@ -93,10 +94,11 @@ def run_all_model_analysis(cfg):
         # ComparePerEllR2Executor,
         # ComparePerEllMSEExecutor,
         # ComparePerEllAbsRelErrPctExecutor,
-        # ComparePerEllVarianceExecutor
-        # ModelVsTheoryWithTensionExecutor
+        # ComparePerEllVarianceExecutor,
+        # ModelVsTheoryWithTensionExecutor,
         # FixedRealizationFigsExecutor,
-        RankedRealizationFigsExecutor
+        # RankedRealizationFigsExecutor,
+        PredictionCloudExecutor
     ]
     run(cfg, pipes)
 

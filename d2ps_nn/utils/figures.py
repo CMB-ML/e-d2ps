@@ -43,6 +43,7 @@ argument (``metrics`` / ``preds`` / ``spectra``).
 """
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 
 
@@ -329,3 +330,168 @@ def plot_realization(
         fig.suptitle(title, fontsize=14)
     fig.tight_layout()
     return fig
+
+
+def plot_prediction_cloud(
+    ells, pred, errors, *, style, label, display, bottom_display,
+    cloud_style, figure=None, theory=None, theory_style=None,
+    theory_peaks=None, pred_peaks=None, peak_style=None,
+    title=None, title_fontsize=12, ax=None,
+):
+    """Every realization of one model as a faint trace, with an error cloud below.
+ 
+    SINGLE MODEL, deliberately. Unlike the other functions here this takes one
+    array rather than a dict keyed by model: N overlaid traces are already dense,
+    and two models' clouds on one axis are unreadable. ``style`` and ``label``
+    are therefore that one model's, not mappings.
+ 
+    ``pred``    (N, n_ell) predictions, one trace each
+    ``errors``  (N, n_ell) ALREADY NORMALIZED errors for the lower panel. The
+                caller chooses the denominator -- theory, or its spread across
+                realizations -- because that choice is analysis, not drawing,
+                and it changes what the panel means. ``bottom_display`` should
+                carry the matching label.
+    ``theory``  (N, n_ell) or (1, n_ell); its mean is drawn, and its band when
+                it varies across realizations
+     ``theory_peaks`` and ``pred_peaks`` are each a sequence of peak-position
+    sequences, one per realization, marked as short ticks at opposite edges of
+    the top panel. Both optional. They arrive as positions rather than being found here:
+    peak fitting is analysis, and keeping it out leaves this module free of
+    project dependencies.
+    """
+    ells = np.asarray(ells)
+    pred = np.atleast_2d(np.asarray(pred, dtype=float))
+    errors = np.atleast_2d(np.asarray(errors, dtype=float))
+ 
+    if errors.shape != pred.shape:
+        raise ValueError(
+            f"errors has shape {errors.shape}, pred has {pred.shape}; "
+            f"they must match -- errors is per realization, already normalized"
+        )
+ 
+    line_style, fill_alpha = _split_style(style)
+    color = line_style.get("color")
+ 
+    if ax is None:
+        fig, (ax_top, ax_err) = _new_figure(
+            figure, nrows=2, sharex=True,
+            gridspec_kw={"height_ratios": cloud_style.get("height_ratios", [1, 2.4])},
+            layout="constrained",
+        )
+    else:
+        ax_top, ax_err = ax
+        fig = ax_top.figure
+ 
+    # --- bands, behind the traces ---
+    if theory is not None:
+        ts = _require_theory_style(theory_style)
+        theory = np.atleast_2d(np.asarray(theory, dtype=float))
+        thry_mean = theory.mean(0)
+        if not is_fixed(theory):
+            thry_std = theory.std(0)
+            ax_top.fill_between(
+                ells, thry_mean - thry_std, thry_mean + thry_std,
+                color=ts["fill"], alpha=ts["alpha"], linewidth=0,
+                label=ts.get("band_label"), zorder=0,
+            )
+    else:
+        thry_mean = None
+ 
+    pred_mean = pred.mean(0)
+    if fill_alpha is not None:
+        pred_std = pred.std(0)
+        ax_top.fill_between(
+            ells, pred_mean - pred_std, pred_mean + pred_std,
+            color=color, alpha=fill_alpha, linewidth=0,
+            label=f"$\\pm\\sigma$ {label}", zorder=1,
+        )
+ 
+    # --- the clouds ---
+    trace_kwargs = dict(
+        color=color,
+        alpha=cloud_style["trace_alpha"],
+        linewidth=cloud_style["trace_lw"],
+    )
+    for row in pred:
+        ax_top.plot(ells, row, zorder=2, **trace_kwargs)
+    for row in errors:
+        ax_err.plot(ells, row, **trace_kwargs)
+ 
+    # --- peak ticks ---
+    if theory_peaks is not None or pred_peaks is not None:
+        ps = peak_style or {}
+        for crits in (theory_peaks or []):
+            mark_crits_at_axis_edge(
+                ax_top, crits, color=ps.get("color", "0.15"),
+                where=ps.get("theory_where", "top"),
+                tick_frac=ps.get("tick_frac", 0.025),
+                linewidth=ps.get("linewidth", 0.45),
+                alpha=ps.get("alpha", 0.35),
+                ls=ps.get("theory_linestyle", "-"),
+            )
+        for crits in (pred_peaks or []):
+            mark_crits_at_axis_edge(
+                ax_top, crits, color=ps.get("color", "0.15"),
+                where=ps.get("pred_where", "bottom"),
+                tick_frac=ps.get("tick_frac", 0.025),
+                linewidth=ps.get("linewidth", 0.45),
+                alpha=ps.get("alpha", 0.35),
+                ls=ps.get("pred_linestyle", "--"),
+            )
+ 
+    # --- mean lines, on top of everything ---
+    if thry_mean is not None:
+        ax_top.plot(ells, thry_mean, color=theory_style["color"], lw=1.2,
+                    label=theory_style.get("line_label", "Theory"), zorder=4)
+    ax_top.plot(ells, pred_mean, color=color, lw=1.2, ls="--",
+                label=f"Mean {label}", zorder=5)
+ 
+    # --- legend proxies: the traces carry no labels of their own ---
+    handles, _ = ax_top.get_legend_handles_labels()
+    proxies = [Line2D([0], [0], color=color, lw=1.0, alpha=0.8, label=label)]
+    if theory_peaks is not None or pred_peaks is not None:
+        ps = peak_style or {}
+        pc = ps.get("color", "0.15")
+        if theory_peaks is not None:
+            proxies.append(Line2D([0], [0], color=pc, lw=1.0,
+                                  ls=ps.get("theory_linestyle", "-"),
+                                  label=f"Theory peaks ({ps.get('theory_where', 'top')})"))
+        if pred_peaks:
+            proxies.append(Line2D([0], [0], color=pc, lw=1.0,
+                                  ls=ps.get("pred_linestyle", "--"),
+                                  label=f"Prediction peaks ({ps.get('pred_where', 'bottom')})"))
+    ax_top.legend(handles=[*handles, *proxies],
+                  fontsize=cloud_style.get("legend_fontsize", 8),
+                  loc="upper right")
+ 
+    _apply_display(ax_top, display)
+    ax_top.set_xlim(ells.min(), ells.max())
+ 
+    ax_err.axhline(0, color="0.5", ls=":", lw=1.0)
+    _apply_display(ax_err, bottom_display)
+    ax_err.set_xlim(ells.min(), ells.max())
+ 
+    if title:
+        fig.suptitle(title, fontsize=title_fontsize)
+    return fig
+ 
+ 
+def mark_crits_at_axis_edge(ax, crit_ells, color, where="bottom", tick_frac=0.025,
+                            linewidth=1.2, alpha=1.0, ls=None):
+    """Mark extrema as short ticks at the top or bottom edge of an axis.
+ 
+    where="bottom" -> ticks rise from the bottom edge.
+    where="top"    -> ticks drop from the top edge.
+    """
+    if where not in {"bottom", "top"}:
+        raise ValueError(f"where must be 'bottom' or 'top', got {where!r}")
+ 
+    trans = ax.get_xaxis_transform()        # x in data coords, y in axes fraction
+    y_pos = [0.0, tick_frac] if where == "bottom" else [1.0 - tick_frac, 1.0]
+ 
+    for ell in crit_ells:
+        if ell is None:
+            continue
+        ax.plot([ell, ell], y_pos, transform=trans, color=color,
+                linewidth=linewidth, alpha=alpha, ls=ls,
+                solid_capstyle="butt", clip_on=False)

@@ -181,3 +181,15 @@ def metrics_for(data, split, model_keys, metric_keys):
 def preds_for(data, split, model_keys):
     """``{model: (N, n_ell) array}`` of predictions."""
     return {model: data.get(split, model, "pred") for model in model_keys}
+
+
+def cloud_style(cfg_figs, override=None):
+    """Appearance of the individual cloud traces."""
+    cfg_figs = _plain(cfg_figs)
+    return _merge(cfg_figs["cloud_style"], override)
+
+
+def peak_style(cfg_figs, override=None):
+    """Appearance of the peak-location ticks."""
+    cfg_figs = _plain(cfg_figs)
+    return _merge(cfg_figs["peak_style"], override)

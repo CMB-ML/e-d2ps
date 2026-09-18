@@ -10,6 +10,7 @@ from cmbml.core.asset_handlers import NpyHandler, MPLFigure
 from d2ps_nn.utils.parse_ell_list import parse_ells
 import d2ps_nn.utils.figures as figs
 import d2ps_nn.utils.figure_config as fcfg
+from d2ps_nn.utils.find_peaks import find_crits, PeakFitError
 
 
 logger = logging.getLogger(__name__)
@@ -560,3 +561,126 @@ class RankedRealizationFigsExecutor(RealizationFigsExecutor):
         worst = order[-self.n_show:][::-1]   # worst first
         return ([(f"best{i}_sim{idx:04d}", int(idx)) for i, idx in enumerate(best)] +
                 [(f"worst{i}_sim{idx:04d}", int(idx)) for i, idx in enumerate(worst)])
+
+
+class PredictionCloudExecutor(PerModelFigsExecutor):
+    """Every realization of one model as a faint trace, with an error cloud below.
+
+    Per model: N traces are dense enough on their own.
+
+    Two normalizations for the lower panel -- by theory, and by theory's spread
+    across realizations. The second is meaningless on a fixed-cosmology split,
+    where that spread is numerical residue, so it is skipped there. That makes
+    the loop data-dependent and therefore the executor's rather than config's.
+
+    Peak positions are found here and passed to the figure as ell values: peak
+    fitting is analysis, and keeping it out of figures.py leaves that module
+    free of project dependencies.
+    """
+
+    NORMALIZATIONS = {
+        "thry": "err_norm_thry",            # -> metric_display key
+        "sd_thry": "err_norm_sd_thry",
+    }
+
+    def __init__(self, cfg: DictConfig, stage_str="plot_prediction_cloud"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.band_alpha = self.get_stage_element_silent("band_alpha")
+        self.mark_peaks = bool(self.get_stage_element_silent("mark_peaks"))
+
+    def make_figures(self, data: FigData) -> None:
+        for split in self.splits:
+            thry = data.thry[split.name]
+            norms = ["thry"]
+            if not figs.is_fixed(thry):
+                norms.append("sd_thry")
+            else:
+                logger.info(
+                    f"{split.name} has one fixed theory spectrum; "
+                    f"skipping the sd_thry normalization."
+                )
+
+            for model_key, model_cfg in self.models.items():
+                for norm in norms:
+                    fig = self.make_figure(data, split.name, model_key, norm)
+                    self.save_fig(fig, split, model=model_cfg, norm=norm)
+
+    def make_figure(self, data: FigData, split_name: str, model_key: str,
+                    norm: str):
+        thry = np.atleast_2d(data.thry[split_name])
+        pred = np.atleast_2d(data.get(split_name, model_key, "pred"))
+
+        theory_peaks, pred_peaks = self.find_peaks(pred, thry)
+
+        return figs.plot_prediction_cloud(
+            data.ells, pred, self.normalized_errors(pred, thry, norm),
+            style=self.styles(fill_alpha=self.band_alpha, only=model_key)[model_key],
+            label=self.models[model_key].fig_model_name,
+            display=fcfg.display_for_dl(self.cfg_figs, self.display_override),
+            bottom_display=fcfg.display_for_metric(
+                self.cfg_figs, self.NORMALIZATIONS[norm],
+                self.bottom_display_override),
+            cloud_style=fcfg.cloud_style(self.cfg_figs),
+            figure=fcfg.figure_kwargs(
+                self.cfg_figs, canvas="figure_cloud", override=self.figure_override),
+            theory=thry,
+            theory_style=fcfg.theory_style(self.cfg_figs),
+            theory_peaks=theory_peaks,
+            pred_peaks=pred_peaks,
+            peak_style=fcfg.peak_style(self.cfg_figs),
+            title=f"{self.models[model_key].fig_model_name} — {split_name}",
+        )
+
+    def normalized_errors(self, pred, thry, norm: str) -> np.ndarray:
+        """(N, n_ell) prediction error, normalized as `norm` says.
+
+        Theory is broadcast when a split carries one fixed spectrum.
+        """
+        thry_matched = thry if thry.shape[0] == pred.shape[0] else thry[:1]
+
+        if norm == "thry":
+            denom = thry_matched
+        elif norm == "sd_thry":
+            denom = thry.std(0)
+        else:
+            raise ValueError(f"unknown normalization {norm!r}")
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return np.divide(
+                pred - thry_matched, denom,
+                out=np.full_like(pred, np.nan, dtype=float),
+                where=(np.asarray(denom) != 0),
+            )
+
+    def find_peaks(self, pred, thry):
+        """Peak ell positions, one set per realization for theory and prediction.
+
+        Theory is fitted per realization rather than on the mean: averaging
+        cosmologies washes out the acoustic peaks, so the mean spectrum yields
+        one feature where an individual spectrum yields several. A fixed-
+        cosmology split has one distinct spectrum, so it is fitted once.
+        """
+        if not self.mark_peaks:
+            return None, None
+
+        if figs.is_fixed(thry):
+            theory_rows = thry[:1]
+        else:
+            theory_rows = thry
+
+        theory_peaks = [c for c in (self._crits(row, f"theory {i}")
+                                    for i, row in enumerate(theory_rows))
+                        if c is not None]
+        pred_peaks = [c for c in (self._crits(row, f"prediction {i}")
+                                  for i, row in enumerate(pred)) if c is not None]
+        return theory_peaks, pred_peaks
+
+    def _crits(self, spectrum, what: str):
+        try:
+            return find_crits(spectrum, self.ells)
+        except PeakFitError as e:
+            logger.warning(f"Could not fit {what} peaks: peak index "
+                           f"{e.peak_index}, {e}")
+        except Exception as e:
+            logger.warning(f"Could not mark {what} peaks: {e}")
+        return None
