@@ -40,10 +40,10 @@ def run_bundle_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        # MaskCreatorExecutor,
-        # MakeRealPowerSpectrumExecutor,
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
+        MaskCreatorExecutor,
+        MakeRealPowerSpectrumExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
@@ -55,8 +55,8 @@ def run_bundle_real(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_pyilc")
 def run_bundle_pyilc(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
@@ -68,8 +68,8 @@ def run_bundle_pyilc(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_cmbnncs")
 def run_bundle_cmbnncs(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
@@ -81,8 +81,8 @@ def run_bundle_cmbnncs(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_obs2ps")
 def run_bundle_d2ps(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
@@ -94,17 +94,17 @@ def run_bundle_d2ps(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="produce_figs")
 def run_all_model_analysis(cfg):
     pipes = [
-        # ComparePerEllR2Executor,
-        # ComparePerEllMSEExecutor,
+        ComparePerEllR2Executor,
+        ComparePerEllMSEExecutor,
         ComparePerEllTensionExecutor,
-        # ComparePerEllAbsRelErrPctExecutor,
-        # ComparePerEllVarianceExecutor,
-        # ModelVsTheoryWithTensionExecutor,
-        # FixedRealizationFigsExecutor,
-        # RankedRealizationFigsExecutor,
-        # PredictionCloudExecutor,
-        # R2DecompositionExecutor,
-        # PairedRealizationPeaksExecutor
+        ComparePerEllAbsRelErrPctExecutor,
+        ComparePerEllVarianceExecutor,
+        ModelVsTheoryWithTensionExecutor,
+        FixedRealizationFigsExecutor,
+        RankedRealizationFigsExecutor,
+        PredictionCloudExecutor,
+        R2DecompositionExecutor,
+        PairedRealizationPeaksExecutor
     ]
     run(cfg, pipes)
 
@@ -147,10 +147,10 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_bundle_real()
-    # run_bundle_pyilc()
-    # run_bundle_cmbnncs()
-    # run_bundle_d2ps()
+    run_bundle_real()
+    run_bundle_pyilc()
+    run_bundle_cmbnncs()
+    run_bundle_d2ps()
 
     run_all_model_analysis()
 
