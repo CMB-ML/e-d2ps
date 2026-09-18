@@ -495,3 +495,80 @@ def mark_crits_at_axis_edge(ax, crit_ells, color, where="bottom", tick_frac=0.02
         ax.plot([ell, ell], y_pos, transform=trans, color=color,
                 linewidth=linewidth, alpha=alpha, ls=ls,
                 solid_capstyle="butt", clip_on=False)
+
+
+def plot_r2_decomposition(
+    ells, ceiling, losses, r2, *, style, label, display, loss_styles,
+    figure=None, ceiling_label=None, identity_rtol=1e-6, title=None,
+    title_fontsize=14, ax=None,
+):
+    """One model's R^2 budget: what it could reach, and what it gives away.
+
+    SINGLE MODEL, like the cloud figure. The terms only mean anything as a
+    decomposition of one model's R^2, and four stacked budgets on one axis do
+    not read.
+
+    ``ceiling``  (n_ell,) the achievable ceiling -- r^2, what R^2 would be with
+                 perfect calibration and no bias
+    ``losses``   ordered {name: (n_ell,)} subtracted from the ceiling, stacked
+                 in the order given. Insertion order is the stacking order.
+    ``r2``       (n_ell,) what was actually achieved
+
+    The bands are drawn between running partial sums, so the lowest band edge
+    lands exactly on ``r2`` when the identity holds. It is checked rather than
+    assumed: a mismatch means the terms were computed under different
+    conventions -- a ddof change, or a stale artifact -- and the figure would
+    otherwise show a gap nobody could explain.
+    """
+    ells = np.asarray(ells)
+    ceiling = np.asarray(ceiling, dtype=float)
+    r2 = np.asarray(r2, dtype=float)
+
+    missing = [name for name in losses if name not in loss_styles]
+    if missing:
+        raise KeyError(
+            f"loss_styles is missing entries for {missing}; has {sorted(loss_styles)}"
+        )
+
+    residual = ceiling - sum(np.asarray(v, dtype=float) for v in losses.values())
+    finite = np.isfinite(residual) & np.isfinite(r2)
+    if finite.any() and not np.allclose(residual[finite], r2[finite],
+                                        rtol=identity_rtol, atol=identity_rtol):
+        worst = np.nanmax(np.abs(residual[finite] - r2[finite]))
+        raise ValueError(
+            f"ceiling - {' - '.join(losses)} does not equal r2 for {label!r}: "
+            f"worst discrepancy {worst:.3g}. The terms were computed under "
+            f"different conventions, or one artifact is stale."
+        )
+
+    line_style, _ = _split_style(style)
+    color = line_style.get("color")
+
+    if ax is None:
+        fig, ax = _new_figure(figure)
+    else:
+        fig = ax.figure
+
+    upper = ceiling
+    for name, loss in losses.items():
+        lower = upper - np.asarray(loss, dtype=float)
+        ls = loss_styles[name]
+        ax.fill_between(
+            ells, lower, upper, color=ls["color"], alpha=ls.get("alpha", 0.5),
+            linewidth=0, label=ls.get("label", name),
+        )
+        upper = lower
+
+    ax.plot(ells, ceiling, color="0.35", lw=1.0, ls=":",
+            label=ceiling_label or "Ceiling")
+    ax.plot(ells, r2, lw=1.4, label=label, **line_style)
+
+    _apply_display(ax, display)
+    ax.set_xlim(ells.min(), ells.max())
+    ax.legend(loc="best", fontsize=8)
+
+    if title:
+        fig.suptitle(title, fontsize=title_fontsize)
+    fig.tight_layout()
+    return fig
+

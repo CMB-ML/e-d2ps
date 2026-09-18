@@ -63,5 +63,6 @@ from .stage_executors.ZZZ_base_figs import (
     ComparePerEllVarianceExecutor,
     FixedRealizationFigsExecutor,
     RankedRealizationFigsExecutor,
-    PredictionCloudExecutor
+    PredictionCloudExecutor,
+    R2DecompositionExecutor
     )

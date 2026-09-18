@@ -101,6 +101,22 @@ plot_prediction_cloud:
   dir_name: Analysis_Figures
   make_stage_log: True
 
+plot_r2_decomposition:
+  metrics: ["ceiling_r2", "loss_calib", "loss_bias", "R2"]
+  ceiling_metric: ceiling_r2
+  loss_metrics: ["loss_calib", "loss_bias"]
+  total_metric: R2
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_D_r2budget_{split}.{fig_type}"
+  assets_in:
+    per_ell_metric: {stage: get_per_ell_metrics}
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
 # plot_compare_per_ell_metric:
 #   metrics:
 #     - mse

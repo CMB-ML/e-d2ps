@@ -75,6 +75,10 @@ metric_display:
     label: "Error in theory sigma"
     ylabel: "$(\\widehat D_\\ell-\\mathring D_\\ell)/\\sigma_{\\mathring D,\\ell}$"
     ylim: [-5, 5]
+  r2_decomposition:
+    label: "$R^2$ budget"
+    ylabel: "$R^2$"
+    ylim: [0, 1]
 
 
 # Cloud figure
@@ -97,3 +101,14 @@ peak_style:
 figure_cloud:
   figsize: [12, 7]
   dpi: 150
+
+# Decomposition
+loss_styles:
+  loss_calib:
+    color: "tab:orange"
+    alpha: 0.45
+    label: "Calibration loss $(A-r)^2_\\ell$"
+  loss_bias:
+    color: "tab:purple"
+    alpha: 0.45
+    label: "Bias loss $b^2_\\ell$"

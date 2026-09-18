@@ -193,3 +193,16 @@ def peak_style(cfg_figs, override=None):
     """Appearance of the peak-location ticks."""
     cfg_figs = _plain(cfg_figs)
     return _merge(cfg_figs["peak_style"], override)
+
+
+def loss_styles(cfg_figs, names, override=None):
+    """``{loss name: {color, alpha, label}}`` for the decomposition bands."""
+    cfg_figs = _plain(cfg_figs)
+    table = cfg_figs["loss_styles"]
+    missing = [n for n in names if n not in table]
+    if missing:
+        raise KeyError(
+            f"No loss_styles entry for {missing}; has {sorted(table)}. "
+            f"Add them to the figures config."
+        )
+    return {n: _merge(table[n], (override or {}).get(n)) for n in names}

@@ -684,3 +684,50 @@ class PredictionCloudExecutor(PerModelFigsExecutor):
         except Exception as e:
             logger.warning(f"Could not mark {what} peaks: {e}")
         return None
+
+
+class R2DecompositionExecutor(PerModelFigsExecutor):
+    """One model's R^2 budget: the ceiling, and the losses that eat into it.
+
+    R^2 = r^2 - (A-r)^2 - b^2, so the figure stacks the two losses downward
+    from the ceiling and lands on R^2. What it shows is WHERE a method loses
+    ground -- miscalibrated amplitude, or systematic bias -- which the R^2
+    curve alone cannot distinguish.
+
+    Per model, since the terms decompose one model's R^2 and four stacked
+    budgets on one axis do not read. The stage names the terms rather than
+    hard-coding them, so the same executor serves a different decomposition.
+    """
+
+    def __init__(self, cfg: DictConfig, stage_str="plot_r2_decomposition"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.ceiling_metric = self.get_stage_element("ceiling_metric")
+        self.loss_metrics = list(self.get_stage_element("loss_metrics"))
+        self.total_metric = self.get_stage_element("total_metric")
+
+        needed = {self.ceiling_metric, self.total_metric, *self.loss_metrics}
+        missing = needed - set(self.metrics_to_load or [])
+        if missing:
+            raise ValueError(
+                f"{self.stage_str} needs {sorted(needed)} but 'metrics' is "
+                f"{self.metrics_to_load}; add {sorted(missing)}."
+            )
+
+    def make_figure(self, data: FigData, split_name: str, model_key: str):
+        get = lambda name: data.get(split_name, model_key, name)
+        return figs.plot_r2_decomposition(
+            data.ells,
+            get(self.ceiling_metric),
+            {name: get(name) for name in self.loss_metrics},
+            get(self.total_metric),
+            style=self.styles(only=model_key)[model_key],
+            label=self.models[model_key].fig_model_name,
+            display=fcfg.display_for_metric(
+                self.cfg_figs, "r2_decomposition", self.display_override),
+            loss_styles=fcfg.loss_styles(self.cfg_figs, self.loss_metrics),
+            figure=fcfg.figure_kwargs(
+                self.cfg_figs, override=self.figure_override),
+            ceiling_label=fcfg.label_for_metric(self.cfg_figs, self.ceiling_metric),
+            title=f"{self.models[model_key].fig_model_name} — {split_name}",
+        )
+
