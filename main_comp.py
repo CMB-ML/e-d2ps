@@ -15,18 +15,20 @@ from d2ps_nn.ex import (
     GetPolyDegreeExecutor,
     BundleSmoothExecutor,
     BundleSmoothTrueExecutor,
-    GetMetricsExecutor,
+    GetPerEllMetricsExecutor,
     GetPerSimMetricsExecutor,
     BundleTrueExecutor,
     ComparePerEllR2Executor,
     ComparePerEllMSEExecutor,
+    ComparePerEllTensionExecutor,
     ComparePerEllAbsRelErrPctExecutor,
     ModelVsTheoryWithTensionExecutor,
     ComparePerEllVarianceExecutor,
     FixedRealizationFigsExecutor,
     RankedRealizationFigsExecutor,
     PredictionCloudExecutor,
-    R2DecompositionExecutor
+    R2DecompositionExecutor,
+    PairedRealizationPeaksExecutor
 )
 
 
@@ -42,9 +44,9 @@ def run_bundle_real(cfg):
         # MakeRealPowerSpectrumExecutor,
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        GetMetricsExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -55,9 +57,9 @@ def run_bundle_pyilc(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        GetMetricsExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -68,9 +70,9 @@ def run_bundle_cmbnncs(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        GetMetricsExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -81,9 +83,9 @@ def run_bundle_d2ps(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        GetMetricsExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -94,13 +96,15 @@ def run_all_model_analysis(cfg):
     pipes = [
         # ComparePerEllR2Executor,
         # ComparePerEllMSEExecutor,
+        ComparePerEllTensionExecutor,
         # ComparePerEllAbsRelErrPctExecutor,
         # ComparePerEllVarianceExecutor,
         # ModelVsTheoryWithTensionExecutor,
         # FixedRealizationFigsExecutor,
         # RankedRealizationFigsExecutor,
         # PredictionCloudExecutor,
-        R2DecompositionExecutor
+        # R2DecompositionExecutor,
+        # PairedRealizationPeaksExecutor
     ]
     run(cfg, pipes)
 

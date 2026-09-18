@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 class GetPerSimMetricsExecutor(BaseStageExecutor):
     """Per-realization scalars: one value per simulation, shape (N,).
 
-    The orthogonal reduction to GetMetricsExecutor. That one collapses over
-    realizations to get (n_ell,); this collapses over ell to get (N,), so a
-    figure can rank realizations and a table can quote a spread across the
-    split.
+    The orthogonal reduction to GetPerEllMetricsExecutor. That one collapses 
+    over realizations to get (n_ell,); this collapses over ell to get (N,),
+    so a figure can rank realizations and a table can quote a spread across 
+    the split.
 
     Built on split_metrics' per-instance intermediates rather than a fresh
     expression, so a number here cannot disagree with the per-ell artifact.

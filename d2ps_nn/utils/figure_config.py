@@ -189,12 +189,6 @@ def cloud_style(cfg_figs, override=None):
     return _merge(cfg_figs["cloud_style"], override)
 
 
-def peak_style(cfg_figs, override=None):
-    """Appearance of the peak-location ticks."""
-    cfg_figs = _plain(cfg_figs)
-    return _merge(cfg_figs["peak_style"], override)
-
-
 def loss_styles(cfg_figs, names, override=None):
     """``{loss name: {color, alpha, label}}`` for the decomposition bands."""
     cfg_figs = _plain(cfg_figs)
@@ -206,3 +200,33 @@ def loss_styles(cfg_figs, names, override=None):
             f"Add them to the figures config."
         )
     return {n: _merge(table[n], (override or {}).get(n)) for n in names}
+
+
+def paired_realization_style(cfg_figs, override=None):
+    """``(theory kwargs, prediction kwargs)`` for the paired-realization figure."""
+    cfg_figs = _plain(cfg_figs)
+    block = _merge(cfg_figs["paired_realization_style"], override)
+    return dict(block["theory"]), dict(block["prediction"])
+
+
+def peak_style(cfg_figs, block="cloud_peak_style", override=None):
+    """Appearance of the peak-location ticks.
+
+    Named per figure: the cloud draws N faint tick sets that must not swamp the
+    traces, while the paired figure draws a handful that are the point of the
+    figure and want to be read precisely.
+    """
+    cfg_figs = _plain(cfg_figs)
+    try:
+        return _merge(cfg_figs[block], override)
+    except KeyError:
+        raise KeyError(
+            f"No {block!r} block in the figures config; "
+            f"has {sorted(k for k in cfg_figs if k.endswith('peak_style'))}"
+        ) from None
+
+
+def annotation_style(cfg_figs, override=None):
+    """Placement of the in-figure annotation, in axes coordinates."""
+    cfg_figs = _plain(cfg_figs)
+    return _merge(cfg_figs.get("annotation_style", {}), override)

@@ -281,7 +281,8 @@ def plot_model_vs_theory_with_tension(
 
 def plot_realization(
     ells, spectra, realization=0, *, styles, labels, display, figure=None,
-    theory=None, theory_style=None, title=None, ax=None,
+    theory=None, theory_style=None, annotation=None, annotation_style=None,
+    title=None, ax=None,
 ):
     """One realization from each series.
 
@@ -324,6 +325,11 @@ def plot_realization(
                 label=labels[key], **line_style)
 
     _apply_display(ax, display)
+    if annotation:
+        a = annotation_style or {}
+        ax.text(a.get("x", 0.02), a.get("y", 0.05), annotation,
+                transform=ax.transAxes, fontsize=a.get("fontsize", 9),
+                va="bottom", ha="left")
     ax.legend(loc="best")
 
     if title:
@@ -569,6 +575,111 @@ def plot_r2_decomposition(
 
     if title:
         fig.suptitle(title, fontsize=title_fontsize)
+    fig.tight_layout()
+    return fig
+
+
+def plot_paired_realizations(
+    ells, theory, pred, *, colors, display, theory_kwargs, pred_kwargs,
+    figure=None, theory_peaks=None, pred_peaks=None, peak_style=None,
+    legend_labels=("Target", "Prediction"), title=None, ax=None,
+):
+    """A few realizations, each prediction against its own matched theory.
+
+    POSITIONAL, unlike the keyed functions here. The series are realizations,
+    identified by index, so there is no reordering hazard for a keyed contract
+    to protect against: ``theory[i]``, ``pred[i]``, and ``colors[i]`` are one
+    realization by construction.
+
+    Colour pairs a prediction with its target; ``pred_kwargs["dash_pattern"]``
+    is offset per realization so overlapping predictions stay separable where
+    they agree.
+
+    Peak ticks go at opposite edges -- theory at the top, prediction at the
+    bottom -- so a shifted acoustic peak shows as a horizontal offset between
+    two ticks of the same colour. That comparison is the point of the figure,
+    which is why the legend names only the two kinds and not each realization.
+    """
+    ells = np.asarray(ells)
+    theory = np.atleast_2d(np.asarray(theory, dtype=float))
+    pred = np.atleast_2d(np.asarray(pred, dtype=float))
+
+    if theory.shape != pred.shape:
+        raise ValueError(
+            f"theory has shape {theory.shape}, pred has {pred.shape}; "
+            f"rows are paired by index and must match"
+        )
+    if len(colors) < len(pred):
+        raise ValueError(
+            f"{len(colors)} colours for {len(pred)} realizations"
+        )
+
+    if ax is None:
+        fig, ax = _new_figure(figure)
+    else:
+        fig = ax.figure
+
+    theory_kwargs = dict(theory_kwargs)
+    pred_kwargs = dict(pred_kwargs)
+    dash = pred_kwargs.pop("dash_pattern", None)
+
+    ps = peak_style or {}
+    mark = theory_peaks is not None or pred_peaks is not None
+
+    for i, (thry_row, pred_row) in enumerate(zip(theory, pred)):
+        color = colors[i]
+        ls = (i, tuple(dash)) if dash else pred_kwargs.get("linestyle")
+
+        ax.plot(ells, thry_row, color=color, **theory_kwargs)
+        ax.plot(ells, pred_row, color=color,
+                **{**pred_kwargs, "linestyle": ls})
+
+        if mark:
+            if theory_peaks is not None and theory_peaks[i] is not None:
+                mark_crits_at_axis_edge(
+                    ax, theory_peaks[i], color=color,
+                    where=ps.get("theory_where", "top"),
+                    tick_frac=ps.get("tick_frac", 0.025),
+                    linewidth=ps.get("linewidth", 1.0)*0.5,
+                    alpha=ps.get("alpha", 1.0),
+                    ls="-",
+                )
+            if pred_peaks is not None and pred_peaks[i] is not None:
+                mark_crits_at_axis_edge(
+                    ax, pred_peaks[i], color=color,
+                    where=ps.get("pred_where", "bottom"),
+                    tick_frac=ps.get("tick_frac", 0.025),
+                    linewidth=ps.get("linewidth", 1.0),
+                    alpha=ps.get("alpha", 1.0),
+                    ls="-",
+                )
+
+    # Legend names the two kinds, not the realizations: which sim a trace is
+    # does not matter, only that a prediction sits against its own target.
+    thry_label, pred_label = legend_labels
+    proxies = [
+        Line2D([0], [0], color="black", label=thry_label,
+               **{k: v for k, v in theory_kwargs.items() if k != "label"}),
+        Line2D([0], [0], color="black", label=pred_label,
+               **{k: v for k, v in pred_kwargs.items() if k != "label"}),
+    ]
+    if mark:
+        tick_lw = ps.get("linewidth", 1.0)
+        if theory_peaks is not None:
+            proxies.append(Line2D(
+                [0], [0], color="black", lw=tick_lw*0.5, ls="-",
+                label=f"{thry_label} peaks ({ps.get('theory_where', 'top')})"))
+        if pred_peaks is not None:
+            proxies.append(Line2D(
+                [0], [0], color="black", lw=tick_lw, ls="-",
+                label=f"{pred_label} peaks ({ps.get('pred_where', 'bottom')})"))
+    ax.legend(handles=proxies, loc="upper right")
+
+    _apply_display(ax, display)
+    ax.set_xlim(ells.min(), ells.max())
+
+    if title:
+        fig.suptitle(title, fontsize=14)
     fig.tight_layout()
     return fig
 

@@ -50,19 +50,21 @@ from .stage_executors.Z_bundle_maps import BundleMapsExecutor
 # from .stage_executors._show_treble_ell import ShowTrebleEll
 from .stage_executors.Z_bundle_smooth_ps import BundleSmoothExecutor, BundleSmoothTrueExecutor
 
-from .stage_executors._new_metric import NewMetricExecutor, NewMetricSmExecutor
-from .stage_executors._cloud import ShowPredictionsCloudsExecutor
+# from .stage_executors._new_metric import NewMetricExecutor, NewMetricSmExecutor
+# from .stage_executors._cloud import ShowPredictionsCloudsExecutor
 
-from .stage_executors.ZZ_get_metrics import GetMetricsExecutor
+from .stage_executors.ZZ_per_ell_metrics import GetPerEllMetricsExecutor
 from .stage_executors.ZZ_per_sim_scalar_metrics import GetPerSimMetricsExecutor
 from .stage_executors.ZZZ_base_figs import (
     ComparePerEllAbsRelErrPctExecutor,
     ComparePerEllMSEExecutor,
+    ComparePerEllTensionExecutor,
     ComparePerEllR2Executor,
     ModelVsTheoryWithTensionExecutor,
     ComparePerEllVarianceExecutor,
     FixedRealizationFigsExecutor,
     RankedRealizationFigsExecutor,
     PredictionCloudExecutor,
-    R2DecompositionExecutor
+    R2DecompositionExecutor,
+    PairedRealizationPeaksExecutor
     )

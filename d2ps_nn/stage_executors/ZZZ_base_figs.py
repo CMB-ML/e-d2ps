@@ -10,7 +10,7 @@ from cmbml.core.asset_handlers import NpyHandler, MPLFigure
 from d2ps_nn.utils.parse_ell_list import parse_ells
 import d2ps_nn.utils.figures as figs
 import d2ps_nn.utils.figure_config as fcfg
-from d2ps_nn.utils.find_peaks import find_crits, PeakFitError
+from d2ps_nn.utils.find_peaks import crits_for_rows
 
 
 logger = logging.getLogger(__name__)
@@ -127,6 +127,7 @@ class BaseFigsExecutor(BaseStageExecutor):
         self.bottom_display_override = self.get_stage_element_silent("bottom_display")
 
         self.ells = parse_ells(cfg.model.use_ells)
+        self.fig_type = cfg.fig_type
 
     @property
     def metrics_to_load(self):
@@ -177,6 +178,7 @@ class BaseFigsExecutor(BaseStageExecutor):
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
+        self.out_fig.handler.set_fig_types(self.fig_type)
         data = self.load_all_data()
         logger.info(f"Data contains: {data.contents}")
         self.make_figures(data)
@@ -239,28 +241,12 @@ class BaseFigsExecutor(BaseStageExecutor):
             metric = self.in_per_ell_metric.read()
         return metric
 
-    def get_rank_scores(self, split_name: str, model_key: str) -> np.ndarray:
-        """Per-sim scores for ranking, shape (N,).
-
-        Read from the artifact rather than recomputed, so the realization a
-        figure calls "worst" is worst by the same number a table would quote.
-        """
-        model = self.models[model_key]
-        context = dict(
-            split=split_name,
-            working=model.working_dir,
-            epoch=model.use_epoch,
-            metric=self.rank_metric,
-        )
-        with self.name_tracker.set_contexts(context):
-            return np.asarray(self.in_per_sim_metric.read())
-
     # ------------------------------------------------------------------
     # Output
     # ------------------------------------------------------------------
 
     def save_fig(self, fig, split: Split, model: ModelConfig = None, **extra) -> None:
-        """Write one figure, once per configured fig_type.
+        """Write one figure, letting the handler handle fig_type iteration.
 
         Extra keyword arguments become name-tracker context, for path templates
         carrying tokens beyond split and model -- {metric}, for instance.
@@ -274,11 +260,7 @@ class BaseFigsExecutor(BaseStageExecutor):
             context["working"] = model.working_dir
             context["epoch"] = model.use_epoch
         with self.name_tracker.set_contexts(context):
-            for fig_type in self.cfg.fig_type:
-                with self.name_tracker.set_context("fig_type", fig_type):
-                    self.out_fig.write(fig=fig)
-                    logger.info(f"Wrote {self.out_fig.path}")
-        plt.close(fig)
+            self.out_fig.write(fig=fig, verbose=True)
 
     # ------------------------------------------------------------------
     # Appearance, from config
@@ -343,24 +325,25 @@ class ComparePerEllMetricExecutor(AllModelFigsExecutor):
         if stage_str is None:
             raise NotImplementedError("This is a base class")
         super().__init__(cfg, stage_str=stage_str)
-        self.metric = self.get_stage_element("metric")
-        if self.metric not in (self.metrics_to_load or []):
+
+        # 'metrics' is the load list; 'metric' is which one to plot. They differ
+        # only when the stage loads something extra -- the variance figure loads
+        # thry_var for its reference line. When the load list names one thing,
+        # that is what gets plotted, so the stage need not say it twice.
+        self.metric = self.get_stage_element_silent("metric")
+        if self.metric is None:
+            if not self.metrics_to_load or len(self.metrics_to_load) != 1:
+                raise ValueError(
+                    f"{self.stage_str} has no 'metric' and 'metrics' is "
+                    f"{self.metrics_to_load}; name which one to plot, or load "
+                    f"exactly one."
+                )
+            self.metric = self.metrics_to_load[0]
+        elif self.metric not in (self.metrics_to_load or []):
             raise ValueError(
                 f"{self.stage_str} plots {self.metric!r} but 'metrics' is "
                 f"{self.metrics_to_load}; add it to the load list."
             )
-
-    # def __init__(self, cfg: DictConfig, stage_str=None) -> None:
-    #     if stage_str is None:
-    #         raise NotImplementedError("This is a base class")
-    #     super().__init__(cfg, stage_str=stage_str)
-    #     if not self.metrics_to_load or len(self.metrics_to_load) != 1:
-    #         raise ValueError(
-    #             f"{self.stage_str} plots one metric, but 'metrics' is "
-    #             f"{self.metrics_to_load}. Name exactly one, and add a stage per "
-    #             f"metric you want plotted."
-    #         )
-    #     self.metric = self.metrics_to_load[0]
 
     def make_figures(self, data: FigData) -> None:
         for split in self.splits:
@@ -384,6 +367,11 @@ class ComparePerEllMetricExecutor(AllModelFigsExecutor):
 
 class ComparePerEllMSEExecutor(ComparePerEllMetricExecutor):
     def __init__(self, cfg: DictConfig, stage_str="plot_mse"):
+        super().__init__(cfg, stage_str=stage_str)
+
+
+class ComparePerEllTensionExecutor(ComparePerEllMetricExecutor):
+    def __init__(self, cfg: DictConfig, stage_str="plot_tension"):
         super().__init__(cfg, stage_str=stage_str)
 
 
@@ -502,15 +490,28 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
     def make_figures(self, data: FigData) -> None:
         for split in self.splits:
             for model_key, model_cfg in self.models.items():
-                for tag, idx in self.realizations(data, split.name, model_key):
-                    fig = self.make_figure(data, split.name, model_key, idx)
+                for tag, idx, note, tag_label in self.realizations(
+                        data, split.name, model_key):
+                    fig = self.make_figure(data, split.name, model_key, idx,
+                                           note, tag_label)
                     self.save_fig(fig, split, model=model_cfg, realization=tag)
 
     def realizations(self, data, split_name, model_key):
-        """[(path tag, index), ...] for this model and split."""
-        raise NotImplementedError
+        """Which realizations to draw: [(tag, index, note, tag_label), ...].
 
-    def make_figure(self, data: FigData, split_name: str, model_key: str, idx: int):
+        tag        path discriminator, since each model emits several figures
+                   per split
+        index      row of the prediction bundle to draw
+        note       in-figure annotation, or None
+        tag_label  parenthetical for the title, or None
+        """
+        raise NotImplementedError
+    
+    def make_figure(self, data: FigData, split_name: str, model_key: str,
+                    idx: int, note: str = None, tag_label: str = None):
+        title = f"{self.models[model_key].fig_model_name} — {split_name} #{idx}"
+        if tag_label:
+            title = f"{title} ({tag_label})"
         return figs.plot_realization(
             data.ells,
             {model_key: data.get(split_name, model_key, "pred")},
@@ -521,7 +522,9 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
             figure=fcfg.figure_kwargs(self.cfg_figs, override=self.figure_override),
             theory=data.thry[split_name],
             theory_style=fcfg.theory_style(self.cfg_figs),
-            title=f"{self.models[model_key].fig_model_name} — {split_name} #{idx}",
+            annotation=note,
+            annotation_style=fcfg.annotation_style(self.cfg_figs),
+            title=title,
         )
 
 
@@ -534,7 +537,7 @@ class FixedRealizationFigsExecutor(RealizationFigsExecutor):
         self.indices = [idxs] if isinstance(idxs, int) else list(idxs)
 
     def realizations(self, data, split_name, model_key):
-        return [(f"sim{i:04d}", i) for i in self.indices]
+        return [(f"sim{i:04d}", i, None, None) for i in self.indices]
 
 
 class RankedRealizationFigsExecutor(RealizationFigsExecutor):
@@ -556,11 +559,37 @@ class RankedRealizationFigsExecutor(RealizationFigsExecutor):
         scores = self.get_rank_scores(split_name, model_key)
         if self.rank_abs:
             scores = np.abs(scores)
-        order = np.argsort(scores)           # ascending: best first
-        best = order[:self.n_show]
-        worst = order[-self.n_show:][::-1]   # worst first
-        return ([(f"best{i}_sim{idx:04d}", int(idx)) for i, idx in enumerate(best)] +
-                [(f"worst{i}_sim{idx:04d}", int(idx)) for i, idx in enumerate(worst)])
+        order = np.argsort(scores)
+        label = fcfg.label_for_metric(self.cfg_figs, self.rank_metric)
+
+        out = []
+        for bucket, idxs in (("best", order[:self.n_show]),
+                             ("worst", order[-self.n_show:][::-1])):
+            for i, idx in enumerate(idxs):
+                idx = int(idx)
+                out.append((
+                    f"{bucket}{i}_sim{idx:04d}",
+                    idx,
+                    f"{label}: {scores[idx]:.3g}",
+                    f"among {bucket}",
+                ))
+        return out
+
+    def get_rank_scores(self, split_name: str, model_key: str) -> np.ndarray:
+        """Per-sim scores for ranking, shape (N,).
+
+        Read from the artifact rather than recomputed, so the realization a
+        figure calls "worst" is worst by the same number a table would quote.
+        """
+        model = self.models[model_key]
+        context = dict(
+            split=split_name,
+            working=model.working_dir,
+            epoch=model.use_epoch,
+            metric=self.rank_metric,
+        )
+        with self.name_tracker.set_contexts(context):
+            return np.asarray(self.in_per_sim_metric.read())
 
 
 class PredictionCloudExecutor(PerModelFigsExecutor):
@@ -627,7 +656,7 @@ class PredictionCloudExecutor(PerModelFigsExecutor):
             theory_style=fcfg.theory_style(self.cfg_figs),
             theory_peaks=theory_peaks,
             pred_peaks=pred_peaks,
-            peak_style=fcfg.peak_style(self.cfg_figs),
+            peak_style=fcfg.peak_style(self.cfg_figs, "cloud_peak_style"),
             title=f"{self.models[model_key].fig_model_name} — {split_name}",
         )
 
@@ -653,37 +682,11 @@ class PredictionCloudExecutor(PerModelFigsExecutor):
             )
 
     def find_peaks(self, pred, thry):
-        """Peak ell positions, one set per realization for theory and prediction.
-
-        Theory is fitted per realization rather than on the mean: averaging
-        cosmologies washes out the acoustic peaks, so the mean spectrum yields
-        one feature where an individual spectrum yields several. A fixed-
-        cosmology split has one distinct spectrum, so it is fitted once.
-        """
         if not self.mark_peaks:
             return None, None
-
-        if figs.is_fixed(thry):
-            theory_rows = thry[:1]
-        else:
-            theory_rows = thry
-
-        theory_peaks = [c for c in (self._crits(row, f"theory {i}")
-                                    for i, row in enumerate(theory_rows))
-                        if c is not None]
-        pred_peaks = [c for c in (self._crits(row, f"prediction {i}")
-                                  for i, row in enumerate(pred)) if c is not None]
-        return theory_peaks, pred_peaks
-
-    def _crits(self, spectrum, what: str):
-        try:
-            return find_crits(spectrum, self.ells)
-        except PeakFitError as e:
-            logger.warning(f"Could not fit {what} peaks: peak index "
-                           f"{e.peak_index}, {e}")
-        except Exception as e:
-            logger.warning(f"Could not mark {what} peaks: {e}")
-        return None
+        theory_rows = thry[:1] if figs.is_fixed(thry) else thry
+        return (crits_for_rows(theory_rows, self.ells, "theory", logger),
+                crits_for_rows(pred, self.ells, "prediction", logger))
 
 
 class R2DecompositionExecutor(PerModelFigsExecutor):
@@ -728,6 +731,57 @@ class R2DecompositionExecutor(PerModelFigsExecutor):
             figure=fcfg.figure_kwargs(
                 self.cfg_figs, override=self.figure_override),
             ceiling_label=fcfg.label_for_metric(self.cfg_figs, self.ceiling_metric),
+            title=f"{self.models[model_key].fig_model_name} — {split_name}",
+        )
+
+
+class PairedRealizationPeaksExecutor(PerModelFigsExecutor):
+    """A few realizations of one model, each against its own matched theory.
+
+    What it shows is peak POSITION: the ticks at the two edges make a shifted
+    acoustic peak visible as a horizontal offset between two marks of the same
+    colour, which is hard to see in the curves themselves.
+
+    Capped at n_show realizations -- the figure is about a handful of examples,
+    not the ensemble. The cloud figure is the one that shows all of them.
+    """
+
+    def __init__(self, cfg: DictConfig, stage_str="plot_paired_realizations"):
+        super().__init__(cfg, stage_str=stage_str)
+        self.n_show = self.get_stage_element("n_show")
+        self.mark_peaks = bool(self.get_stage_element_silent("mark_peaks"))
+        self.cycle_colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    def make_figure(self, data: FigData, split_name: str, model_key: str):
+        thry = np.atleast_2d(data.thry[split_name])
+        pred = np.atleast_2d(data.get(split_name, model_key, "pred"))
+
+        n = min(self.n_show, pred.shape[0])
+        pred = pred[:n]
+        # A fixed-cosmology split carries one distinct theory row; repeat it so
+        # the pairing by index still holds.
+        thry = np.repeat(thry[:1], n, axis=0) if thry.shape[0] == 1 else thry[:n]
+
+        theory_peaks = pred_peaks = None
+        if self.mark_peaks:
+            theory_peaks = crits_for_rows(thry, self.ells, "theory",
+                                          logger, keep_none=True)
+            pred_peaks = crits_for_rows(pred, self.ells, "prediction",
+                                        logger, keep_none=True)
+
+        theory_kwargs, pred_kwargs = fcfg.paired_realization_style(self.cfg_figs)
+
+        return figs.plot_paired_realizations(
+            data.ells, thry, pred,
+            colors=self.cycle_colors,
+            display=fcfg.display_for_dl(self.cfg_figs, self.display_override),
+            theory_kwargs=theory_kwargs,
+            pred_kwargs=pred_kwargs,
+            figure=fcfg.figure_kwargs(
+                self.cfg_figs, canvas="figure_wide", override=self.figure_override),
+            theory_peaks=theory_peaks,
+            pred_peaks=pred_peaks,
+            peak_style=fcfg.peak_style(self.cfg_figs, "paired_peak_style"),
             title=f"{self.models[model_key].fig_model_name} — {split_name}",
         )
 

@@ -11,7 +11,7 @@ from d2ps_nn.utils.split_metrics import compute_metrics
 logger = logging.getLogger(__name__)
 
 
-class GetMetricsExecutor(BaseStageExecutor):
+class GetPerEllMetricsExecutor(BaseStageExecutor):
     """
     Goal: Calculate metrics to be used in the paper. Some metrics depend on 
     more information and are currently disabled.
@@ -26,12 +26,12 @@ class GetMetricsExecutor(BaseStageExecutor):
         in_thry_handler: NpyHandler
 
         self.ells = parse_ells(cfg.model.use_ells)
-        self.spectra_kind = ""
 
-        self.include_metrics = cfg.metrics_to_use
+        self.include_metrics = self.get_stage_element("metrics")
 
         self.sky_fraction = None
         if self.sky_fraction is not None:
+            # Don't set sky_fraction to something! This is broken! Return to this!
             raise NotImplementedError("The default: 1, assumes no mask. We're using a mask. There's big questions here to address.")
 
         for banned_metric in ["cosmic_var", "treble_cosmic_var", "e_cv"]:

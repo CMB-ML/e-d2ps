@@ -228,3 +228,34 @@ def find_crits(
         crits.append(ell)
 
     return dedupe_close_crits(crits, min_sep=dedupe_sep)
+
+
+def crits_or_none(spectrum, ells, what="spectrum", logger=None):
+    """Peak positions for one spectrum, or None when the fit fails.
+
+    A failed fit is not a failed figure: one unfittable realization should cost
+    its own ticks, not the whole run. The caller filters the Nones.
+    """
+    try:
+        return find_crits(spectrum, ells)
+    except PeakFitError as e:
+        if logger:
+            logger.warning(f"Could not fit {what} peaks: peak index "
+                           f"{e.peak_index}, {e}")
+    except Exception as e:
+        if logger:
+            logger.warning(f"Could not mark {what} peaks: {e}")
+    return None
+
+
+def crits_for_rows(rows, ells, what="spectrum", logger=None, keep_none=False):
+    """Peak positions for each row of a 2-D array.
+
+    ``keep_none`` keeps a placeholder for a row whose fit failed, which matters
+    when the result is zipped against something else -- a colour list, say --
+    and dropping an entry would shift the rest.
+    """
+    out = [crits_or_none(row, ells, f"{what} {i}", logger)
+           for i, row in enumerate(rows)]
+    return out if keep_none else [c for c in out if c is not None]
+
