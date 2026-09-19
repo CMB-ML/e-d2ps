@@ -103,6 +103,47 @@ preprocess_mask: # D2_preprocess_mask.py / PreprocessMaskExecutor
   splits:
     - train
 
+preprocess_nilc_mask: # D3_preprocess_masks.py / PrepGalNILCMaskExecutor
+  assets_out:
+    mask:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/mask_{px_arrange}.npy"
+    note:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+  assets_in:
+    mask: {stage: raw, orig_name: mask_nilc_map}
+    lut: {stage: make_lut}
+  dir_name: D2_Prep_Masks
+
+preprocess_point_source_mask: # D3_preprocess_masks.py / PrepPSMaskExecutor
+  ps_mask_lmax: 2000
+  ps_mask_iters: null
+  assets_out:
+    mask:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_{freq}_{px_arrange}.npy"
+    note:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+  assets_in:
+    mask:   {stage: raw, orig_name: mask_point_source_map}
+    lut: {stage: make_lut}
+  dir_name: D2_Prep_Masks
+
+preprocess_galcut_mask: # D3_preprocess_masks.py / PrepGalCutMaskExecutor
+  assets_out:
+    mask:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/{working}{stage}/mask_{px_arrange}.npy"
+    note:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+  assets_in:
+    gal_mask:  {stage: raw, orig_name: mask_gal_cut_apo_0_map}
+    lut: {stage: make_lut}
+  dir_name: D2_Prep_Masks
+
 preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_out:
     cmb_ps:

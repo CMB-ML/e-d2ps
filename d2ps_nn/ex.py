@@ -5,6 +5,7 @@ from .stage_executors.C2_find_ps_stats_serial import FindSpectraStatsExecutor
 from .stage_executors.C3_find_map_stats_serial import FindPxMapStatsExecutor
 from .stage_executors.D_preprocess_maps_serial import PreprocessMapsExecutor
 from .stage_executors.D2_preprocess_mask import PreprocessMaskExecutor
+from .stage_executors.D3_preprocess_masks import PrepGalNILCMaskExecutor, PrepPSMaskExecutor, PrepGalCutMaskExecutor
 from .stage_executors.E_preprocess_ps_serial import PreprocessSpectraExecutor
 from .stage_executors.E1_prep_coef_get_coef import PreprocessGetSpectraCoefExecutor
 from .stage_executors.E2_prep_coef_get_stats import PreprocessStatSpectraCoefExecutor
