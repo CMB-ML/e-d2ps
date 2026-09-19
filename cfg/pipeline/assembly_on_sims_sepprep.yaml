@@ -4,4 +4,8 @@ defaults:
   - pipes_on_sims
   # Adjustments needed:
   - adapt_sepprep
+  - pipes_plot_process
+  - pipes_bundling
+  - pipes_plot_results
+
   - _self_

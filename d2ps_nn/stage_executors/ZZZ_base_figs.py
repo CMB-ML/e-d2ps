@@ -357,8 +357,7 @@ class ComparePerEllMetricExecutor(AllModelFigsExecutor):
             self.metric,
             styles=self.styles(),
             labels=self.labels(),
-            display=fcfg.display_for_metric(
-                self.cfg_figs, self.metric, self.display_override),
+            display=fcfg.display_for_dl(self.cfg_figs, self.display_override),
             figure=fcfg.figure_kwargs(
                 self.cfg_figs, override=self.figure_override),
             title=f"{fcfg.label_for_metric(self.cfg_figs, self.metric)} — {split_name}",
@@ -697,6 +696,10 @@ class R2DecompositionExecutor(PerModelFigsExecutor):
     ground -- miscalibrated amplitude, or systematic bias -- which the R^2
     curve alone cannot distinguish.
 
+    An exemplar panel above puts one realization's spectrum on the same ell
+    axis: the budget is a statistic over the split and cannot say which spectral
+    feature a dip belongs to. Set exemplar: null in the stage to drop it.
+
     Per model, since the terms decompose one model's R^2 and four stacked
     budgets on one axis do not read. The stage names the terms rather than
     hard-coding them, so the same executor serves a different decomposition.
@@ -716,8 +719,24 @@ class R2DecompositionExecutor(PerModelFigsExecutor):
                 f"{self.metrics_to_load}; add {sorted(missing)}."
             )
 
+        # Which realization the context panel shows; null drops the panel.
+        self.exemplar = self.get_stage_element_silent("exemplar")
+        self.exemplar_display_override = \
+            self.get_stage_element_silent("exemplar_display")
+
     def make_figure(self, data: FigData, split_name: str, model_key: str):
         get = lambda name: data.get(split_name, model_key, name)
+
+        exemplar = None
+        canvas = "figure"
+        if self.exemplar is not None:
+            thry = np.atleast_2d(data.thry[split_name])
+            pred = np.atleast_2d(get("pred"))
+            idx = int(self.exemplar)
+            # A fixed-cosmology split carries one distinct theory row.
+            exemplar = (thry[0] if thry.shape[0] == 1 else thry[idx], pred[idx])
+            canvas = "figure_wide"
+
         return figs.plot_r2_decomposition(
             data.ells,
             get(self.ceiling_metric),
@@ -728,9 +747,14 @@ class R2DecompositionExecutor(PerModelFigsExecutor):
             display=fcfg.display_for_metric(
                 self.cfg_figs, "r2_decomposition", self.display_override),
             loss_styles=fcfg.loss_styles(self.cfg_figs, self.loss_metrics),
+            budget_style=fcfg.budget_style(self.cfg_figs),
             figure=fcfg.figure_kwargs(
-                self.cfg_figs, override=self.figure_override),
+                self.cfg_figs, canvas=canvas, override=self.figure_override),
             ceiling_label=fcfg.label_for_metric(self.cfg_figs, self.ceiling_metric),
+            exemplar=exemplar,
+            exemplar_display=fcfg.display_for_dl(
+                self.cfg_figs, self.exemplar_display_override),
+            theory_style=fcfg.theory_style(self.cfg_figs),
             title=f"{self.models[model_key].fig_model_name} — {split_name}",
         )
 

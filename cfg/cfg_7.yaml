@@ -1,13 +1,26 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
   - cfg_6
+  - model/cleaning: obs2ps
   - _self_
-
-hydra:
-  sweeper:
-    params:
-      run_inference_on: test, valid, train
 
 splits:
   Train:
     n_sims: ${n_sims_train_infer}
+
+pipeline:
+  bundle_pred:
+    assets_in:
+      ps: ${model.cleaning.bundle_pred_src}
+
+obs2ps_cleaning_model   : "obs2ps"
+obs2ps_working_dir      : ${working_dir}
+obs2ps_fig_model_name   : ${fig_model_name}
+obs2ps_use_epochs       : ["best"]
+obs2ps_use_epoch        : "best"
+obs2ps_sm_epoch         : null
+obs2ps_do_smooth        : false
+obs2ps_sm_score_ell_max : null
+obs2ps_bundle_pred_src  : {stage: predict, orig_name: cmb_ps}
+obs2ps_fig_color        : "blue"
+

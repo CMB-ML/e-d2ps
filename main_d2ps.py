@@ -37,15 +37,24 @@ from d2ps_nn.ex import (
     LRFindingTrainingExecutor,
     # LearningRatePlotExecutor,
     TrainingExecutor,
-    # LossPlotExecutor,
-    # LossDeltaPlotExecutor,
+    LossPlotExecutor,
+    LossDeltaPlotExecutor,
     PredictExecutor,
     # ShowPredictionsPeaksExecutor,
     BundlePredExecutor, 
     BundleTrueExecutor,
     # ShowTrebleEll,
-    NewMetricExecutor,
-    ShowPredictionsCloudsExecutor
+
+    GetPolyDegreeExecutor,
+    BundleSmoothExecutor,
+    GetPerEllMetricsExecutor,
+    GetPerSimMetricsExecutor,
+    ModelVsTheoryWithTensionExecutor,
+    FixedRealizationFigsExecutor,
+    RankedRealizationFigsExecutor,
+    PredictionCloudExecutor,
+    R2DecompositionExecutor,
+    PairedRealizationPeaksExecutor
     )
 
 
@@ -113,22 +122,37 @@ def run_6_train(cfg):
         # LRFindingTrainingExecutor,
         # LearningRatePlotExecutor,
         TrainingExecutor,
-        # LossPlotExecutor,
-        # LossDeltaPlotExecutor
+        LossPlotExecutor,
+        LossDeltaPlotExecutor
     ]
     run(cfg, pipes)
+
 
 @hydra.main(version_base=None, config_path="cfg", config_name="cfg_7")
 def run_7_infer(cfg):
     logger.info(f"Running models_run in {__file__}")
     pipes = [
         PredictExecutor,
-        # ShowPredictionsPeaksExecutor,
-        BundlePredExecutor,
+    ]
+    run(cfg, pipes)
+
+
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_7B")
+def run_7B_analysis(cfg):
+    logger.info(f"Running models_run in {__file__}")
+    pipes = [
         BundleTrueExecutor,
-        # ShowTrebleEll,
-        NewMetricExecutor,
-        ShowPredictionsCloudsExecutor
+        BundlePredExecutor,
+        GetPolyDegreeExecutor,  # A no-op, but simpler to use it instead of rearranging
+        BundleSmoothExecutor,   # A no-op, but simpler to use it instead of rearranging
+        GetPerEllMetricsExecutor,
+        GetPerSimMetricsExecutor,
+        ModelVsTheoryWithTensionExecutor,
+        FixedRealizationFigsExecutor,
+        RankedRealizationFigsExecutor,
+        PredictionCloudExecutor,
+        R2DecompositionExecutor,
+        PairedRealizationPeaksExecutor
     ]
     run(cfg, pipes)
 
@@ -189,7 +213,8 @@ if __name__ == "__main__":
     # run_3_prep_px()
     # run_4_prep_ps()
     # run_5_make_models()
-    run_6_train()
+    # run_6_train()
     # run_7_infer()
+    run_7B_analysis()    
     # run_8_prep_planck()
     # run_9_run_planck()

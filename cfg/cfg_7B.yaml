@@ -1,0 +1,22 @@
+# Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
+defaults:
+  - cfg_7
+  - model/analysis/figures: figures
+  - _self_
+
+run_inference_on: [test, valid]
+
+models:
+  d2ps:
+    working_dir: ${working_dir}
+    cleaning_model: "obs2ps"
+    fig_model_name: ${fig_short_name}
+    use_epoch: "best"
+    fig_color: "blue"
+
+fig_short_name: "d2ps"
+
+# Placeholders
+sm_basis_kind: polyfit
+sm_deg_range: [4,30]
+sm_criterion: "mean_r2"

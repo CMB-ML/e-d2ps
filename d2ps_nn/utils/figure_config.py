@@ -114,12 +114,17 @@ def display_for_metric(cfg_figs, metric, override=None):
 
 
 def display_for_dl(cfg_figs, override=None):
-    """``{xlabel, ylabel}`` for a spectrum panel, whose y-axis is D_ell."""
+    """``{xlabel, ylabel, ylim}`` for a spectrum panel, whose y-axis is D_ell.
+
+    The limit is shared, not per figure: several figures draw D_ell, and
+    autoscaling each to its own extremes makes them incomparable. Omit
+    ``dl_ylim`` from config to autoscale instead.
+    """
     cfg_figs = _plain(cfg_figs)
-    display = {
-        "xlabel": cfg_figs["axis_labels"]["ell"],
-        "ylabel": cfg_figs["axis_labels"]["dl"],
-    }
+    labels = cfg_figs["axis_labels"]
+    display = {"xlabel": labels["ell"], "ylabel": labels["dl"]}
+    if labels.get("dl_ylim") is not None:
+        display["ylim"] = labels["dl_ylim"]
     return _merge(display, override)
 
 
@@ -230,3 +235,9 @@ def annotation_style(cfg_figs, override=None):
     """Placement of the in-figure annotation, in axes coordinates."""
     cfg_figs = _plain(cfg_figs)
     return _merge(cfg_figs.get("annotation_style", {}), override)
+
+
+def budget_style(cfg_figs, override=None):
+    """Appearance of the R^2 budget figure: panels, line weights, legend."""
+    cfg_figs = _plain(cfg_figs)
+    return _merge(cfg_figs["budget_style"], override)

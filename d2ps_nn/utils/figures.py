@@ -505,8 +505,9 @@ def mark_crits_at_axis_edge(ax, crit_ells, color, where="bottom", tick_frac=0.02
 
 def plot_r2_decomposition(
     ells, ceiling, losses, r2, *, style, label, display, loss_styles,
-    figure=None, ceiling_label=None, identity_rtol=1e-6, title=None,
-    title_fontsize=14, ax=None,
+    budget_style, figure=None, ceiling_label=None, exemplar=None,
+    exemplar_display=None, theory_style=None, identity_rtol=1e-6,
+    title=None, title_fontsize=14, ax=None,
 ):
     """One model's R^2 budget: what it could reach, and what it gives away.
 
@@ -519,6 +520,12 @@ def plot_r2_decomposition(
     ``losses``   ordered {name: (n_ell,)} subtracted from the ceiling, stacked
                  in the order given. Insertion order is the stacking order.
     ``r2``       (n_ell,) what was actually achieved
+
+    ``exemplar`` is an optional ``(theory_row, pred_row)`` pair drawn in a panel
+    above: one realization, for context. The budget is a per-ell statistic over
+    the whole split and says nothing about where in the spectrum a loss sits, so
+    the panel is there to let a reader put a dip at ell~1000 against the damping
+    tail rather than against nothing.
 
     The bands are drawn between running partial sums, so the lowest band edge
     lands exactly on ``r2`` when the identity holds. It is checked rather than
@@ -550,11 +557,36 @@ def plot_r2_decomposition(
     line_style, _ = _split_style(style)
     color = line_style.get("color")
 
-    if ax is None:
+    ax_top = None
+    if ax is not None:
+        try:
+            ax_top, ax = ax
+        except TypeError:
+            pass
+        fig = ax.figure
+    elif exemplar is None:
         fig, ax = _new_figure(figure)
     else:
-        fig = ax.figure
+        fig, (ax_top, ax) = _new_figure(
+            figure, nrows=2, sharex=True,
+            gridspec_kw={"height_ratios": budget_style.get("height_ratios", [1, 2.4])},
+            layout="constrained",
+        )
 
+    # --- exemplar panel: one realization, for context ---
+    if exemplar is not None and ax_top is not None:
+        ts = _require_theory_style(theory_style)
+        thry_row, pred_row = exemplar
+        ax_top.plot(ells, thry_row, color=ts["color"],
+                    lw=budget_style.get("exemplar_theory_lw", 1.0),
+                    label=ts.get("line_label", "Theory"))
+        ax_top.plot(ells, pred_row, color=color,
+                    lw=budget_style.get("exemplar_pred_lw", 0.8), label=label)
+        _apply_display(ax_top, exemplar_display or {})
+        ax_top.legend(fontsize=budget_style.get("legend_fontsize", 7),
+                      loc="upper right")
+
+    # --- the budget ---
     upper = ceiling
     for name, loss in losses.items():
         lower = upper - np.asarray(loss, dtype=float)
@@ -565,17 +597,25 @@ def plot_r2_decomposition(
         )
         upper = lower
 
-    ax.plot(ells, ceiling, color="0.35", lw=1.0, ls=":",
+    ax.plot(ells, ceiling, color=budget_style.get("ceiling_color", "0.3"),
+            lw=budget_style.get("ceiling_lw", 1.0),
             label=ceiling_label or "Ceiling")
-    ax.plot(ells, r2, lw=1.4, label=label, **line_style)
+    ax.plot(ells, r2, lw=budget_style.get("achieved_lw", 1.2), label=label,
+            **line_style)
+
+    if budget_style.get("zero_line", True):
+        ax.axhline(0, color="0.5", ls=":", lw=1.0)
 
     _apply_display(ax, display)
     ax.set_xlim(ells.min(), ells.max())
-    ax.legend(loc="best", fontsize=8)
+    ax.legend(loc=budget_style.get("legend_loc", "lower right"),
+              fontsize=budget_style.get("legend_fontsize", 7),
+              ncol=budget_style.get("legend_ncol", 2))
 
     if title:
         fig.suptitle(title, fontsize=title_fontsize)
-    fig.tight_layout()
+    if exemplar is None:
+        fig.tight_layout()
     return fig
 
 

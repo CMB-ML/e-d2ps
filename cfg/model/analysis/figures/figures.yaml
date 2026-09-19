@@ -32,6 +32,10 @@ theory_style:
 axis_labels:
   ell: "Multipole Moment $\\ell$"
   dl: "$D_\\ell$ $[\\mu K_\\mathrm{CMB}^2]$"
+  # Shared across every D_ell panel -- the realization figures, the cloud's top
+  # panel, the budget's exemplar -- so a "worst" realization and a "best" one
+  # are read on the same scale. A stage's own display block overrides it.
+  dl_ylim: [0, 7500]
 
 # Per-metric display. A metric absent from here still plots: it falls back to
 # its own name with a linear axis, and warns. yscale and ylim defaults can be
@@ -85,8 +89,8 @@ metric_display:
     ylim: [-5, 5]
   r2_decomposition:
     label: "$R^2$ budget"
-    ylabel: "$R^2$"
-    ylim: [0, 1]
+    ylabel: "$R^2_\\ell$ budget"
+    ylim: [-1.05, 1.05]
 
 annotation_style:
   x: 0.02
@@ -111,15 +115,26 @@ cloud_peak_style:
   pred_where: bottom
 
 # Decomposition
+budget_style:
+  height_ratios: [1, 2.4]
+  ceiling_color: "0.3"
+  ceiling_lw: 1.0
+  achieved_lw: 1.2
+  exemplar_theory_lw: 1.0
+  exemplar_pred_lw: 0.8
+  zero_line: true
+  legend_loc: "lower right"
+  legend_ncol: 2
+  legend_fontsize: 7
 loss_styles:
-  loss_calib:
-    color: "tab:orange"
-    alpha: 0.45
-    label: "Calibration loss $(A-r)^2_\\ell$"
   loss_bias:
-    color: "tab:purple"
-    alpha: 0.45
-    label: "Bias loss $b^2_\\ell$"
+    color: "C3"
+    alpha: 0.20
+    label: "$b^2$  (bias loss)"
+  loss_calib:
+    color: "C1"
+    alpha: 0.20
+    label: "$(A-r)^2$  (calib. loss)"
 
 # Paired Realizations
 paired_realization_style:

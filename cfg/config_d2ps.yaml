@@ -33,11 +33,11 @@ pipeline:
       ps_bundle:
         handler: NpyHandler
         path_template:  "{src_root}/CMB-ML/bulk_theory_dl_scale${sigma_scale}.npy"
-  bundle_true: # Z_bundle.py / BundleTrueExecutor
-    assets_out:
-      ps_bundle:
-        handler: NpyHandler
-        path_template: "{root}/{dataset}/True/Analysis_Bundle/true_{split}.npy"
+  # bundle_true: # Z_bundle.py / BundleTrueExecutor
+  #   assets_out:
+  #     ps_bundle:
+  #       handler: NpyHandler
+  #       path_template: "{root}/{dataset}/True/Analysis_Bundle/true_{split}.npy"
 sigma_scale: 1
 
 bn_momentum: 0.1

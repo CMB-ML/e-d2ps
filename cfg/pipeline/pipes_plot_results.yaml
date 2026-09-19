@@ -101,13 +101,18 @@ plot_prediction_cloud:
 plot_r2_decomposition:
   metrics: ["ceiling_r2", "loss_calib", "loss_bias", "R2"]
   ceiling_metric: ceiling_r2
-  loss_metrics: ["loss_calib", "loss_bias"]
+  loss_metrics: ["loss_bias", "loss_calib"]     # stacking order, outermost first
   total_metric: R2
+  exemplar: 0                                   # null to drop the top panel
+  exemplar_display:
+    ylim: [0, 7500]
   assets_out:
     fig:
       handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/fig_D_r2budget_{split}.{fig_type}"
   assets_in:
+    ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
     per_ell_metric: {stage: get_per_ell_metrics}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
@@ -116,6 +121,8 @@ plot_r2_decomposition:
 plot_paired_realizations:
   n_show: 5
   mark_peaks: True
+  display:
+    ylim: [0, 7000]
   assets_out:
     fig:
       handler: MPLFigure
