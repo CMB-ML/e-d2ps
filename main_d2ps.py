@@ -199,20 +199,21 @@ def run(cfg, pipes):
 
     try:
         pipeline_context.run_pipeline()
-    except Exception as e:
-        logger.exception("An exception occured during the pipeline.", exc_info=e)
-        raise e
-    finally:
         logger.info("Pipeline completed.")
+    except Exception:
+        logger.error("An exception occured during the pipeline.")
+        raise
+    finally:
+        logger.info("Cleaning up after pipeline.")
         log_maker.copy_hydra_run_to_dataset_log()
 
 
 if __name__ == "__main__":
-    run_1_prelim_px()
-    run_2_prelim_ps()
-    run_3_prep_px()
-    run_4_prep_ps()
-    run_5_make_models()
+    # run_1_prelim_px()
+    # run_2_prelim_ps()
+    # run_3_prep_px()
+    # run_4_prep_ps()
+    # run_5_make_models()
     run_6_train()
     run_7_infer()
     run_7B_analysis()    
