@@ -51,7 +51,7 @@ bn_momentum: 0.1
 bn_alpha: 0.0
 # bn_recompute_epochs: 0
 bn_recompute_epochs: ${num_epochs}
-bn_recompute_max_batches: null
+bn_recompute_max_batches: 32
 cf_planck: true
 track_val_preds: true
 mask_features: true
@@ -64,8 +64,8 @@ n_sims_train_full: 1000   # 512
 
 # # Normal training scheme
 n_sims_train: 1000
-n_sims_train_infer: 200
-num_epochs: 100
+n_sims_train_infer: 250
+num_epochs: 300
 track_ell_metrics: true
 
 dropout_rate: ???          # 9 layers + 2 for decoder
