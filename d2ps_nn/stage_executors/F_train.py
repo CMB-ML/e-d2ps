@@ -152,8 +152,6 @@ class TrainingExecutor(BaseD2PSExecutor):
             "bn_recompute_max_batches", None
         )
 
-        self.use_mask = cfg.model.mask_features
-
     def set_up_planck(self):
             n_dets = len(self.instrument.dets)
             for i, freq in enumerate(self.instrument.dets.keys()):
@@ -171,8 +169,14 @@ class TrainingExecutor(BaseD2PSExecutor):
             # get a shape error at best, plausible-looking garbage at worst.
             if self.use_pos_enc_lut:
                 raise NotImplementedError
-            self.pl_obs = torch.from_numpy(self.pl_obs).unsqueeze(0)
+            # self.pl_obs = torch.from_numpy(self.pl_obs).unsqueeze(0)
             logger.info(f"Loaded Planck comparison maps: feature tensor {tuple(self.pl_obs.shape)}")
+
+            self.pl_obs = torch.from_numpy(self.pl_obs)
+            mask = self.get_mask()
+            if mask is not None:
+                self.pl_obs = mask * self.pl_obs
+            self.pl_obs = self.pl_obs.unsqueeze(0)
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -306,7 +310,12 @@ class TrainingExecutor(BaseD2PSExecutor):
             pos_enc_lut=self.get_pos_enc_lut(),
             mask=self.get_mask()
         )
-        logger.info(f"Dataset: {dataset_params}")
+
+        log_params = {k: v for k, v in dataset_params.items() if k not in ("mask", "pos_enc_lut")}
+        for key in ("mask", "pos_enc_lut"):
+            val = dataset_params[key]
+            log_params[key] = None if val is None else f"<{type(val).__name__} shape {tuple(val.shape)}>"
+        logger.info(f"Dataset: {log_params}")
 
         dataset = dataset_class(**dataset_params)
         return dataset
