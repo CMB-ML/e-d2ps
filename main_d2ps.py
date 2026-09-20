@@ -73,6 +73,8 @@ from d2ps_nn.ex import (
 
 from d2ps_nn.ex import AdjustZeroLevelExecutor
 
+from d2ps_nn.ex import CheckDatasetExecutor
+
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +83,10 @@ logger = logging.getLogger(__name__)
 def run_1_prelim_px(cfg):
     logger.info(f"Running prelim_px in {__file__}")
     pipes = [
-        # PrepPSMaskExecutor,
-        # PrepGalNILCMaskExecutor,
-        # PrepGalCutMaskExecutor,
-        # ComposeMasksExecutor,
+        PrepPSMaskExecutor,
+        PrepGalNILCMaskExecutor,
+        PrepGalCutMaskExecutor,
+        ComposeMasksExecutor,
 
         # MakeLutExecutor,
         # MakePosEncLutExecutor,
@@ -110,8 +112,8 @@ def run_2_prelim_ps(cfg):
 def run_3_prep_px(cfg):
     logger.info(f"Running prep_px in {__file__}")
     pipes = [
-        PreprocessMapsExecutor,
-        # PreprocessMaskExecutor,
+        # PreprocessMapsExecutor,
+        PreprocessMaskExecutor,
     ]
     run(cfg, pipes)
 
@@ -120,7 +122,7 @@ def run_3_prep_px(cfg):
 def run_4_prep_ps(cfg):
     logger.info(f"Running prep_ps in {__file__}")
     pipes = [
-        PreprocessSpectraExecutor
+        # PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 
@@ -131,6 +133,17 @@ def run_5_make_models(cfg):
     pipes = [
         ModelInitExecutor
     ]
+    run(cfg, pipes)
+
+
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_8")
+def run_8_prep_planck(cfg):
+    logger.debug(f"Running train in {__file__}")
+    pipes = [
+             AdjustZeroLevelExecutor,
+             PreprocessMapsExecutor,
+             PreprocessSpectraExecutor,
+             ]
     run(cfg, pipes)
 
 
@@ -148,6 +161,14 @@ def run_6_train(cfg):
         TrainingExecutor,
         LossPlotExecutor,
         LossDeltaPlotExecutor
+    ]
+    run(cfg, pipes)
+
+
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_6")
+def run_6b_show_dataset(cfg):
+    pipes = [
+        CheckDatasetExecutor,
     ]
     run(cfg, pipes)
 
@@ -181,23 +202,12 @@ def run_7B_analysis(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="cfg_8")
-def run_8_prep_planck(cfg):
-    logger.debug(f"Running train in {__file__}")
-    pipes = [
-             AdjustZeroLevelExecutor,
-            #  PreprocessMapsExecutor,
-            #  PreprocessSpectraExecutor,
-             ]
-    run(cfg, pipes)
-
-
 @hydra.main(version_base=None, config_path="cfg", config_name="cfg_9")
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
              PredictExecutor,
-            #  ShowPredictionsPeaksExecutor,
+             PairedRealizationPeaksExecutor,
              ]
     run(cfg, pipes)
 
@@ -234,12 +244,12 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_1_prelim_px()
-    # run_2_prelim_ps()
-    # run_3_prep_px()
-    # run_4_prep_ps()
-    # run_5_make_models()
-    # run_6_train()
-    # run_7_infer()
-    # run_7B_analysis()
+    run_2_prelim_ps()
+    run_3_prep_px()
+    run_4_prep_ps()
+    run_5_make_models()
     run_8_prep_planck()
-    # run_9_run_planck()
+    run_6_train()
+    run_7_infer()
+    run_7B_analysis()
+    run_9_run_planck()
