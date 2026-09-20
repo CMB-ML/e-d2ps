@@ -10,6 +10,7 @@ from cmbml.utils.fits_inspection import get_header_cards
 from cmbml.utils.planck_instrument import make_instrument, Instrument
 from d2ps_nn.utils.masks.mask_composition import gal_mask_label, provenance_cards
 from d2ps_nn.utils.masks.masked_monopole import adjust_zero_level
+from d2ps_nn.utils.masks.io import read_channel_mask
 
 
 logger = logging.getLogger(__name__)
@@ -18,18 +19,20 @@ logger = logging.getLogger(__name__)
 class AdjustZeroLevelExecutor(BaseStageExecutor):
     def __init__(self, cfg: DictConfig, stage_str="adjust_zero_level") -> None:
         super().__init__(cfg, stage_str=stage_str)
-        self.instrument: Instrument = make_instrument(cfg=cfg)
-        self.gal_source = cfg.masks.gal_source
-        self.gal_cut_cfg = cfg.masks.gal_cut
+
+        self.out_obs_maps: Asset = self.assets_out["obs_maps"]
+        out_obs_maps_handler: HealpyMap
 
         self.in_obs_maps: Asset = self.assets_in["obs_maps"]
         self.in_mask: Asset = self.assets_in["mask"]
         self.in_monopole: Asset = self.assets_in["monopole"]
-        self.out_obs_maps: Asset = self.assets_out["obs_maps"]
         in_obs_maps_handler: HealpyMap
         in_mask_handler: HealpyMap
         in_monopole_handler: Config
-        out_obs_maps_handler: HealpyMap
+
+        self.instrument: Instrument = make_instrument(cfg=cfg)
+        self.gal_source = cfg.masks.gal_source
+        self.gal_cut_cfg = cfg.masks.gal_cut
 
     def execute(self) -> None:
         logger.debug(f"Running {self.__class__.__name__} execute()")
@@ -39,8 +42,15 @@ class AdjustZeroLevelExecutor(BaseStageExecutor):
 
         for ch in self.instrument.dets:
             stats = monopole["channels"][ch]
-            mask, mask_path = self.load_mask(ch)
-            self.check_mask(ch, mask, mask_path, stats)
+
+            mask, info = read_channel_mask(self.in_mask, self.name_tracker, ch,
+                                        self.gal_source, self.gal_cut_cfg)
+            if info != stats["mask"]:
+                raise ValueError(
+                    f"{ch} GHz: mask differs from when the monopole target was computed.\n"
+                    f"  now:      {info}\n  recorded: {stats['mask']}\n"
+                    "Rerun get_monopole."
+                )
 
             context = dict(split="Test", sim_num=0, freq=ch)
 
@@ -59,7 +69,7 @@ class AdjustZeroLevelExecutor(BaseStageExecutor):
                 ("ZL_MEAS", float(measured.value), f"Masked mean before adj [{unit_str}]"),
                 ("ZL_TRGT", float(u.Quantity(stats["mean"]).to_value(m.unit)), f"Target masked mean [{unit_str}]"),
                 ("ZL_OFF", float(offset.value), f"Subtracted offset [{unit_str}]"),
-                ("ZL_MASK", mask_path, "Mask used for zero level"),
+                ("ZL_MASK", info["path"], "Mask used for zero level"),
                 ("ZL_FILE", mono_path, "Monopole target file"),
             ]
             with self.name_tracker.set_contexts(context):

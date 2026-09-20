@@ -29,7 +29,8 @@ from d2ps_nn.ex import (
     MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
     FindPxMapStatsExecutor,
-    GetMonopoleExecutor
+    GetMonopoleExecutor,
+    ArrangeMasksExecutor
 )
 
 from d2ps_nn.ex import (
@@ -90,7 +91,8 @@ def run_1_prelim_px(cfg):
         # FindDatasetStatsParallelExecutor,
         # FindPxMapStatsExecutor,
 
-        GetMonopoleExecutor
+        GetMonopoleExecutor,
+        ArrangeMasksExecutor
     ]
     run(cfg, pipes)
 
@@ -184,8 +186,8 @@ def run_8_prep_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
              AdjustZeroLevelExecutor,
-             PreprocessMapsExecutor,
-             PreprocessSpectraExecutor,
+            #  PreprocessMapsExecutor,
+            #  PreprocessSpectraExecutor,
              ]
     run(cfg, pipes)
 
@@ -231,7 +233,7 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_1_prelim_px()
+    run_1_prelim_px()
     # run_2_prelim_ps()
     # run_3_prep_px()
     # run_4_prep_ps()

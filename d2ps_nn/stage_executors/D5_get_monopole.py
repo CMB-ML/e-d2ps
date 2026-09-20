@@ -20,6 +20,7 @@ from cmbml.utils.map_fields_helper import map_field_str2int
 from cmbml.utils.fits_inspection import get_header_cards
 from d2ps_nn.utils.masks.mask_composition import gal_mask_label, provenance_cards
 from d2ps_nn.utils.masks.masked_monopole import masked_mean, summarize
+from d2ps_nn.utils.masks.io import read_channel_mask
 
 
 logger = logging.getLogger(__name__)
@@ -92,17 +93,7 @@ class GetMonopoleExecutor(BaseStageExecutor):
     def load_masks(self) -> None:
         self.mask_info = {}
         for ch in self.channels:
-            gal_mask = gal_mask_label(ch, self.gal_source, self.gal_cut_cfg).lower()
-            with self.name_tracker.set_contexts(dict(freq=ch, gal_mask=gal_mask)):
-                mask = self.in_mask.read()[0].astype(bool)
-                cards = get_header_cards(self.in_mask.path)
-                path = str(self.in_mask.path)
-            self.masks[ch] = mask
-            self.mask_info[ch] = dict(
-                path=path,
-                f_sky=float(mask.mean()),
-                header={k: v for k, v, _ in provenance_cards(cards)},
-            )
+            self.masks[ch], self.mask_info[ch] = read_channel_mask(self.in_mask, self.name_tracker, ch, self.gal_source, self.gal_cut_cfg)
 
     def build_tasks(self):
         tasks = []

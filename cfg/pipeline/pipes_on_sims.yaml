@@ -157,6 +157,19 @@ compose_masks:
     nilc_mask: {stage: prep_nilc_mask, orig_name: mask}
   dir_name: D2_Prep_Masks
 
+arrange_masks: # D_arrange_masks.py / ArrangeMasksExecutor
+  assets_out:
+    mask:
+      handler: NumpyMap
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/mask_{freq}_{gal_mask}_{px_arrange}.npy"
+    note:
+      handler: Config
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/mask_{freq}_{gal_mask}_{px_arrange}.yaml"
+  assets_in:
+    mask: {stage: compose_masks}
+    lut: {stage: make_lut}
+  dir_name: D2_Arrange_Masks
+
 # Retained temporarily.
 # prep_nilc_mask: # D3_preprocess_masks.py / PrepGalNILCMaskExecutor
 #   assets_out:
