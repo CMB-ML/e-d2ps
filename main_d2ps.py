@@ -21,33 +21,45 @@ from cmbml.core import (
                       )
 from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 from d2ps_nn.ex import (
+    PrepGalNILCMaskExecutor,
+    PrepPSMaskExecutor,
+    PrepGalCutMaskExecutor,
+    ComposeMasksExecutor,
     MakeLutExecutor,
     MakePosEncLutExecutor,
     FindDatasetStatsParallelExecutor,
     FindPxMapStatsExecutor,
+    GetMonopoleExecutor
+)
+
+from d2ps_nn.ex import (
     FindSpectraStatsExecutor,
     PreprocessMapsExecutor,
     PreprocessMaskExecutor,
-    PrepGalNILCMaskExecutor,
-    PrepPSMaskExecutor,
-    PrepGalCutMaskExecutor,
+
     PreprocessSpectraExecutor,
 
     ModelInitExecutor,
+)
+
+from d2ps_nn.ex import (
     # CheckGPULoadExecutor,
-    OverfitTrainingExecutor,
+    # OverfitTrainingExecutor,
     # RelativeUpdatePlotExecutor,
-    LRFindingTrainingExecutor,
+    # LRFindingTrainingExecutor,
     # LearningRatePlotExecutor,
     TrainingExecutor,
     LossPlotExecutor,
     LossDeltaPlotExecutor,
+)
+
+from d2ps_nn.ex import (
     PredictExecutor,
-    # ShowPredictionsPeaksExecutor,
+)
+
+from d2ps_nn.ex import (
     BundlePredExecutor, 
     BundleTrueExecutor,
-    # ShowTrebleEll,
-
     GetPolyDegreeExecutor,
     BundleSmoothExecutor,
     GetPerEllMetricsExecutor,
@@ -68,10 +80,17 @@ logger = logging.getLogger(__name__)
 def run_1_prelim_px(cfg):
     logger.info(f"Running prelim_px in {__file__}")
     pipes = [
-        MakeLutExecutor,
-        MakePosEncLutExecutor,
-        FindDatasetStatsParallelExecutor,
-        FindPxMapStatsExecutor,
+        # PrepPSMaskExecutor,
+        # PrepGalNILCMaskExecutor,
+        # PrepGalCutMaskExecutor,
+        # ComposeMasksExecutor,
+
+        # MakeLutExecutor,
+        # MakePosEncLutExecutor,
+        # FindDatasetStatsParallelExecutor,
+        # FindPxMapStatsExecutor,
+
+        GetMonopoleExecutor
     ]
     run(cfg, pipes)
 
@@ -89,9 +108,8 @@ def run_2_prelim_ps(cfg):
 def run_3_prep_px(cfg):
     logger.info(f"Running prep_px in {__file__}")
     pipes = [
-        # PreprocessMapsExecutor,
+        PreprocessMapsExecutor,
         # PreprocessMaskExecutor,
-        PrepPSMaskExecutor
     ]
     run(cfg, pipes)
 
@@ -212,9 +230,9 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_1_prelim_px()
+    run_1_prelim_px()
     # run_2_prelim_ps()
-    run_3_prep_px()
+    # run_3_prep_px()
     # run_4_prep_ps()
     # run_5_make_models()
     # run_6_train()

@@ -26,6 +26,12 @@ trained_wd         : *wd
 prep_working_dir   : "d2ps-prep/"
 pl_fig_model_name  : "${features_type} to PS, On Planck, ${model_name_base}"
 
+masks:
+  gal_source: galcut      # or nilc
+  gal_cut:
+    default: 70
+    per_channel:
+      100: 60
 
 pipeline:
   raw:

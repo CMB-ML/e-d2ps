@@ -1,0 +1,6 @@
+masks:
+  gal_source: galcut      # or nilc
+  gal_cut:
+    default: 70
+    per_channel:
+      100: 60

@@ -57,7 +57,7 @@ class FindDatasetStatsParallelExecutor(BaseStageExecutor):
         in_obs_map_handler: HealpyMap
 
         scaling = cfg.model.get("scale_px", None)
-        self.get_extrema = scaling in ["global_minmax"]
+        self.get_extrema = scaling in ["global_minmax", "minmax_global"]
 
         self.scale_scan_method = None
         self.scale_sift_method = None

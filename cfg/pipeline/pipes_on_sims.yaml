@@ -9,18 +9,31 @@ make_theory_ps:
     cmb_ps:
       handler: DictCambPowerSpectrum
 
+get_monopole:  # D5_get_monopole.py / GetMonopoleExecutor
+  n_workers: ${model.preprocess.n_workers}
+  assets_out:
+    monopole:
+      handler: Config
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/monopole_{gal_mask_source}.yaml"
+  assets_in:
+    obs_maps: {stage: make_sims, working: Simulation_Working/}
+    mask: {stage: compose_masks}
+  splits:
+    - train
+  dir_name: C_PreprocessingPrep
+
 make_lut:  # B_make_lut.py / MakeLutExecutor
   assets_out:
     lut: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/lut_{style}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/lut_{style}.npy"
   dir_name: B_LUT
 
 make_pos_enc_lut:  # B_make_pos_enc_lut.py / MakePosEncLutExecutor
   assets_out:
     pos_enc_lut: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/pos_enc_lut_{style}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/pos_enc_lut_{style}.npy"
   assets_in:
     lut: {stage: make_lut}
   dir_name: B_LUT
@@ -29,7 +42,7 @@ get_dataset_stats: # C_find_dataset_stats_parallel.py / FindDatasetStatsParallel
   assets_out:
     dataset_stats: 
       handler: Config
-      path_template: "{root}/{dataset}/{working}{stage}/feature_stats.yaml"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/feature_stats.yaml"
   assets_in:
     cmb_map: {stage: make_sims, working: Simulation_Working/}
     obs_maps: {stage: make_sims, working: Simulation_Working/}
@@ -41,11 +54,11 @@ get_px_map_stats: # C3_find_map_stats_serial.py / FindPxMapStatsExecutor
   assets_out:
     cmb_map: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/cmb_px_stats.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/cmb_px_stats.npy"
       # path_template: "{root}/{dataset}/{working}{stage}/cmb_px_stats_beam_{map_prep_beam}d.npy"
     obs_maps: 
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/obs_px_stats_{freq}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/obs_px_stats_{freq}.npy"
       # path_template: "{root}/{dataset}/{working}{stage}/obs_px_stats_{freq}_{map_prep_beam}d.npy"
   assets_in:
     cmb_map: {stage: make_sims, working: Simulation_Working/}
@@ -58,10 +71,10 @@ get_spectra_stats: # C2_find_ps_stats_serial / FindSpectraStatsExecutor
   assets_out:
     mean_ps:
       handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/ps_mean.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/ps_mean.npy"
     stdv_ps:
       handler: NumpyPowerSpectrum
-      path_template: "{root}/{dataset}/{working}{stage}/ps_stdv.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/ps_stdv.npy"
   assets_in:
     cmb_ps:
       stage: make_theory_ps
@@ -74,10 +87,10 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_out:
     obs_maps:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/obs_prep_{freq}_{px_arrange}_{scale}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/{split}/{sim}/obs_prep_{freq}_{px_arrange}_{scale}.npy"
     cmb_map:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/{split}/{sim}/cmb_prep_{px_arrange}_{scale}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/{split}/{sim}/cmb_prep_{px_arrange}_{scale}.npy"
   assets_in:
     obs_maps: {stage: make_sims}
     cmb_map: {stage: make_sims}
@@ -95,7 +108,7 @@ preprocess_mask: # D2_preprocess_mask.py / PreprocessMaskExecutor
   assets_out:
     mask:
       handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/mask_{px_arrange}.npy"
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/mask_{px_arrange}.npy"
   assets_in:
     mask: {stage: make_mask}
     lut: {stage: make_lut}
@@ -103,46 +116,89 @@ preprocess_mask: # D2_preprocess_mask.py / PreprocessMaskExecutor
   splits:
     - train
 
-preprocess_nilc_mask: # D3_preprocess_masks.py / PrepGalNILCMaskExecutor
+prep_nilc_mask: # D3_preprocess_masks.py / PrepGalNILCMaskExecutor
   assets_out:
     mask:
-      handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/mask_{px_arrange}.npy"
-    note:
-      handler: Config
-      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+      handler: HealpyMap
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/mask_gal_nilc.fits"
   assets_in:
     mask: {stage: raw, orig_name: mask_nilc_map}
-    lut: {stage: make_lut}
   dir_name: D2_Prep_Masks
 
-preprocess_point_source_mask: # D3_preprocess_masks.py / PrepPSMaskExecutor
+prep_point_source_mask: # D3_preprocess_masks.py / PrepPSMaskExecutor
   ps_mask_lmax: 2000
   ps_mask_iters: null
   assets_out:
     mask:
-      handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_{freq}_{px_arrange}.npy"
-    note:
-      handler: Config
-      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+      handler: HealpyMap
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/mask_ps_{freq}.fits"
   assets_in:
     mask:   {stage: raw, orig_name: mask_point_source_map}
-    lut: {stage: make_lut}
   dir_name: D2_Prep_Masks
 
-preprocess_galcut_mask: # D3_preprocess_masks.py / PrepGalCutMaskExecutor
+prep_galcut_mask: # D3_preprocess_masks.py / PrepGalCutMaskExecutor
+  gal_cuts: [20, 40, 60, 70, 80]
   assets_out:
     mask:
-      handler: NumpyMap
-      path_template: "{root}/{dataset}/{working}{stage}/mask_{px_arrange}.npy"
-    note:
-      handler: Config
-      path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+      handler: HealpyMap
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/mask_{gal_cut}.fits"
   assets_in:
-    gal_mask:  {stage: raw, orig_name: mask_gal_cut_apo_0_map}
-    lut: {stage: make_lut}
+    mask:  {stage: raw, orig_name: mask_gal_cut_apo_0_map}
   dir_name: D2_Prep_Masks
+
+compose_masks:
+  assets_out:
+    mask:
+      handler: HealpyMap
+      path_template: "{root}/{dataset}/${prep_working_dir}{stage}/ps_gal_mask_{freq}_{gal_mask}.fits"
+  assets_in:
+    galcut_mask: {stage: prep_galcut_mask, orig_name: mask}
+    ps_mask: {stage: prep_point_source_mask, orig_name: mask}
+    nilc_mask: {stage: prep_nilc_mask, orig_name: mask}
+  dir_name: D2_Prep_Masks
+
+# Retained temporarily.
+# prep_nilc_mask: # D3_preprocess_masks.py / PrepGalNILCMaskExecutor
+#   assets_out:
+#     mask:
+#       handler: NumpyMap
+#       path_template: "{root}/{dataset}/{working}{stage}/mask_gal_nilc.npy"
+#     note:
+#       handler: Config
+#       path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{px_arrange}.txt"
+#   assets_in:
+#     mask: {stage: raw, orig_name: mask_nilc_map}
+#     lut: {stage: make_lut}
+#   dir_name: D2_Prep_Masks
+
+# prep_point_source_mask: # D3_preprocess_masks.py / PrepPSMaskExecutor
+#   ps_mask_lmax: 2000
+#   ps_mask_iters: null
+#   assets_out:
+#     mask:
+#       handler: NumpyMap
+#       path_template: "{root}/{dataset}/{working}{stage}/ps_mask_{freq}_{px_arrange}.npy"
+#     note:
+#       handler: Config
+#       path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{freq}_{px_arrange}.txt"
+#   assets_in:
+#     mask:   {stage: raw, orig_name: mask_point_source_map}
+#     lut: {stage: make_lut}
+#   dir_name: D2_Prep_Masks
+
+# prep_galcut_mask: # D3_preprocess_masks.py / PrepGalCutMaskExecutor
+#   gal_cuts: [20, 40, 60, 70, 80]
+#   assets_out:
+#     mask:
+#       handler: NumpyMap
+#       path_template: "{root}/{dataset}/{working}{stage}/mask_{gal_cut}_{px_arrange}.npy"
+#     note:
+#       handler: Config
+#       path_template: "{root}/{dataset}/{working}{stage}/ps_mask_note_{gal_cut}_{px_arrange}.txt"
+#   assets_in:
+#     mask:  {stage: raw, orig_name: mask_gal_cut_apo_0_map}
+#     lut: {stage: make_lut}
+#   dir_name: D2_Prep_Masks
 
 preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_out:
