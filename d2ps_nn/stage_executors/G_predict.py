@@ -54,7 +54,6 @@ class PredictExecutor(BaseD2PSExecutor):
         self.scale_px = cfg.model.scale_px
 
         self.model = None  # Placeholder for model
-        self.use_mask = cfg.model.mask_features
 
     @property
     def model_epochs(self):

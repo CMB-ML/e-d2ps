@@ -288,7 +288,7 @@ train: # _check_model_size.py / CheckGPULoadExecutor AND F_train.py / TrainingEx
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}
     mask:
-      stage: preprocess_mask
+      stage: arrange_masks
       working: ${prep_working_dir}
   splits:
     - train
@@ -330,7 +330,7 @@ predict: &final_inference # G_predict.py / PredictExecutor
     obs_maps: {stage: preprocess_maps}
     model: {stage: train}
     mask:
-      stage: preprocess_mask
+      stage: arrange_masks
       working: ${prep_working_dir}
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}

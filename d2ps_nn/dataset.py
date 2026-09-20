@@ -206,52 +206,42 @@ def _get_features_idx(freqs, path_template, handler, n_fields, sim_idx):
     return features
 
 
-def get_feature_assembler(px_arrange):
+def _stack_channel(arrays):
+    t = torch.stack([torch.as_tensor(a) for a in arrays], dim=0)
+    if t.ndim == 4 and 12 in t.shape:  # likely (C,F,H,W) or (F,C,H,W)
+        if t.shape[0] == 12:
+            pass
+        elif t.shape[1] == 12:
+            t = t.permute(1, 0, 2, 3)
+        else:
+            raise ValueError(f"Unexpected feature shape {t.shape}")
+    return t
+
+
+def _stack_cmbNNCS(arrays):
+    return torch.stack([torch.as_tensor(a) for a in arrays], dim=0)
+
+
+def get_stacker(px_arrange):
     if px_arrange == "channel":
-        feature_assembler = _build_feature_tensor_channel
-        concat_axis = 1
-    elif px_arrange == "cmbNNCS":
-        feature_assembler = _build_feature_tensor_cmbNNCS
-        concat_axis = 0
-    else:
-        raise ValueError("Pixel arrangement must be set. 'channel' and 'cmbNNCS' are accepted")
-    return feature_assembler, concat_axis
+        return _stack_channel, 1
+    if px_arrange == "cmbNNCS":
+        return _stack_cmbNNCS, 0
+    raise ValueError("Pixel arrangement must be set. 'channel' and 'cmbNNCS' are accepted")
 
 
-def _build_feature_tensor_channel(freqs, path_template, handler, n_fields, sim_idx):
-    features = _get_features_idx(
-        freqs=freqs,
-        path_template=path_template,
-        handler=handler,
-        n_fields=n_fields,
-        sim_idx=sim_idx,
-    )
+def get_feature_assembler(px_arrange):
+    stacker, concat_axis = get_stacker(px_arrange)
 
-    features_tensor = tuple(torch.as_tensor(f) for f in features)
-    features_tensor = torch.stack(features_tensor, dim=0)
+    def assemble(freqs, path_template, handler, n_fields, sim_idx):
+        features = _get_features_idx(freqs=freqs, path_template=path_template,
+                                     handler=handler, n_fields=n_fields, sim_idx=sim_idx)
+        return stacker(features)
 
-    if features_tensor.ndim == 4:  # likely (C,F,H,W) or (F,C,H,W)
-        if 12 in features_tensor.shape:
-            if features_tensor.shape[0] == 12:
-                pass
-            elif features_tensor.shape[1] == 12:
-                features_tensor = features_tensor.permute(1, 0, 2, 3)
-            else:
-                raise ValueError(f"Unexpected feature shape {features_tensor.shape}")
-
-    return features_tensor
+    return assemble, concat_axis
 
 
-def _build_feature_tensor_cmbNNCS(freqs, path_template, handler, n_fields, sim_idx):
-    features = _get_features_idx(
-        freqs=freqs,
-        path_template=path_template,
-        handler=handler,
-        n_fields=n_fields,
-        sim_idx=sim_idx,
-    )
-
-    features_tensor = tuple(torch.as_tensor(f) for f in features)
-    features_tensor = torch.stack(features_tensor, dim=0)
-
-    return features_tensor
+def stack_masks(masks, px_arrange):
+    """Stack per-channel arranged masks exactly as features are stacked."""
+    stacker, _ = get_stacker(px_arrange)
+    return stacker(masks)

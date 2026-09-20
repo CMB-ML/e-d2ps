@@ -26,6 +26,8 @@ from d2ps_nn.models.wrapped_models import WrappedSpectrumModel
 
 from d2ps_nn.utils.parse_ell_list import parse_ells
 from d2ps_nn.utils.select_features import FeatureAsset
+from d2ps_nn.dataset import stack_masks
+from d2ps_nn.utils.masks.mask_composition import gal_mask_label
 
 
 logger = logging.getLogger(__name__)
@@ -137,6 +139,11 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         if self.nn_model in ["TLPEnc2AggDec", "TLPEncAggDec"]:
             self.face_reduction = cfg.model.face_reduction
 
+        # Masking
+        self.use_mask = cfg.model.mask_features
+        self.gal_source = cfg.masks.gal_source
+        self.gal_cut_cfg = cfg.masks.gal_cut
+        self._mask = None
         # Other
         self.model_note = cfg.model.note
 
@@ -290,14 +297,25 @@ class BaseD2PSExecutor(BasePyTorchModelExecutor):
         if not self.use_mask:
             logger.info("Features will not be masked.")
             return None
-        logger.info("Features will be masked.")
-        with self.name_tracker.set_context("px_arrange", self.px_arrange):
-            mask = 1 - self.in_mask.read()
-        f_sky = mask / mask.size
-        is_hard_mask = np.all((mask == 0) | (mask == 1))
-        print(f"Unmasked sky fraction is {f_sky:.3f} and it is {'not ' if not is_hard_mask else ''}a hard mask.")
-        return mask
+        if self._mask is not None:
+            return self._mask
+        if self.features_type != "obs":
+            raise NotImplementedError("Masks are per-channel; not defined for cmb features.")
 
+        masks = []
+        for ch in self.instrument.dets:  # same order as freqs in set_up_dataset
+            gal_mask = gal_mask_label(ch, self.gal_source, self.gal_cut_cfg).lower()
+            context = dict(freq=ch, gal_mask=gal_mask, px_arrange=self.px_arrange)
+            with self.name_tracker.set_contexts(context):
+                m = np.asarray(self.in_mask.read(), dtype=np.float32)
+            if not np.all((m == 0) | (m == 1)):
+                raise ValueError(f"{ch} GHz mask is not a hard 0/1 mask.")
+            logger.info(f"{ch} GHz: mask {gal_mask}, unmasked sky fraction {m.mean():.3f}")
+            masks.append(m)
+
+        self._mask = stack_masks(masks, self.px_arrange)
+        logger.info(f"Features will be masked; stacked mask shape {tuple(self._mask.shape)}.")
+        return self._mask
 
     # def init_simple(self):
     #     # Get the model class
