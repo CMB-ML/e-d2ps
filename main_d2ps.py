@@ -36,11 +36,11 @@ from d2ps_nn.ex import (
     FindSpectraStatsExecutor,
     PreprocessMapsExecutor,
     PreprocessMaskExecutor,
-
-    PreprocessSpectraExecutor,
-
-    ModelInitExecutor,
 )
+
+from d2ps_nn.ex import PreprocessSpectraExecutor
+
+from d2ps_nn.ex import ModelInitExecutor
 
 from d2ps_nn.ex import (
     # CheckGPULoadExecutor,
@@ -53,9 +53,7 @@ from d2ps_nn.ex import (
     LossDeltaPlotExecutor,
 )
 
-from d2ps_nn.ex import (
-    PredictExecutor,
-)
+from d2ps_nn.ex import PredictExecutor
 
 from d2ps_nn.ex import (
     BundlePredExecutor, 
@@ -71,6 +69,8 @@ from d2ps_nn.ex import (
     R2DecompositionExecutor,
     PairedRealizationPeaksExecutor
     )
+
+from d2ps_nn.ex import AdjustZeroLevelExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -179,10 +179,11 @@ def run_7B_analysis(cfg):
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="config_d2ps_8_prep_planck")
+@hydra.main(version_base=None, config_path="cfg", config_name="cfg_8")
 def run_8_prep_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
+             AdjustZeroLevelExecutor,
              PreprocessMapsExecutor,
              PreprocessSpectraExecutor,
              ]
@@ -230,13 +231,13 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_1_prelim_px()
+    # run_1_prelim_px()
     # run_2_prelim_ps()
     # run_3_prep_px()
     # run_4_prep_ps()
     # run_5_make_models()
     # run_6_train()
     # run_7_infer()
-    # run_7B_analysis()    
-    # run_8_prep_planck()
+    # run_7B_analysis()
+    run_8_prep_planck()
     # run_9_run_planck()

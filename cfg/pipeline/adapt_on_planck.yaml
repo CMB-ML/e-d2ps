@@ -8,13 +8,30 @@
 #       - Working directory for training "Training Dir" (source only)
 #       - Output when using Planck as dataset with trained model
 
+adjust_zero_level:
+  assets_out:
+    obs_maps:
+      handler: HealpyMap
+      path_template: "{root}/{dataset}/{stage}/{split}/{sim}/obs_{freq}_map_Zero_Adj.fits"
+  assets_in:
+    obs_maps: 
+      stage: convert_obs
+      dataset: ${planck_ds}
+    mask: {stage: compose_masks}
+    monopole: {stage: get_monopole}
+  splits: &test_only
+    - test
+  dir_name: Simulation_Planck
+
 preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_in:
     # Pull maps from Planck Dir
     cmb_map:
       dataset: ${planck_ds}
-    obs_maps:
-      dataset: ${planck_ds}
+    # For disabling the zero'd Plancks in a side-by-side test, switch these and change output paths
+    # obs_maps:
+    #   dataset: ${planck_ds}
+    obs_maps: {stage: adjust_zero_level}
     # Pull processing parameters from Training Dir
     lut:
       working: ${trained_wd}
@@ -22,8 +39,7 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
       working: ${trained_wd}
   dir_name: D_Prep_Observs_Planck
   # There is only the "Test" split
-  splits: &test_only
-    - test
+  splits: *test_only
 
 preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_in:

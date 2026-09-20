@@ -1,0 +1,25 @@
+defaults:
+  - config_d2ps
+  - job_sweep: ???
+  - override pipeline: assembly_on_planck_sepprep
+  - override splits: "1-1"
+  - _self_
+
+splits:
+  name: 1850
+
+working_dir        : ${prep_working_dir}
+
+hydra:
+  mode: MULTIRUN
+  run:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}
+  sweep:
+    dir        : Logs/${now:%Y-%m-%d-%H-%M-%S}  # Should be the same as run.dir
+    subdir     : ${hydra.job.num}
+  verbose      : false
+  sweeper:
+    params:
+      job_sweep: r22
+
+n_sims: ${n_sims_train}

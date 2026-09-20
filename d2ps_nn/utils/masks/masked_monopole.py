@@ -14,3 +14,23 @@ def summarize(values):
     """Mean and std across sims, preserving units if present."""
     q = u.Quantity(values)
     return dict(mean=q.mean(), std=q.std(), n_sims=len(values))
+
+
+def adjust_zero_level(m, mask, target):
+    """
+    Shift a map so its mean over the unmasked region equals `target`.
+
+    Args:
+        m: HEALPix map (array or Quantity), RING ordering.
+        mask: Boolean-like mask, True = unmasked.
+        target: Desired masked mean (same units as m, or convertible).
+
+    Returns:
+        (adjusted_map, offset, measured): offset = measured - target, and
+        adjusted_map = m - offset.
+    """
+    measured = masked_mean(m, mask)
+    if isinstance(m, u.Quantity):
+        target = u.Quantity(target).to(m.unit)
+    offset = measured - target
+    return m - offset, offset, measured

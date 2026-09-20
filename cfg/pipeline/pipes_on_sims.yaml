@@ -337,4 +337,3 @@ loss_summary: # _loss_summary.py / LossSummaryExecutor
     loss_record: {stage: train, orig_name: loss_record}
   dir_name: Analysis_Figures
   make_stage_log: False
-
