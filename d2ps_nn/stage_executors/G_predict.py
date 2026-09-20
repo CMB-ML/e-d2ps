@@ -13,7 +13,7 @@ from cmbml.core import Split, Asset
 from cmbml.core.asset_handlers import Config, HealpyMap, NumpyMap
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from d2ps_nn.models import BaseD2PSExecutor
-from d2ps_nn.dataset import TestDataset
+from d2ps_nn.dataset import TestDataset, summarize_params
 from d2ps_nn.models import SimpleEncDec
 # from d2ps_nn.utils.ps_scale import make_cl_lognorm_scale
 from d2ps_nn.utils.parse_ell_list import parse_ells
@@ -143,14 +143,16 @@ class PredictExecutor(BaseD2PSExecutor):
             obs_path_template = self.make_fn_template(template_split, self.in_feat_asset)
         freqs = self.instrument.dets.keys() if self.features_type == "obs" else [None]
 
-        dataset = TestDataset(
-            n_sims = template_split.n_sims,
-            freqs = freqs,
+        dataset_params = dict(
+            n_sims=template_split.n_sims,
+            freqs=freqs,
             map_fields=self.map_fields,
             feature_path_template=obs_path_template,
             feature_handler=self.in_feat_asset.handler,
             px_arrange=self.px_arrange,
             pos_enc_lut=self.get_pos_enc_lut(),
-            mask=self.get_mask()
-            )
+            mask=self.get_mask(),
+        )
+        logger.info(f"Dataset: {summarize_params(dataset_params)}")
+        dataset = TestDataset(**dataset_params)
         return dataset

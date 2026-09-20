@@ -13,7 +13,7 @@ from cmbml.core.asset_handlers import NumpyMap, AppendingCsvHandler, NpzHandler
 from cmbml.torch.pytorch_model_handler import PyTorchModel
 from d2ps_nn.models import BaseD2PSExecutor
 from d2ps_nn.utils.loss import get_loss
-from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset
+from d2ps_nn.dataset import TrainDataset, PreloadTrainDataset, summarize_params
 from d2ps_nn.utils.select_features import FeatureAsset
 from d2ps_nn.utils.ps_scale import make_ps_processor
 from d2ps_nn.models.bn_recompute import recompute_bn_stats
@@ -311,11 +311,7 @@ class TrainingExecutor(BaseD2PSExecutor):
             mask=self.get_mask()
         )
 
-        log_params = {k: v for k, v in dataset_params.items() if k not in ("mask", "pos_enc_lut")}
-        for key in ("mask", "pos_enc_lut"):
-            val = dataset_params[key]
-            log_params[key] = None if val is None else f"<{type(val).__name__} shape {tuple(val.shape)}>"
-        logger.info(f"Dataset: {log_params}")
+        logger.info(f"Dataset: {summarize_params(dataset_params)}")
 
         dataset = dataset_class(**dataset_params)
         return dataset

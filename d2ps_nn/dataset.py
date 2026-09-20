@@ -245,3 +245,18 @@ def stack_masks(masks, px_arrange):
     """Stack per-channel arranged masks exactly as features are stacked."""
     stacker, _ = get_stacker(px_arrange)
     return stacker(masks)
+
+
+def summarize_params(params: dict) -> dict:
+    """Readable summary of dataset parameters for logging."""
+    out = {}
+    for k, v in params.items():
+        if v is None or isinstance(v, (str, int, float, bool)):
+            out[k] = v
+        elif hasattr(v, "shape"):
+            out[k] = f"<{type(v).__name__} shape {tuple(v.shape)}>"
+        elif isinstance(v, (list, tuple, type({}.keys()))):
+            out[k] = list(v)
+        else:
+            out[k] = f"<{type(v).__name__}>"
+    return out
