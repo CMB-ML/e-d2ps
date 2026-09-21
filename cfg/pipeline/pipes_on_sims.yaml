@@ -335,8 +335,7 @@ predict: &final_inference # G_predict.py / PredictExecutor
     pos_enc_lut: {stage: make_pos_enc_lut}
     mean_ps: {stage: get_spectra_stats}
     stdv_ps: {stage: get_spectra_stats}
-  splits:
-    - ${splits.run_inference_on}
+  splits: ${splits.run_inference_on}
   epochs: ${use_epochs}
   dir_name: G_Predict
   make_stage_log: True

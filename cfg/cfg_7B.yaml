@@ -4,7 +4,7 @@ defaults:
   - model/analysis/figures: figures
   - _self_
 
-run_inference_on: [test, valid]
+# run_inference_on: [test, valid]
 
 models:
   d2ps:
