@@ -2,6 +2,9 @@ defaults:
   - assembly_planck_as_sim
   # Mostly, use pipeline for simulations:
   - pipes_on_sims
+  - pipes_plot_process
+  - pipes_bundling
+  - pipes_plot_results
   # Adjustments needed:
   - adapt_on_planck
   - adapt_sepprep
