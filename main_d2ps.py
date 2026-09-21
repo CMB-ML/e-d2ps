@@ -250,6 +250,6 @@ if __name__ == "__main__":
     # run_5_make_models()
     # run_8_prep_planck()
     # run_6_train()
-    run_7_infer()
-    run_7B_analysis()
+    # run_7_infer()
+    # run_7B_analysis()
     run_9_run_planck()
