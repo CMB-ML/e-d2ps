@@ -81,7 +81,6 @@ bundle_pred: # Z_bundle.py / BundlePredExecutor
   splits: test
 
 plot_realizations:
-  thry_band: cosm_var
   realizations: [0]
   assets_out:
     fig:

@@ -58,6 +58,7 @@ model_vs_theory_tension:
   make_stage_log: True
 
 plot_realizations:
+  thry_band: cosm_var
   realizations: [0, 1, 2]
   assets_out:
     fig:
@@ -72,6 +73,7 @@ plot_realizations:
   make_stage_log: True
 
 plot_realizations_ranked:
+  thry_band: cosm_var
   rank_metric: mse
   n_show: 3
   # rank_abs: True      # for a signed metric such as bias
