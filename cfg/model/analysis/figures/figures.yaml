@@ -71,6 +71,10 @@ metric_display:
   loss_bias:
     label: "$b^2_\\ell$"
     ylabel: "bias loss"
+  cosm_var:
+    label: "$\\sigma^2_\\mathrm{c.v.}$"
+    ylabel: "$\\mu K_\\mathrm{CMB}^4$"
+    yscale: log
   thry_var:
     label: "$\\sigma^2_{theory}$"
     ylabel: "$\\mu K_\\mathrm{CMB}^4$"

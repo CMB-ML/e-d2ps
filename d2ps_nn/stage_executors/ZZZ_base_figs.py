@@ -491,12 +491,15 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
         self.thry_band_src = self.get_stage_element_silent("thry_band")
         if self.thry_band_src is not None:
             if self.thry_band_src not in self.THRY_BAND_OPTS:
-                raise ValueError(f"{self.stage_str}: compare_to must be one of "
+                raise ValueError(f"{self.stage_str}: thry_band must be one of "
                                  f"{self.THRY_BAND_OPTS} or null, got {self.thry_band_src!r}")
-            if (self.thry_band_src == "thry_var"
-                    and "thry_var" not in (self.metrics_to_load or [])):
-                raise ValueError(f"{self.stage_str} compares to thry_var but "
-                                 f"'metrics' is {self.metrics_to_load}; add it.")
+            if self.thry_band_src == "thry_var":
+                if "thry_var" not in (self.metrics_to_load or []):
+                    raise ValueError(f"{self.stage_str} bands with thry_var but "
+                                     f"'metrics' is {self.metrics_to_load}; add it.")
+                if self.in_per_ell_metric is None:
+                    raise ValueError(f"{self.stage_str} bands with thry_var but has "
+                                     f"no per_ell_metric in assets_in.")
 
     def make_figures(self, data: FigData) -> None:
         for split in self.splits:
@@ -552,7 +555,9 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
             annotation=note,
             annotation_style=fcfg.annotation_style(self.cfg_figs),
             title=title,
-            thry_band=self.get_thry_band(data, split_name, model_key, idx)
+            thry_band=self.get_thry_band(data, split_name, model_key, idx),
+            thry_band_label=(None if self.thry_band_src is None else
+                             fcfg.label_for_metric(self.cfg_figs, self.thry_band_src)),
         )
 
 
