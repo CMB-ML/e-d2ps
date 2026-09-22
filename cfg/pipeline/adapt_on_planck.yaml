@@ -8,6 +8,9 @@
 #       - Working directory for training "Training Dir" (source only)
 #       - Output when using Planck as dataset with trained model
 
+convert_obs:
+  dir_name: &planck_maps_dir Simulation_Surr
+
 adjust_zero_level:
   assets_out:
     obs_maps:
@@ -21,7 +24,7 @@ adjust_zero_level:
     monopole: {stage: get_monopole}
   splits: &test_only
     - test
-  dir_name: Simulation_Planck
+  dir_name: Simulation_Planck_Surr
 
 preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
   assets_in:
@@ -37,7 +40,7 @@ preprocess_maps: # D_preprocess_maps_serial.py / PreprocessMapsExecutor
       working: ${trained_wd}
     dataset_stats:
       working: ${trained_wd}
-  dir_name: D_Prep_Observs_Planck
+  dir_name: D_Prep_Observs_Planck_Surr
   # There is only the "Test" split
   splits: *test_only
 
@@ -45,14 +48,14 @@ preprocess_spectra: # E_preprocess_ps_serial.py / PreprocessSpectraExecutor
   assets_in:
     cmb_ps:
       dataset: ${planck_ds}
-  dir_name: E_Prep_Spectra_Planck 
+  dir_name: E_Prep_Spectra_Planck_Surr
   splits: *test_only
 
 predict: &final_inference # G_predict.py / PredictExecutor
   assets_in:
     model:
       working: ${trained_wd}
-  dir_name: G_Predict_on_Planck
+  dir_name: G_Predict_on_Planck_Surr
   splits: *test_only
 
 # show_predictions: # _show_predictions.py / ShowPredictionsExecutor
@@ -66,18 +69,18 @@ predict: &final_inference # G_predict.py / PredictExecutor
 
 # ps_analysis used in ps_agg, show_predictions_indiv, show_predictions_bw
 ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
-  dir_name: Analysis_H_PS_Report_Planck
+  dir_name: Analysis_H_PS_Report_Planck_Surr
 
 bundle_true: # Z_bundle.py / BundleTrueExecutor
   assets_out:
     ps_bundle:
-      path_template: "{root}/{dataset}/{stage}/true_planck.npy"
+      path_template: "{root}/{dataset}/{stage}/true_planck_Surr.npy"
   splits: test
 
 bundle_pred: # Z_bundle.py / BundlePredExecutor
   assets_out:
     ps_bundle:
-      path_template: "{root}/{dataset}/{stage}/pred_planck.npy"
+      path_template: "{root}/{dataset}/{stage}/pred_planck_Surr.npy"
   splits: test
 
 plot_single_sim_results:
@@ -85,7 +88,7 @@ plot_single_sim_results:
   assets_out:
     fig:
       handler: MPLFigure
-      path_template: "{root}/{dataset}/{working}{stage}/fig_R_fixed_planck.{fig_type}"
+      path_template: "{root}/{dataset}/{working}{stage}/fig_R_fixed_planck_Surr.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_pred, orig_name: ps_bundle}  # not bundle_smooth, like in d2ps_comp
     ps_thry: {stage: bundle_true, orig_name: ps_bundle}

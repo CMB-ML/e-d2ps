@@ -250,7 +250,7 @@ if __name__ == "__main__":
     # run_3_prep_px()
     # run_4_prep_ps()
     # run_5_make_models()
-    # run_8_prep_planck()
+    run_8_prep_planck()
     # run_6_train()
     # run_7_infer()
     # run_7B_analysis()
