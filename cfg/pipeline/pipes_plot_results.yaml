@@ -31,7 +31,8 @@ plot_variance:
       handler: MPLFigure
       path_template: "{root}/{dataset}/{working}{stage}/fig_L_{metric}_{split}.{fig_type}"
   assets_in:
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
     per_ell_metric: {stage: get_per_ell_metrics}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
@@ -49,7 +50,8 @@ model_vs_theory_tension:
       path_template: "{root}/{dataset}/{working}{stage}/fig_M_tall_panel_{split}.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
     per_ell_metric: {stage: get_per_ell_metrics}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
@@ -63,7 +65,8 @@ plot_realizations:
       path_template: "{root}/{dataset}/{working}{stage}/fig_R_fixed_{split}_{realization}.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
   make_stage_log: True
@@ -78,7 +81,8 @@ plot_realizations_ranked:
       path_template: "{root}/{dataset}/{working}{stage}/fig_R_{split}_{realization}.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
     per_sim_metric: {stage: get_per_sim_metrics}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
@@ -93,7 +97,8 @@ plot_prediction_cloud:
       path_template: "{root}/{dataset}/{working}{stage}/fig_C_cloud_{split}_{norm}.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
   make_stage_log: True
@@ -112,7 +117,8 @@ plot_r2_decomposition:
       path_template: "{root}/{dataset}/{working}{stage}/fig_D_r2budget_{split}.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
     per_ell_metric: {stage: get_per_ell_metrics}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
@@ -129,7 +135,8 @@ plot_paired_realizations:
       path_template: "{root}/{dataset}/{working}{stage}/fig_P_peaks_{split}.{fig_type}"
   assets_in:
     ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
-    ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    # ps_thry: {stage: bundle_true, orig_name: ps_bundle, working: Simulation_Working/}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
   splits: ${splits.run_inference_on}
   dir_name: Analysis_Figures
   make_stage_log: True
