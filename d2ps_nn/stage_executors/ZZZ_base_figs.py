@@ -520,11 +520,11 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
 
     def get_thry_band(self, data, split_name, model_key, idx):
         """1-sigma band around this realization's theory, or None."""
-        if self.compare_to is None:
+        if self.thry_band_src is None:
             return None
         thry = np.atleast_2d(data.thry[split_name])
         target = thry[0] if thry.shape[0] == 1 else thry[idx]
-        if self.compare_to == "cosm_var":
+        if self.thry_band_src == "cosm_var":
             ells = np.asarray(self.ells)
             var = 2.0 / (2 * ells + 1) * target**2
         else:  # thry_var
