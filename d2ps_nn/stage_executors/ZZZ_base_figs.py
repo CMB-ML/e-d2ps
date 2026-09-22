@@ -474,7 +474,7 @@ class ComparePerEllVarianceExecutor(ComparePerEllMetricExecutor):
         )
 
 
-class RealizationFigsExecutor(PerModelFigsExecutor):
+class SingleSimFigsExecutor(PerModelFigsExecutor):
     """One realization's spectrum against theory, per model.
 
     Subclasses supply which realizations: fixed indices from config, or ranked
@@ -504,13 +504,13 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
     def make_figures(self, data: FigData) -> None:
         for split in self.splits:
             for model_key, model_cfg in self.models.items():
-                for tag, idx, note, tag_label in self.realizations(
+                for tag, idx, note, tag_label in self.which_data(
                         data, split.name, model_key):
                     fig = self.make_figure(data, split.name, model_key, idx,
                                            note, tag_label)
                     self.save_fig(fig, split, model=model_cfg, realization=tag)
 
-    def realizations(self, data, split_name, model_key):
+    def which_data(self, data, split_name, model_key):
         """Which realizations to draw: [(tag, index, note, tag_label), ...].
 
         tag        path discriminator, since each model emits several figures
@@ -542,7 +542,7 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
         title = f"{self.models[model_key].fig_model_name} — {split_name} #{idx}"
         if tag_label:
             title = f"{title} ({tag_label})"
-        return figs.plot_realization(
+        return figs.plot_single_sim(
             data.ells,
             {model_key: data.get(split_name, model_key, "pred")},
             realization=idx,
@@ -561,19 +561,19 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
         )
 
 
-class FixedRealizationFigsExecutor(RealizationFigsExecutor):
+class FixedSingleSimFigsExecutor(SingleSimFigsExecutor):
     """The same realization indices for every model, so panels are comparable."""
 
-    def __init__(self, cfg: DictConfig, stage_str="plot_realizations"):
+    def __init__(self, cfg: DictConfig, stage_str="plot_single_sim_results"):
         super().__init__(cfg, stage_str=stage_str)
         idxs = self.get_stage_element("realizations")
         self.indices = [idxs] if isinstance(idxs, int) else list(idxs)
 
-    def realizations(self, data, split_name, model_key):
+    def which_data(self, data, split_name, model_key):
         return [(f"sim{i:04d}", i, None, None) for i in self.indices]
 
 
-class RankedRealizationFigsExecutor(RealizationFigsExecutor):
+class RankedSingleSimFigsExecutor(SingleSimFigsExecutor):
     """The N best and N worst realizations per model, by a per-sim metric.
 
     Best and worst are tagged distinctly in the path so they can be shown
@@ -581,14 +581,14 @@ class RankedRealizationFigsExecutor(RealizationFigsExecutor):
     end is which.
     """
 
-    def __init__(self, cfg: DictConfig, stage_str="plot_realizations_ranked"):
+    def __init__(self, cfg: DictConfig, stage_str="plot_single_sim_results_ranked"):
         super().__init__(cfg, stage_str=stage_str)
         self.rank_metric = self.get_stage_element("rank_metric")
         self.n_show = self.get_stage_element("n_show")
         self.in_per_sim_metric = self.assets_in["per_sim_metric"]
         self.rank_abs = bool(self.get_stage_element_silent("rank_abs"))
 
-    def realizations(self, data, split_name, model_key):
+    def which_data(self, data, split_name, model_key):
         scores = self.get_rank_scores(split_name, model_key)
         if self.rank_abs:
             scores = np.abs(scores)

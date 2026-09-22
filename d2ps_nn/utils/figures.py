@@ -279,7 +279,7 @@ def plot_model_vs_theory_with_tension(
     return fig
 
 
-def plot_realization(
+def plot_single_sim(
     ells, spectra, realization=0, *, styles, labels, display, figure=None,
     theory=None, theory_style=None, annotation=None, annotation_style=None,
     title=None, ax=None, thry_band=None, thry_band_label=None

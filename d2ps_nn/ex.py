@@ -68,8 +68,8 @@ from .stage_executors.ZZZ_base_figs import (
     ComparePerEllR2Executor,
     ModelVsTheoryWithTensionExecutor,
     ComparePerEllVarianceExecutor,
-    FixedRealizationFigsExecutor,
-    RankedRealizationFigsExecutor,
+    FixedSingleSimFigsExecutor,
+    RankedSingleSimFigsExecutor,
     PredictionCloudExecutor,
     R2DecompositionExecutor,
     PairedRealizationPeaksExecutor

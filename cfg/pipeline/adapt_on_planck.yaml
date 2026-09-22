@@ -80,7 +80,7 @@ bundle_pred: # Z_bundle.py / BundlePredExecutor
       path_template: "{root}/{dataset}/{stage}/pred_planck.npy"
   splits: test
 
-plot_realizations:
+plot_single_sim_results:
   realizations: [0]
   assets_out:
     fig:

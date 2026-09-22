@@ -64,8 +64,8 @@ from d2ps_nn.ex import (
     GetPerEllMetricsExecutor,
     GetPerSimMetricsExecutor,
     ModelVsTheoryWithTensionExecutor,
-    FixedRealizationFigsExecutor,
-    RankedRealizationFigsExecutor,
+    FixedSingleSimFigsExecutor,
+    RankedSingleSimFigsExecutor,
     PredictionCloudExecutor,
     R2DecompositionExecutor,
     PairedRealizationPeaksExecutor
@@ -194,8 +194,8 @@ def run_7B_analysis(cfg):
         GetPerEllMetricsExecutor,
         GetPerSimMetricsExecutor,
         ModelVsTheoryWithTensionExecutor,
-        FixedRealizationFigsExecutor,
-        RankedRealizationFigsExecutor,
+        FixedSingleSimFigsExecutor,
+        RankedSingleSimFigsExecutor,
         PredictionCloudExecutor,
         R2DecompositionExecutor,
         PairedRealizationPeaksExecutor
@@ -209,7 +209,7 @@ def run_9_run_planck(cfg):
     pipes = [
             #  PredictExecutor,
             #  BundlePredExecutor,
-             FixedRealizationFigsExecutor,
+             FixedSingleSimFigsExecutor,
              ]
     run(cfg, pipes)
 

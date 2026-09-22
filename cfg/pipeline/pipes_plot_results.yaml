@@ -57,7 +57,7 @@ model_vs_theory_tension:
   dir_name: Analysis_Figures
   make_stage_log: True
 
-plot_realizations:
+plot_single_sim_results:
   thry_band: cosm_var
   realizations: [0, 1, 2]
   assets_out:
@@ -72,7 +72,7 @@ plot_realizations:
   dir_name: Analysis_Figures
   make_stage_log: True
 
-plot_realizations_ranked:
+plot_single_sim_results_ranked:
   thry_band: cosm_var
   rank_metric: mse
   n_show: 3
