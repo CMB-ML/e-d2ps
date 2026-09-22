@@ -143,6 +143,7 @@ def run_8_prep_planck(cfg):
              AdjustZeroLevelExecutor,
              PreprocessMapsExecutor,
              PreprocessSpectraExecutor,
+             BundleTrueExecutor,
              ]
     run(cfg, pipes)
 
@@ -206,8 +207,9 @@ def run_7B_analysis(cfg):
 def run_9_run_planck(cfg):
     logger.debug(f"Running train in {__file__}")
     pipes = [
-             PredictExecutor,
-             PairedRealizationPeaksExecutor,
+            #  PredictExecutor,
+            #  BundlePredExecutor,
+             FixedRealizationFigsExecutor,
              ]
     run(cfg, pipes)
 
