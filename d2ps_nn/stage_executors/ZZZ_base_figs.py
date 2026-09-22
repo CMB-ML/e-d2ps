@@ -481,10 +481,22 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
     per model from the data. Output paths need a discriminator beyond split and
     model, since each model emits several figures per split.
     """
+    THRY_BAND_OPTS = ("thry_var", "cosm_var")
+
     def __init__(self, cfg, stage_str=None):
         if stage_str is None:
             raise NotImplementedError("This class is intended as an abstract class.")
         super().__init__(cfg, stage_str=stage_str)
+
+        self.thry_band_src = self.get_stage_element_silent("thry_band")
+        if self.thry_band_src is not None:
+            if self.thry_band_src not in self.THRY_BAND_OPTS:
+                raise ValueError(f"{self.stage_str}: compare_to must be one of "
+                                 f"{self.THRY_BAND_OPTS} or null, got {self.thry_band_src!r}")
+            if (self.thry_band_src == "thry_var"
+                    and "thry_var" not in (self.metrics_to_load or [])):
+                raise ValueError(f"{self.stage_str} compares to thry_var but "
+                                 f"'metrics' is {self.metrics_to_load}; add it.")
 
     def make_figures(self, data: FigData) -> None:
         for split in self.splits:
@@ -505,7 +517,23 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
         tag_label  parenthetical for the title, or None
         """
         raise NotImplementedError
-    
+
+    def get_thry_band(self, data, split_name, model_key, idx):
+        """1-sigma band around this realization's theory, or None."""
+        if self.compare_to is None:
+            return None
+        thry = np.atleast_2d(data.thry[split_name])
+        target = thry[0] if thry.shape[0] == 1 else thry[idx]
+        if self.compare_to == "cosm_var":
+            ells = np.asarray(self.ells)
+            var = 2.0 / (2 * ells + 1) * target**2
+        else:  # thry_var
+            if figs.is_fixed(data.thry[split_name]):
+                logger.info(f"{split_name} is fixed-cosmology; no thry_var band.")
+                return None
+            var = data.get(split_name, model_key, "thry_var")
+        return np.sqrt(var)
+
     def make_figure(self, data: FigData, split_name: str, model_key: str,
                     idx: int, note: str = None, tag_label: str = None):
         title = f"{self.models[model_key].fig_model_name} — {split_name} #{idx}"
@@ -524,6 +552,7 @@ class RealizationFigsExecutor(PerModelFigsExecutor):
             annotation=note,
             annotation_style=fcfg.annotation_style(self.cfg_figs),
             title=title,
+            thry_band=self.get_thry_band(data, split_name, model_key, idx)
         )
 
 

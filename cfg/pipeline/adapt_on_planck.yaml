@@ -55,14 +55,14 @@ predict: &final_inference # G_predict.py / PredictExecutor
   dir_name: G_Predict_on_Planck
   splits: *test_only
 
-show_predictions: # _show_predictions.py / ShowPredictionsExecutor
-  assets_out:
-    fig:
-      # Change file name
-      path_template: "{root}/{dataset}/{working}{stage}/planck_predictions_{epoch}.{fig_type}"
-  assets_in:
-    ps_thry:
-      dataset: ${planck_ds}
+# show_predictions: # _show_predictions.py / ShowPredictionsExecutor
+#   assets_out:
+#     fig:
+#       # Change file name
+#       path_template: "{root}/{dataset}/{working}{stage}/planck_predictions_{epoch}.{fig_type}"
+#   assets_in:
+#     ps_thry:
+#       dataset: ${planck_ds}
 
 # ps_analysis used in ps_agg, show_predictions_indiv, show_predictions_bw
 ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
@@ -71,4 +71,25 @@ ps_analysis:  # H_ps_analysis.py / PowerSpectrumAnalysisExecutor
 bundle_true: # Z_bundle.py / BundleTrueExecutor
   assets_out:
     ps_bundle:
-      path_template: "{root}/{dataset}/True/{stage}/true_planck.npy"
+      path_template: "{root}/{dataset}/{stage}/true_planck.npy"
+  splits: test
+
+bundle_pred: # Z_bundle.py / BundlePredExecutor
+  assets_out:
+    ps_bundle:
+      path_template: "{root}/{dataset}/{stage}/pred_planck.npy"
+  splits: test
+
+plot_realizations:
+  thry_band: cosm_var
+  realizations: [0]
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_R_fixed_planck.{fig_type}"
+  assets_in:
+    ps_pred: {stage: bundle_pred, orig_name: ps_bundle}  # not bundle_smooth, like in d2ps_comp
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
+  splits: ${splits.run_inference_on}
+  dir_name: Analysis_Figures
+  make_stage_log: True

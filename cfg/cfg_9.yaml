@@ -1,6 +1,8 @@
 defaults:
   - config_d2ps
   - job_sweep: ???
+  - model/analysis/figures: figures
+  - model/cleaning: obs2ps
   - override pipeline: assembly_on_planck_sepprep
   - override splits: "1-1"
   - _self_
@@ -22,4 +24,29 @@ hydra:
     params:
       job_sweep: r22
 
+obs2ps_cleaning_model   : "obs2ps"
+obs2ps_working_dir      : ${working_dir}
+obs2ps_fig_model_name   : ${fig_model_name}
+obs2ps_use_epochs       : ["best"]
+obs2ps_use_epoch        : "best"
+obs2ps_sm_epoch         : null
+obs2ps_do_smooth        : false
+obs2ps_sm_score_ell_max : null
+obs2ps_bundle_pred_src  : {stage: predict, orig_name: cmb_ps}
+obs2ps_fig_color        : "blue"
+
+models:
+  d2ps:
+    working_dir: ${working_dir}
+    cleaning_model: "obs2ps"
+    fig_model_name: ${fig_short_name}
+    use_epoch: "best"
+    fig_color: "blue"
+fig_short_name: "d2ps"
+
 n_sims: ${n_sims_train}
+
+pipeline:
+  bundle_pred:
+    assets_in:
+      ps: ${model.cleaning.bundle_pred_src}

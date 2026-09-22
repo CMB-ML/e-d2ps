@@ -282,7 +282,7 @@ def plot_model_vs_theory_with_tension(
 def plot_realization(
     ells, spectra, realization=0, *, styles, labels, display, figure=None,
     theory=None, theory_style=None, annotation=None, annotation_style=None,
-    title=None, ax=None,
+    title=None, ax=None, thry_band=None
 ):
     """One realization from each series.
 
@@ -318,6 +318,12 @@ def plot_realization(
         ax.plot(ells, theory[idx], lw=1, color=ts["color"],
                 alpha=ts.get("alpha", 1.0),
                 label=ts.get("line_label", "Theory"))
+        if thry_band is not None:
+            ax.fill_between(
+                ells, theory - thry_band, theory + thry_band,
+                color=ts["fill"], alpha=ts["alpha"], linewidth=0,
+                label=ts.get("band_label"), zorder=0,
+            )
 
     for key in keys:
         line_style, _ = _split_style(styles[key])
