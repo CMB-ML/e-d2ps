@@ -47,17 +47,16 @@ def run_bundle_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        # MaskCreatorExecutor,
-        # MakeRealPowerSpectrumExecutor,
-        # BundleTrueExecutor,
-        # MakeMeanSpectrumExecutor,
-        # BundlePredExecutor,
+        MaskCreatorExecutor,
+        MakeRealPowerSpectrumExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
         GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        # GetPerEllMetricsExecutor,
-        # GetScalarMetricsExecutor,
-        # GetScalarUncertaintyExecutor,
-        # GetPerSimMetricsExecutor
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
+        GetScalarMetricsExecutor,
+        GetScalarUncertaintyExecutor,
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -65,14 +64,14 @@ def run_bundle_real(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_pyilc")
 def run_bundle_pyilc(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        # GetPerEllMetricsExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
         GetScalarUncertaintyExecutor,
-        # GetPerSimMetricsExecutor
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -80,14 +79,14 @@ def run_bundle_pyilc(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_cmbnncs")
 def run_bundle_cmbnncs(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        # GetPerEllMetricsExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
         GetScalarUncertaintyExecutor,
-        # GetPerSimMetricsExecutor
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -95,14 +94,14 @@ def run_bundle_cmbnncs(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_obs2ps")
 def run_bundle_d2ps(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        # GetPerEllMetricsExecutor,
+        BundleTrueExecutor,
+        BundlePredExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
         GetScalarUncertaintyExecutor,
-        # GetPerSimMetricsExecutor
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -110,15 +109,14 @@ def run_bundle_d2ps(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_mean_thry")
 def run_bundle_mean_thry(cfg):
     pipes = [
-        # BundleTrueExecutor,
-        # BundlePredExecutor,
-        # BundleMeanTheoryExecutor,
-        # GetPolyDegreeExecutor,
-        # BundleSmoothExecutor,
-        # GetPerEllMetricsExecutor,
+        MakeMeanSpectrumExecutor,
+        BundleMeanTheoryExecutor,
+        GetPolyDegreeExecutor,
+        BundleSmoothExecutor,
+        GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
         GetScalarUncertaintyExecutor,
-        # GetPerSimMetricsExecutor
+        GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -183,12 +181,12 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_bundle_real()
-    # run_bundle_pyilc()
-    # run_bundle_cmbnncs()
-    # run_bundle_d2ps()
+    run_bundle_pyilc()
+    run_bundle_cmbnncs()
+    run_bundle_d2ps()
     # run_bundle_mean_thry()
 
-    # run_all_model_analysis()
+    run_all_model_analysis()
 
     # run_real_pl()
     # run_cmbnncs_planck()
