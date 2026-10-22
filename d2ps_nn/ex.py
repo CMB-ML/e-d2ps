@@ -52,7 +52,7 @@ from .stage_executors._loss_plot import LossPlotExecutor, LossDeltaPlotExecutor,
 # from .stage_executors.__show_petroff_like import ShowPetroffSetBinned
 
 from .stage_executors.Y_get_best_poly_deg import GetPolyDegreeExecutor
-from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor
+from .stage_executors.Z_bundle import BundlePredExecutor, BundleTrueExecutor, BundleMeanTheoryExecutor
 from .stage_executors.Z_bundle_maps import BundleMapsExecutor
 # from .stage_executors._show_treble_ell import ShowTrebleEll
 from .stage_executors.Z_bundle_smooth_ps import BundleSmoothExecutor, BundleSmoothTrueExecutor
@@ -62,6 +62,7 @@ from .stage_executors.Z_bundle_smooth_ps import BundleSmoothExecutor, BundleSmoo
 
 from .stage_executors.ZZ_per_ell_metrics import GetPerEllMetricsExecutor
 from .stage_executors.ZZ_per_sim_scalar_metrics import GetPerSimMetricsExecutor
+from .stage_executors.ZZ_scalar_metrics import GetScalarMetricsExecutor
 from .stage_executors.ZZZ_base_figs import (
     ComparePerEllAbsRelErrPctExecutor,
     ComparePerEllMSEExecutor,

@@ -18,7 +18,9 @@ from d2ps_nn.ex import (
     GetPerEllMetricsExecutor,
     GetPerSimMetricsExecutor,
     BundleTrueExecutor,
+    BundleMeanTheoryExecutor,
     MakeMeanSpectrumExecutor,
+    GetScalarMetricsExecutor,
     ComparePerEllR2Executor,
     ComparePerEllMSEExecutor,
     ComparePerEllTensionExecutor,
@@ -48,7 +50,8 @@ def run_bundle_real(cfg):
         # BundlePredExecutor,
         # GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
+        # GetPerEllMetricsExecutor,
+        GetScalarMetricsExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -59,9 +62,10 @@ def run_bundle_pyilc(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
+        # GetPerEllMetricsExecutor,
+        GetScalarMetricsExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -72,9 +76,10 @@ def run_bundle_cmbnncs(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
+        # GetPerEllMetricsExecutor,
+        GetScalarMetricsExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -85,9 +90,25 @@ def run_bundle_d2ps(cfg):
     pipes = [
         # BundleTrueExecutor,
         # BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
+        # GetPerEllMetricsExecutor,
+        GetScalarMetricsExecutor,
+        # GetPerSimMetricsExecutor
+    ]
+    run(cfg, pipes)
+
+
+@hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_mean_thry")
+def run_bundle_mean_thry(cfg):
+    pipes = [
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
+        # BundleMeanTheoryExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
+        # GetPerEllMetricsExecutor,
+        GetScalarMetricsExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -149,10 +170,11 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    # run_bundle_real()
-    # run_bundle_pyilc()
-    # run_bundle_cmbnncs()
+    run_bundle_real()
+    run_bundle_pyilc()
+    run_bundle_cmbnncs()
     run_bundle_d2ps()
+    run_bundle_mean_thry()
 
     # run_all_model_analysis()
 

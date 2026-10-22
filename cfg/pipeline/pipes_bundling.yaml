@@ -133,6 +133,21 @@ get_per_ell_metrics:
   dir_name: Analysis_Metrics
   make_stage_log: True
 
+get_scalar_metrics:
+  lcut: ${lcut}
+  assets_out:
+    scalar_metrics:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/scalar_metrics_{split}_{epoch}.yaml"
+  assets_in:
+    per_ell_metric:
+      stage: get_per_ell_metrics
+      orig_name: per_ell_metric
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Metrics
+  make_stage_log: True
+
 get_per_sim_metrics:
   metrics: ["mse", "abs_rel_err_pct", "bias"]
   assets_out:
