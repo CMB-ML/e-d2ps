@@ -150,11 +150,11 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_bundle_real()
-    run_bundle_pyilc()
-    run_bundle_cmbnncs()
-    run_bundle_d2ps()
+    # run_bundle_pyilc()
+    # run_bundle_cmbnncs()
+    # run_bundle_d2ps()
 
-    run_all_model_analysis()
+    # run_all_model_analysis()
 
     # run_real_pl()
     # run_cmbnncs_planck()
