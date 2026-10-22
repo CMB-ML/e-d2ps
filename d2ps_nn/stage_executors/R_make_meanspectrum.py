@@ -63,4 +63,5 @@ class MakeMeanSpectrumExecutor(BaseStageExecutor):
                 f"expected {want_N_ell}, got {load_N_ell}."
             )
 
+        logger.info(f"MeanSpectra to be written at {self.out_mean_spectrum.path}")
         self.out_mean_spectrum.write(data=thry.mean(axis=0))
