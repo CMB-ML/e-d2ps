@@ -337,10 +337,19 @@ def decomposition(pred, thry, ells):
 
     with np.errstate(divide="ignore", invalid="ignore"):
         varies = _has_spread(sd_t, mu_t)
-        A = np.where(varies, sd_p / sd_t, np.nan)
+        pred_varies = _has_spread(sd_p, mu_p)
+        A = np.where(
+            varies,
+            np.where(pred_varies, sd_p / sd_t, 0.0),
+            np.nan,
+        )
         b = np.where(varies, (mu_p - mu_t) / sd_t, np.nan)
         cov = ((pred - mu_p) * (thry - mu_t)).sum(0) / (pred.shape[0] - DDOF)
-        r = np.where(varies & (sd_p > 0), cov / (sd_p * sd_t), np.nan)
+        r = np.where(
+            varies & pred_varies,
+            cov / (sd_p * sd_t),
+            np.nan,
+        )
         R2 = np.divide(
             -mse,
             sd_t**2,
