@@ -79,7 +79,7 @@ make_mean_spectrum:
   assets_out:
     mean_spectrum:
       handler: NpyHandler
-      path_template: "{root}/{dataset}/{working}{stage}/mean_theory.npy"
+      path_template: "{root}/{dataset}/{stage}/mean_theory.npy"
   assets_in:
     ps_thry_bundle: {stage: bundle_true, orig_name: ps_bundle}
   splits:
