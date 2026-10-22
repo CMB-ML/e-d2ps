@@ -17,7 +17,10 @@ bundle_true: # Z_bundle.py / BundleTrueExecutor
       path_template: "{root}/{dataset}/{stage}/true_{split}.npy"
   assets_in:
     ps: {stage: make_theory_ps, orig_name: cmb_ps, working: Simulation_Working/}
-  splits: ${splits.run_inference_on}
+  splits:
+    - train
+    - test
+    - valid
   dir_name: *bundle_raw
   make_stage_log: False
 
@@ -70,6 +73,18 @@ bundle_smooth:
   splits: ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
   dir_name: *bundle_pred
+  make_stage_log: False
+
+make_mean_spectrum:
+  assets_out:
+    mean_spectrum:
+      handler: NpyHandler
+      path_template: "{root}/{dataset}/{working}{stage}/mean_theory.npy"
+  assets_in:
+    ps_thry_bundle: {stage: bundle_true, orig_name: ps_bundle}
+  splits:
+    - Train
+  dir_name: *bundle_raw
   make_stage_log: False
 
 get_per_ell_metrics:

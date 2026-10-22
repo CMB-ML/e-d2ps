@@ -30,6 +30,7 @@ from .stage_executors.I_ps_agg import PowerSpectrumAggExecutor
 from .stage_executors.J_ps_error_analysis import ErrorAnalysisExecutor
 from .stage_executors.K_per_split_analysis import PerSplitAnalysis
 from .stage_executors.P_adjust_zero_level import AdjustZeroLevelExecutor
+from .stage_executors.R_make_meanspectrum import MakeMeanSpectrumExecutor
 
 # from .stage_executors._check_model_size import CheckGPULoadExecutor
 # from .stage_executors._show_chosen_ells import ShowChosenEllsExecutor

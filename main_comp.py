@@ -18,6 +18,7 @@ from d2ps_nn.ex import (
     GetPerEllMetricsExecutor,
     GetPerSimMetricsExecutor,
     BundleTrueExecutor,
+    MakeMeanSpectrumExecutor,
     ComparePerEllR2Executor,
     ComparePerEllMSEExecutor,
     ComparePerEllTensionExecutor,
@@ -40,14 +41,15 @@ def run_bundle_real(cfg):
     # print(OmegaConf.to_yaml(cfg))
 
     pipes = [
-        MaskCreatorExecutor,
-        MakeRealPowerSpectrumExecutor,
+        # MaskCreatorExecutor,
+        # MakeRealPowerSpectrumExecutor,
         BundleTrueExecutor,
-        BundlePredExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
-        GetPerSimMetricsExecutor
+        MakeMeanSpectrumExecutor,
+        # BundlePredExecutor,
+        # GetPolyDegreeExecutor,
+        # BundleSmoothExecutor,
+        # GetPerEllMetricsExecutor,
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
