@@ -63,6 +63,7 @@ from .stage_executors.Z_bundle_smooth_ps import BundleSmoothExecutor, BundleSmoo
 from .stage_executors.ZZ_per_ell_metrics import GetPerEllMetricsExecutor
 from .stage_executors.ZZ_per_sim_scalar_metrics import GetPerSimMetricsExecutor
 from .stage_executors.ZZ_scalar_metrics import GetScalarMetricsExecutor
+from .stage_executors.ZZ_scalar_uncertainty import GetScalarUncertaintyExecutor
 from .stage_executors.ZZZ_base_figs import (
     ComparePerEllAbsRelErrPctExecutor,
     ComparePerEllMSEExecutor,
@@ -74,5 +75,8 @@ from .stage_executors.ZZZ_base_figs import (
     RankedSingleSimFigsExecutor,
     PredictionCloudExecutor,
     R2DecompositionExecutor,
-    PairedRealizationPeaksExecutor
+    PairedRealizationPeaksExecutor,
+    TestFPOverviewExecutor,
+    TestVTMetricsExecutor,
+    TestFPMetricsExecutor
     )

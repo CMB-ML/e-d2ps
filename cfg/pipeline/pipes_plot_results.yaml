@@ -257,3 +257,88 @@ plot_paired_realizations:
 #   epochs: ${use_epochs_ps_stats}
 #   dir_name: Analysis_Figures
 #   make_stage_log: False
+
+plot_testfp_overview:
+  lcut: ${lcut}
+  band_alpha: 0.20
+  residual_ylim: [-200, 200]
+  figure:
+    figsize: [12, 8]
+    dpi: 150
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_testfp_overview.{fig_type}"
+  assets_in:
+    ps_pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
+  splits:
+    - TestFP
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
+plot_testvt_metrics:
+  lcut: ${lcut}
+  metrics:
+    - R2
+    - abs_rel_err_pct
+    - r
+    - A
+  figure:
+    figsize: [12, 8]
+    dpi: 150
+  single_figure:
+    figsize: [8, 5]
+    dpi: 150
+  panel_ylims:
+    R2: [-0.05, 1.1]
+    abs_rel_err_pct: [0, 10]
+    r: [0.8, 1.02]
+    A: [0.8, 1.2]
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_testvt_metrics_{split}.{fig_type}"
+
+    fig_single:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_testvt_{metric}_{split}.{fig_type}"
+  assets_in:
+    per_ell_metric: {stage: get_per_ell_metrics}
+  splits:
+    - Test
+  dir_name: Analysis_Figures
+  make_stage_log: True
+
+plot_testfp_metrics:
+  lcut: ${lcut}
+  metrics:
+    - bias
+    - resid_std
+    - abs_rel_err_pct
+    - tension
+  figure:
+    figsize: [12, 8]
+    dpi: 150
+  single_figure:
+    figsize: [8, 5]
+    dpi: 150
+  panel_ylims:
+    bias: [-150, 150]
+    resid_std: [0, 75]
+    abs_rel_err_pct: [0, 10]
+    tension: [0, 10]
+  assets_out:
+    fig:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_testfp_metrics_{split}.{fig_type}"
+
+    fig_single:
+      handler: MPLFigure
+      path_template: "{root}/{dataset}/{working}{stage}/fig_testfp_{metric}_{split}.{fig_type}"
+  assets_in:
+    per_ell_metric: {stage: get_per_ell_metrics}
+  splits:
+    - TestFP
+  dir_name: Analysis_Figures
+  make_stage_log: True

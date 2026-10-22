@@ -21,6 +21,7 @@ from d2ps_nn.ex import (
     BundleMeanTheoryExecutor,
     MakeMeanSpectrumExecutor,
     GetScalarMetricsExecutor,
+    GetScalarUncertaintyExecutor,
     ComparePerEllR2Executor,
     ComparePerEllMSEExecutor,
     ComparePerEllTensionExecutor,
@@ -31,7 +32,10 @@ from d2ps_nn.ex import (
     RankedSingleSimFigsExecutor,
     PredictionCloudExecutor,
     R2DecompositionExecutor,
-    PairedRealizationPeaksExecutor
+    PairedRealizationPeaksExecutor,
+    TestFPOverviewExecutor,
+    TestVTMetricsExecutor,
+    TestFPMetricsExecutor,
 )
 
 
@@ -48,10 +52,11 @@ def run_bundle_real(cfg):
         # BundleTrueExecutor,
         # MakeMeanSpectrumExecutor,
         # BundlePredExecutor,
-        # GetPolyDegreeExecutor,
+        GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
         # GetPerEllMetricsExecutor,
-        GetScalarMetricsExecutor,
+        # GetScalarMetricsExecutor,
+        # GetScalarUncertaintyExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -66,6 +71,7 @@ def run_bundle_pyilc(cfg):
         # BundleSmoothExecutor,
         # GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
+        GetScalarUncertaintyExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -80,6 +86,7 @@ def run_bundle_cmbnncs(cfg):
         # BundleSmoothExecutor,
         # GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
+        GetScalarUncertaintyExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -94,6 +101,7 @@ def run_bundle_d2ps(cfg):
         # BundleSmoothExecutor,
         # GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
+        GetScalarUncertaintyExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -109,6 +117,7 @@ def run_bundle_mean_thry(cfg):
         # BundleSmoothExecutor,
         # GetPerEllMetricsExecutor,
         GetScalarMetricsExecutor,
+        GetScalarUncertaintyExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -117,17 +126,20 @@ def run_bundle_mean_thry(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="produce_figs")
 def run_all_model_analysis(cfg):
     pipes = [
-        ComparePerEllR2Executor,
-        ComparePerEllMSEExecutor,
-        ComparePerEllTensionExecutor,
-        ComparePerEllAbsRelErrPctExecutor,
-        ComparePerEllVarianceExecutor,
-        ModelVsTheoryWithTensionExecutor,
-        FixedSingleSimFigsExecutor,
-        RankedSingleSimFigsExecutor,
-        PredictionCloudExecutor,
-        R2DecompositionExecutor,
-        PairedRealizationPeaksExecutor
+        # ComparePerEllR2Executor,
+        # ComparePerEllMSEExecutor,
+        # ComparePerEllTensionExecutor,
+        # ComparePerEllAbsRelErrPctExecutor,
+        # ComparePerEllVarianceExecutor,
+        # ModelVsTheoryWithTensionExecutor,
+        # FixedSingleSimFigsExecutor,
+        # RankedSingleSimFigsExecutor,
+        # PredictionCloudExecutor,
+        # R2DecompositionExecutor,
+        # PairedRealizationPeaksExecutor,
+        TestFPOverviewExecutor,
+        TestVTMetricsExecutor,
+        TestFPMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -171,10 +183,10 @@ def run(cfg, pipes):
 
 if __name__ == "__main__":
     run_bundle_real()
-    run_bundle_pyilc()
-    run_bundle_cmbnncs()
-    run_bundle_d2ps()
-    run_bundle_mean_thry()
+    # run_bundle_pyilc()
+    # run_bundle_cmbnncs()
+    # run_bundle_d2ps()
+    # run_bundle_mean_thry()
 
     # run_all_model_analysis()
 

@@ -843,3 +843,656 @@ class PairedRealizationPeaksExecutor(PerModelFigsExecutor):
             title=f"{self.models[model_key].fig_model_name} — {split_name}",
         )
 
+
+class TestFPOverviewExecutor(AllModelFigsExecutor):
+    """
+    Compare mean predicted spectra against the fixed TestFP theory.
+
+    Top panel:
+        Mean predicted spectra with +/-1 standard deviation bands,
+        alongside the fixed theory spectrum.
+
+    Bottom panel:
+        Mean residuals relative to the fixed theory, with +/-1
+        standard deviation bands.
+
+    Both panels show the complete multipole range. The residual
+    panel has configurable vertical limits, allowing large errors
+    to extend beyond the displayed region.
+    """
+
+    def __init__(
+        self,
+        cfg: DictConfig,
+        stage_str="plot_testfp_overview",
+    ) -> None:
+        super().__init__(cfg, stage_str=stage_str)
+
+        self.lcut = int(self.get_stage_element("lcut"))
+        self.band_alpha = float(self.get_stage_element("band_alpha"))
+        self.residual_ylim = self.get_stage_element("residual_ylim")
+
+    def make_figure(self, data: FigData, split_name: str):
+        ells = np.asarray(data.ells)
+        thry = np.asarray(data.thry[split_name])
+
+        if thry.ndim != 2 or thry.shape[1] != len(ells):
+            raise ValueError(
+                f"Expected theory shape (N_sim, {len(ells)}), "
+                f"got {thry.shape}."
+            )
+
+        if not np.all(thry == thry[0]):
+            raise ValueError(
+                f"{split_name} does not contain a fixed theory spectrum."
+            )
+
+        fixed_theory = thry[0]
+
+        # Two vertically stacked panels with a shared multipole axis.
+        fig, (ax_top, ax_bottom) = plt.subplots(
+            2,
+            1,
+            sharex=True,
+            gridspec_kw={
+                "height_ratios": [3, 2],
+                "hspace": 0.08,
+            },
+            **fcfg.figure_kwargs(
+                self.cfg_figs,
+                canvas="figure_tall",
+                override=self.figure_override,
+            ),
+        )
+
+        styles = self.styles()
+        labels = self.labels()
+
+        # ---------------------------------------------------------
+        # Top panel: Mean predicted spectra
+        # ---------------------------------------------------------
+
+        theory_style = self.cfg_figs.theory_style
+
+        ax_top.plot(
+            ells,
+            fixed_theory,
+            color=theory_style.color,
+            linewidth=1.8,
+            label=theory_style.line_label,
+            zorder=10,
+        )
+
+        # ---------------------------------------------------------
+        # Both panels: Predictions and residuals
+        # ---------------------------------------------------------
+
+        for model_key in self.models:
+            pred = np.asarray(
+                data.get(split_name, model_key, "pred")
+            )
+
+            if pred.shape != thry.shape:
+                raise ValueError(
+                    f"{model_key}: prediction shape {pred.shape} "
+                    f"does not match theory shape {thry.shape}."
+                )
+
+            mean_pred = pred.mean(axis=0)
+            std_pred = pred.std(axis=0, ddof=0)
+
+            # Matched residuals
+            residual = pred - thry
+            mean_residual = residual.mean(axis=0)
+            std_residual = residual.std(axis=0, ddof=0)
+
+            color = styles[model_key]["color"]
+            label = labels[model_key]
+
+            # Upper panel: prediction mean
+            ax_top.plot(
+                ells,
+                mean_pred,
+                color=color,
+                linewidth=1.2,
+                label=label,
+            )
+
+            # Lower panel: signed mean residual
+            ax_bottom.plot(
+                ells,
+                mean_residual,
+                color=color,
+                linewidth=1.2,
+                label=label,
+            )
+
+            # Constant predictions have no scatter band.
+            if not np.all(pred == pred[0]):
+                ax_top.fill_between(
+                    ells,
+                    mean_pred - std_pred,
+                    mean_pred + std_pred,
+                    color=color,
+                    alpha=self.band_alpha,
+                    linewidth=0,
+                )
+
+                ax_bottom.fill_between(
+                    ells,
+                    mean_residual - std_residual,
+                    mean_residual + std_residual,
+                    color=color,
+                    alpha=self.band_alpha,
+                    linewidth=0,
+                )
+
+        # ---------------------------------------------------------
+        # Reference lines
+        # ---------------------------------------------------------
+
+        ax_bottom.axhline(
+            0,
+            color="black",
+            linewidth=1.0,
+            zorder=5,
+        )
+
+        for ax in (ax_top, ax_bottom):
+            ax.axvline(
+                self.lcut,
+                color="0.4",
+                linestyle="--",
+                linewidth=1.0,
+            )
+
+            ax.grid(alpha=0.2)
+            ax.set_xlim(ells[0], ells[-1])
+
+        # ---------------------------------------------------------
+        # Axis labels and limits
+        # ---------------------------------------------------------
+
+        display = fcfg.display_for_dl(
+            self.cfg_figs,
+            self.display_override,
+        )
+
+        ax_top.set_ylabel(display["ylabel"])
+
+        if "ylim" in display:
+            ax_top.set_ylim(display["ylim"])
+
+        ax_bottom.set_ylabel(
+            r"$\overline{\widehat{D}}_\ell - \overline{D}_\ell$ "
+            r"$[\mu\mathrm{K}_{\mathrm{CMB}}^2]$"
+        )
+
+        ax_bottom.set_xlabel(display["xlabel"])
+        ax_bottom.set_ylim(self.residual_ylim)
+
+        # ---------------------------------------------------------
+        # Legend
+        # ---------------------------------------------------------
+
+        ax_top.legend(
+            loc="upper right",
+            fontsize=9,
+        )
+
+        fig.align_ylabels((ax_top, ax_bottom))
+
+        return fig
+
+
+class StandaloneMetricPanelsMixin:
+    """
+    Add standalone metric figures to a multi-panel metric executor.
+
+    The original composite figure is retained. Each metric is also
+    saved independently, using the same curves, axis limits, and
+    reference lines as the composite.
+    """
+
+    def __init__(self, cfg, stage_str):
+        super().__init__(cfg, stage_str=stage_str)
+
+        self.out_fig_single: Asset = self.assets_out["fig_single"]
+        out_fig_single_handler: MPLFigure
+
+        self.single_figure_override = self.get_stage_element_silent(
+            "single_figure"
+        )
+
+    def draw_metric_panel(self, ax, data, split_name, metric, ylabel):
+        """Draw one metric using the shared plotting conventions."""
+        ells = np.asarray(data.ells)
+        styles = self.styles()
+        labels = self.labels()
+
+        for model_key in self.models:
+            values = np.asarray(
+                data.get(split_name, model_key, metric)
+            )
+
+            if values.shape != ells.shape:
+                raise ValueError(
+                    f"{model_key}, {metric}: expected {ells.shape}, "
+                    f"got {values.shape}."
+                )
+
+            if not np.any(np.isfinite(values)):
+                continue
+
+            ax.plot(
+                ells,
+                values,
+                color=styles[model_key]["color"],
+                linewidth=1.2,
+                label=labels[model_key],
+            )
+
+        # Reference lines
+        if metric in ("R2", "bias"):
+            ax.axhline(
+                0, color="0.5", linestyle="--", linewidth=1.0
+            )
+
+        if metric in ("R2", "r", "A", "tension"):
+            ax.axhline(
+                1, color="0.5", linestyle=":", linewidth=1.0
+            )
+
+        ax.axvline(
+            self.lcut,
+            color="0.4",
+            linestyle="--",
+            linewidth=1.0,
+        )
+
+        ax.set_ylabel(ylabel)
+        ax.set_xlim(ells[0], ells[-1])
+        ax.grid(alpha=0.2)
+
+        if self.panel_ylims is not None:
+            limits = self.panel_ylims.get(metric)
+            if limits is not None:
+                ax.set_ylim(limits)
+
+    def make_figures(self, data):
+        # Preserve the original four-panel figure.
+        super().make_figures(data)
+
+        self.out_fig_single.handler.set_fig_types(self.fig_type)
+
+        xlabel = fcfg.display_for_dl(
+            self.cfg_figs,
+            self.display_override,
+        )["xlabel"]
+
+        for split in self.splits:
+            for metric, ylabel in self.PANEL_METRICS:
+
+                fig, ax = plt.subplots(
+                    **fcfg.figure_kwargs(
+                        self.cfg_figs,
+                        override=self.single_figure_override,
+                    )
+                )
+
+                self.draw_metric_panel(
+                    ax, data, split.name, metric, ylabel
+                )
+
+                ax.set_xlabel(xlabel)
+                ax.legend(loc="best", fontsize=9)
+
+                fig.subplots_adjust(
+                    left=0.13,
+                    right=0.97,
+                    bottom=0.15,
+                    top=0.97,
+                )
+
+                with self.name_tracker.set_contexts(
+                    dict(split=split.name, metric=metric)
+                ):
+                    self.out_fig_single.write(fig=fig)
+
+                plt.close(fig)
+
+
+class TestVTMetricsExecutor(
+    StandaloneMetricPanelsMixin,
+    AllModelFigsExecutor,
+):
+    """
+    Four-panel per-multipole evaluation of models on TestVT.
+
+    Panels:
+        R2              Predictive performance
+        abs_rel_err_pct  Matched relative accuracy (RE)
+        r               Correlation with target theory variation
+        A               Response amplitude
+
+    All methods are plotted wherever metrics are defined.
+    Multipole arrays are never truncated at lcut.
+    """
+
+    PANEL_METRICS = (
+        ("R2", r"$R_\ell^2$"),
+        ("abs_rel_err_pct", r"$\mathrm{RE}_\ell$ (%)"),
+        ("r", r"$r_\ell$"),
+        ("A", r"$A_\ell$"),
+    )
+
+    def __init__(
+        self,
+        cfg: DictConfig,
+        stage_str="plot_testvt_metrics",
+    ) -> None:
+        super().__init__(cfg, stage_str=stage_str)
+
+        self.lcut = int(self.get_stage_element("lcut"))
+
+        required = {metric for metric, _ in self.PANEL_METRICS}
+        available = set(self.metrics_to_load or [])
+
+        missing = required - available
+        if missing:
+            raise ValueError(
+                f"{stage_str} requires metrics {sorted(missing)}."
+            )
+
+        self.panel_ylims = self.get_stage_element_silent("panel_ylims")
+
+    def make_figure(self, data: FigData, split_name: str):
+        ells = np.asarray(data.ells)
+
+        fig, axes = plt.subplots(
+            2,
+            2,
+            sharex=True,
+            figsize=tuple(
+                fcfg.figure_kwargs(
+                    self.cfg_figs,
+                    canvas="figure_wide",
+                    override=self.figure_override,
+                )["figsize"]
+            ),
+            dpi=fcfg.figure_kwargs(
+                self.cfg_figs,
+                canvas="figure_wide",
+                override=self.figure_override,
+            )["dpi"],
+        )
+
+        styles = self.styles()
+        labels = self.labels()
+
+        axes = axes.ravel()
+
+        for ax, (metric, ylabel) in zip(
+            axes, self.PANEL_METRICS
+        ):
+            for model_key in self.models:
+                values = np.asarray(
+                    data.get(split_name, model_key, metric)
+                )
+
+                if values.shape != ells.shape:
+                    raise ValueError(
+                        f"{model_key}, {metric}: expected shape "
+                        f"{ells.shape}, got {values.shape}."
+                    )
+
+                # Undefined metrics are represented by NaN.
+                # Skip models with no defined values.
+                if not np.any(np.isfinite(values)):
+                    continue
+
+                ax.plot(
+                    ells,
+                    values,
+                    color=styles[model_key]["color"],
+                    linewidth=1.2,
+                    label=labels[model_key],
+                )
+
+            # Reference lines
+            if metric in ("R2", "r", "A"):
+                ax.axhline(
+                    1,
+                    color="0.5",
+                    linestyle=":",
+                    linewidth=1.0,
+                )
+
+            if metric == "R2":
+                ax.axhline(
+                    0,
+                    color="0.5",
+                    linestyle="--",
+                    linewidth=1.0,
+                )
+
+            ax.axvline(
+                self.lcut,
+                color="0.4",
+                linestyle="--",
+                linewidth=1.0,
+            )
+
+            ax.set_ylabel(ylabel)
+            ax.set_xlim(ells[0], ells[-1])
+            ax.grid(alpha=0.2)
+
+            if self.panel_ylims is not None:
+                limits = self.panel_ylims.get(metric, None)
+                if limits is not None:
+                    ax.set_ylim(limits)
+
+        xlabel = fcfg.display_for_dl(
+            self.cfg_figs,
+            self.display_override,
+        )["xlabel"]
+
+        for ax in axes[2:]:
+            ax.set_xlabel(xlabel)
+
+        # Shared legend, preserving model order.
+        from matplotlib.lines import Line2D
+
+        handles = [
+            Line2D(
+                [0], [0],
+                color=styles[key]["color"],
+                linewidth=1.5,
+                label=labels[key],
+            )
+            for key in self.models
+        ]
+
+        fig.legend(
+            handles=handles,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.99),
+            ncol=len(handles),
+            frameon=False,
+        )
+
+        fig.subplots_adjust(
+            left=0.09,
+            right=0.97,
+            bottom=0.09,
+            top=0.90,
+            wspace=0.25,
+            hspace=0.12,
+        )
+
+        return fig
+
+
+class TestFPMetricsExecutor(
+    StandaloneMetricPanelsMixin,
+    AllModelFigsExecutor,
+):
+    """
+    Four-panel per-multipole evaluation of models on TestFP.
+
+    Panels:
+        bias             Mean signed residual
+        resid_std        Residual standard deviation
+        abs_rel_err_pct  Matched relative accuracy (RE)
+        tension          Bias relative to residual scatter
+
+    All methods are plotted wherever metrics are defined.
+    Multipole arrays are never truncated at lcut.
+    """
+
+    PANEL_METRICS = (
+        ("bias", r"$\hat{D}_\ell - {D}_\ell$ $[\mu\mathrm{K}_{\mathrm{CMB}}^2]$"),
+        ("resid_std", r"$\sigma_{\hat{D},\ell}$ $[\mu\mathrm{K}_{\mathrm{CMB}}^2]$"),
+        ("abs_rel_err_pct", r"$\mathrm{RE}_\ell$ (%)"),
+        ("tension", r"$\mathcal{T}_\ell$"),
+    )
+
+    def __init__(
+        self,
+        cfg: DictConfig,
+        stage_str="plot_testfp_metrics",
+    ) -> None:
+        super().__init__(cfg, stage_str=stage_str)
+
+        self.lcut = int(self.get_stage_element("lcut"))
+
+        required = {metric for metric, _ in self.PANEL_METRICS}
+        available = set(self.metrics_to_load or [])
+
+        missing = required - available
+        if missing:
+            raise ValueError(
+                f"{stage_str} requires metrics {sorted(missing)}."
+            )
+
+        self.panel_ylims = self.get_stage_element_silent("panel_ylims")
+
+    def make_figure(self, data: FigData, split_name: str):
+        ells = np.asarray(data.ells)
+
+        figure_kwargs = fcfg.figure_kwargs(
+            self.cfg_figs,
+            canvas="figure_wide",
+            override=self.figure_override,
+        )
+
+        fig, axes = plt.subplots(
+            2,
+            2,
+            sharex=True,
+            **figure_kwargs,
+        )
+
+        styles = self.styles()
+        labels = self.labels()
+
+        axes = axes.ravel()
+
+        for ax, (metric, ylabel) in zip(
+            axes, self.PANEL_METRICS
+        ):
+            for model_key in self.models:
+                values = np.asarray(
+                    data.get(split_name, model_key, metric)
+                )
+
+                if values.shape != ells.shape:
+                    raise ValueError(
+                        f"{model_key}, {metric}: expected shape "
+                        f"{ells.shape}, got {values.shape}."
+                    )
+
+                # Skip undefined metrics.
+                if not np.any(np.isfinite(values)):
+                    continue
+
+                ax.plot(
+                    ells,
+                    values,
+                    color=styles[model_key]["color"],
+                    linewidth=1.2,
+                    label=labels[model_key],
+                )
+
+            # Reference lines
+            if metric == "bias":
+                ax.axhline(
+                    0,
+                    color="0.5",
+                    linestyle="--",
+                    linewidth=1.0,
+                )
+
+            if metric == "tension":
+                ax.axhline(
+                    1,
+                    color="0.5",
+                    linestyle=":",
+                    linewidth=1.0,
+                )
+
+            ax.axvline(
+                self.lcut,
+                color="0.4",
+                linestyle="--",
+                linewidth=1.0,
+            )
+
+            ax.set_ylabel(ylabel)
+            ax.set_xlim(ells[0], ells[-1])
+            ax.grid(alpha=0.2)
+
+            if self.panel_ylims is not None:
+                limits = self.panel_ylims.get(metric, None)
+                if limits is not None:
+                    ax.set_ylim(limits)
+
+        xlabel = fcfg.display_for_dl(
+            self.cfg_figs,
+            self.display_override,
+        )["xlabel"]
+
+        for ax in axes[2:]:
+            ax.set_xlabel(xlabel)
+
+        # Shared legend
+        from matplotlib.lines import Line2D
+
+        handles = [
+            Line2D(
+                [0], [0],
+                color=styles[key]["color"],
+                linewidth=1.5,
+                label=labels[key],
+            )
+            for key in self.models
+        ]
+
+        fig.legend(
+            handles=handles,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.99),
+            ncol=len(handles),
+            frameon=False,
+        )
+
+        fig.subplots_adjust(
+            left=0.09,
+            right=0.97,
+            bottom=0.09,
+            top=0.90,
+            wspace=0.25,
+            hspace=0.12,
+        )
+
+        return fig

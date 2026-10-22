@@ -4,6 +4,7 @@ defaults:
   - model/cleaning@models.pyilc: pyilc
   - model/cleaning@models.cmbnncs: cmbnncs
   - model/cleaning@models.obs2ps: obs2ps
+  - model/cleaning@models.mean_thry: mean_thry
   - model/analysis/figures: figures
   - _self_
 

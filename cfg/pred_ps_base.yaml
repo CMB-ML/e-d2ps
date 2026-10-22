@@ -19,7 +19,7 @@ dataset_name: "${map_fields}_${scenario.nside}_${splits.name}_UnifWMAP_Wide"
 # For interpolation into model_runs
 real_cleaning_model   : "Realization_PS"
 real_working_dir      : "Real_PS/"
-real_fig_model_name   : "Realization Spectra"
+real_fig_model_name   : "RealizationPS"
 real_use_epochs       : [""]
 real_use_epoch        : ""
 real_sm_epoch         : ""
@@ -30,7 +30,7 @@ real_fig_color        : "purple"
 
 pyilc_cleaning_model   : "PyILC_CNILC"
 pyilc_working_dir      : "${pyilc_cleaning_model}/"
-pyilc_fig_model_name   : "PyILC Spectra"
+pyilc_fig_model_name   : "CNILC"
 pyilc_use_epochs       : [""]
 pyilc_use_epoch        : ""
 pyilc_sm_epoch         : ""
@@ -41,7 +41,7 @@ pyilc_fig_color        : "green"
 
 cmbnncs_cleaning_model   : "cmbNNCS_UNet8"
 cmbnncs_working_dir      : "${cmbnncs_cleaning_model}/"
-cmbnncs_fig_model_name   : "cmbNNCS Spectra"
+cmbnncs_fig_model_name   : "cmbNNCS"
 cmbnncs_use_epochs       : ["best"]
 cmbnncs_use_epoch        : "best"
 cmbnncs_sm_epoch         : "best"
@@ -52,7 +52,7 @@ cmbnncs_fig_color        : "red"
 
 obs2ps_cleaning_model   : "obs2ps"
 obs2ps_working_dir      : "obs2ps_r22/drop_no_drop_scale_ps_None-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/"
-obs2ps_fig_model_name   : "d2ps"
+obs2ps_fig_model_name   : "D2PS"
 obs2ps_use_epochs       : ["best"]
 obs2ps_use_epoch        : "best"
 obs2ps_sm_epoch         : null
@@ -115,7 +115,7 @@ sm_basis_kind: "polyfit"  # Use np.polyfit, the fastest by ~4x.
                           # Alternatives (chebyshev, legendre, monomial) use scikit-learn.
                           # Results agree to ~10 decimal places. 
 sm_deg_range: [4,30]
-sm_criterion: "mean_r2"
+sm_criterion: "mean_mse"
 
 # Analysis details
 # metrics_to_use: ["mse", "rel_err", "abs_rel_err_pct", "thry_var", "pred_var", "tension", "R2", "ceiling_r2", "loss_calib", "loss_bias"]

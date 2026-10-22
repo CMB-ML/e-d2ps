@@ -161,3 +161,24 @@ get_per_sim_metrics:
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_Metrics
   make_stage_log: False
+
+get_scalar_uncertainty:
+  lcut: ${lcut}
+  n_bootstrap: 1000
+  seed: 42
+  confidence: 0.95
+
+  assets_out:
+    uncertainty:
+      handler: Config
+      path_template: "{root}/{dataset}/{working}{stage}/scalar_uncertainty_{split}_{epoch}.yaml"
+
+  assets_in:
+    pred: {stage: bundle_smooth, orig_name: ps_bundle}
+    thry: {stage: bundle_true, orig_name: ps_bundle}
+    mean_thry: {stage: make_mean_spectrum, orig_name: mean_thry}
+
+  splits: ${splits.run_inference_on}
+  epochs: ${use_epochs_ps_stats}
+  dir_name: Analysis_Metrics
+  make_stage_log: True
