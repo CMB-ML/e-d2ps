@@ -77,7 +77,7 @@ bundle_smooth:
 
 make_mean_spectrum:
   assets_out:
-    mean_spectrum:
+    mean_thry:
       handler: NpyHandler
       path_template: "{root}/{dataset}/{stage}/mean_theory.npy"
   assets_in:
@@ -88,17 +88,38 @@ make_mean_spectrum:
   make_stage_log: False
 
 get_per_ell_metrics:
-  metrics: 
+  metrics:
+    # Predictive skill
     - mse
-    - rel_err
-    - abs_rel_err_pct
-    - thry_var
-    - pred_var
-    - tension
     - R2
+    - skill
+    # Accuracy
+    - abs_rel_err_pct
+    # Bias
+    - bias
+    - tension
+    # Scatter
+    - resid_var
+    - resid_std
+    - pred_var
+    - pred_std
+    # Sensitivity
+    - r
+    - A
+    # Supporting quantities
+    - thry_var
+    - baseline_mse
+    - rel_err
+    - e_thry
+    # R2 decomposition diagnostics
+    - b
+    - A_minus_r
     - ceiling_r2
     - loss_calib
     - loss_bias
+    # Other diagnostics
+    - treble_thry_var
+    - treble_pred_var
   assets_out:
     per_ell_metric:
       handler: NpyHandler
@@ -106,6 +127,7 @@ get_per_ell_metrics:
   assets_in:
     pred: {stage: bundle_smooth, orig_name: ps_bundle}
     thry: {stage: bundle_true, orig_name: ps_bundle}
+    mean_thry: {stage: make_mean_spectrum, orig_name: mean_thry}
   splits: ${splits.run_inference_on}
   epochs: ${use_epochs_ps_stats}
   dir_name: Analysis_Metrics

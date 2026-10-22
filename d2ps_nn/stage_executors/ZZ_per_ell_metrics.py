@@ -22,8 +22,10 @@ class GetPerEllMetricsExecutor(BaseStageExecutor):
         out_metric_handler: NpyHandler
         self.in_pred: Asset = self.assets_in["pred"]
         self.in_thry: Asset = self.assets_in["thry"]
+        self.in_mean_thry: Asset = self.assets_in["mean_thry"]
         in_pred_handler: NpyHandler
         in_thry_handler: NpyHandler
+        in_mean_thry_handler: NpyHandler
 
         self.ells = parse_ells(cfg.model.use_ells)
 
@@ -51,9 +53,10 @@ class GetPerEllMetricsExecutor(BaseStageExecutor):
     def process(self, split: Split) -> None:
         pred = self.in_pred.read()
         thry = self.in_thry.read()
+        mean_thry = self.in_mean_thry.read()
 
         fsky = 1 if self.sky_fraction is None else self.sky_fraction
-        metrics = compute_metrics(pred, thry, ells=self.ells, fsky=fsky)
+        metrics = compute_metrics(pred, thry, ells=self.ells, fsky=fsky, mean_theory=mean_thry)
 
         for m in self.include_metrics:
             with self.name_tracker.set_context("metric", m):

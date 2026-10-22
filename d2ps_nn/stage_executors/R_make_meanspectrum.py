@@ -21,7 +21,7 @@ class MakeMeanSpectrumExecutor(BaseStageExecutor):
     """
     def __init__(self, cfg: DictConfig, stage_str="make_mean_spectrum") -> None:
         super().__init__(cfg, stage_str)
-        self.out_mean_spectrum: Asset = self.assets_out["mean_spectrum"]
+        self.out_mean_spectrum: Asset = self.assets_out["mean_thry"]
         out_mean_spectra_handler: NpyHandler
 
         self.in_thry: Asset = self.assets_in["ps_thry_bundle"]

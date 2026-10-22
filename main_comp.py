@@ -43,12 +43,12 @@ def run_bundle_real(cfg):
     pipes = [
         # MaskCreatorExecutor,
         # MakeRealPowerSpectrumExecutor,
-        BundleTrueExecutor,
-        MakeMeanSpectrumExecutor,
+        # BundleTrueExecutor,
+        # MakeMeanSpectrumExecutor,
         # BundlePredExecutor,
         # GetPolyDegreeExecutor,
         # BundleSmoothExecutor,
-        # GetPerEllMetricsExecutor,
+        GetPerEllMetricsExecutor,
         # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
@@ -57,12 +57,12 @@ def run_bundle_real(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_pyilc")
 def run_bundle_pyilc(cfg):
     pipes = [
-        BundleTrueExecutor,
-        BundlePredExecutor,
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -70,12 +70,12 @@ def run_bundle_pyilc(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_cmbnncs")
 def run_bundle_cmbnncs(cfg):
     pipes = [
-        BundleTrueExecutor,
-        BundlePredExecutor,
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -83,12 +83,12 @@ def run_bundle_cmbnncs(cfg):
 @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_obs2ps")
 def run_bundle_d2ps(cfg):
     pipes = [
-        BundleTrueExecutor,
-        BundlePredExecutor,
+        # BundleTrueExecutor,
+        # BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
         GetPerEllMetricsExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -149,10 +149,10 @@ def run(cfg, pipes):
 
 
 if __name__ == "__main__":
-    run_bundle_real()
+    # run_bundle_real()
     # run_bundle_pyilc()
     # run_bundle_cmbnncs()
-    # run_bundle_d2ps()
+    run_bundle_d2ps()
 
     # run_all_model_analysis()
 

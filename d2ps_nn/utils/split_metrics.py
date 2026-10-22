@@ -1,58 +1,67 @@
-"""Split-scope per-ell metrics for comparing predicted spectra to theory.
+"""Per-multipole evaluation metrics for matched predictions and theory spectra.
 
-SCOPE. Everything here is normalized within a single data split. There is no
-theory bank: the "population" is the N spectra of the split itself. This is the
-deliberate simplification relative to ``spectrum_metrics.py``, which normalizes
-distributional quantities against a ~100k-draw cosmological prior. That module
-remains canonical for the pipeline's theory task; this one exists because the
-model-comparison analysis has no bank available and does not need one.
+SCOPE
+-----
+Metrics are calculated within an evaluation split, using matched predictions
+and targets of shape (N, n_ell). Each prediction is compared against the
+theory spectrum belonging to the same simulation.
 
-Consequences of dropping the bank, stated once:
+Unlike spectrum_metrics.py, which uses a cosmological theory bank,
+distributional quantities here are calculated from the evaluation split.
+Consequently, R2 uses the evaluation-set theory variance rather than a
+prior-based reference variance.
 
-  * ``thry_var`` replaces the bank's ``S1`` / ``sigma_ring``. It is the across-
-    instance variance of the split's own theory spectra.
-  * ``rho0``, ``score``, ``score_fraction``, ``locked_count`` and
-    ``cleared_count`` have no meaning here and are absent. They are properties
-    of a prior, not of a split.
-  * ``R2`` here is the local, identity-closing form (``spectrum_metrics``
-    calls it ``R2_local``), NOT the bank-referenced ``1 - mse/S1``.
+METRIC ORGANIZATION
+-------------------
+The primary evaluation metrics follow the manuscript's five criteria:
 
+1. Predictive skill: MSE, R2, and skill relative to MeanTheory.
+2. Accuracy: mean absolute relative error (MARE).
+3. Bias: mean signed residual and tension.
+4. Scatter: residual and prediction variance and standard deviation.
+5. Sensitivity: correlation r and response amplitude A.
 
-ORDER OF OPERATIONS. Metrics are computed per instance and aggregated over
-instances as the last step. The exceptions -- quantities that are inherently
-across-instance and have no per-instance value -- are ``thry_var``,
-``decomposition`` (A, r, b, R2) and ``tension``. This ordering matters wherever
-the per-instance operation is nonlinear, and the two orderings genuinely differ:
-by Jensen's inequality mean(D**2) >= (mean D)**2, so the square-then-mean
-``cosmic_var`` below is strictly larger than a mean-then-square version. The
-notebook this code replaces used both spellings in different places; square-then-
-mean is correct under the stated principle and is what treble's denominator has
-always used in practice.
+Additional diagnostics, including the R2 decomposition and cosmic-variance
+normalizations, are retained for comparison with earlier analyses.
 
-Functions returning shape (N, n_ell) are per-instance and it is the caller's job
-to aggregate. Functions returning shape (n_ell,) have already aggregated.
+MeanTheory is calculated exclusively from the training-set theory spectra.
+Its spectrum is supplied separately when calculating skill.
 
+DEFINITIONS
+-----------
+For simulation i and multipole ell:
 
-DDOF=0 THROUGHOUT, and this is not a stylistic choice. The R^2 identity
+    residual[i, ell] = pred[i, ell] - thry[i, ell]
 
-    R^2 = r^2 - (A - r)^2 - b^2
+Variances and covariances use ddof=0, consistent with the manuscript.
+Nonlinear per-instance quantities are calculated before aggregation
+across simulations.
 
-closes only when the variance in the R^2 denominator uses the same divisor as
-the MSE numerator, and MSE is a plain sample mean (divisor N). At ddof=1 the
-identity picks up an N/(N-1) mismatch and R^2 stops equalling 1 - MSE/var.
+R2 is calculated directly:
 
-The numerical cost of switching from the notebook's ddof=1 is negligible, and
-worth knowing when reconciling numbers: A = sd_p/sd_t is ddof-invariant (the
-correction cancels in the ratio), r is a correlation and likewise invariant, and
-only b = (mu_p - mu_t)/sd_t moves -- by sqrt((N-1)/N), so b^2 shifts by 1/N
-(0.5% at N=200).
+    R2 = 1 - mse / thry_var
 
+The identity
 
-UNITS. All returned quantities are dimensionless ratios except ``mse`` and
-``cosmic_var``, which carry the square of the input units. No unit handling is
-done here; ``pred`` and ``thry`` must already agree.
+    R2 = r**2 - (A - r)**2 - b**2
+
+is retained as a diagnostic decomposition wherever its constituent terms
+are defined.
+
+Undefined metrics are represented by NaN. Zero variance itself remains
+a valid result.
+
+UNITS
+-----
+The inputs must use consistent units.
+
+Bias and standard deviations have the units of the input spectra.
+MSE, variances, and cosmic variance have squared units.
+Correlations, relative errors, skill, tension, and response amplitudes
+are dimensionless. MARE is returned as a percentage.
+
+No explicit unit handling is performed.
 """
-
 import numpy as np
 
 
@@ -61,30 +70,25 @@ import numpy as np
 # --------------------------------------------------------------------------- #
 
 DDOF = 0
-"""Delta degrees of freedom for every variance and standard deviation here.
+"""Degrees-of-freedom correction for variances and standard deviations.
 
-DEFAULT 0, AND THAT IS NOT A STYLE CHOICE. The R^2 identity
+DDOF=0 matches the manuscript's definitions, which use the population
+variance of the evaluation simulations.
 
-    R^2 = r^2 - (A - r)^2 - b^2
+It also ensures that the R2 decomposition
 
-closes only when the variance in the R^2 denominator uses the same divisor as
-the MSE numerator, and MSE is a plain sample mean (divisor N). At ddof=1 the
-identity picks up an N/(N-1) mismatch and R^2 stops equalling 1 - MSE/var.
+    R2 = r**2 - (A - r)**2 - b**2
 
-EXPOSED AS A MODULE CONSTANT ONLY to reproduce the original analysis, which used
-ddof=1 throughout. Set ``split_metrics.DDOF = 1`` once, before computing
-metrics, and every function here follows. It is a global compatibility switch,
-not a per-call parameter -- mixing conventions within one set of metrics would
-break the identity in a way nothing would flag.
+agrees with the direct calculation
 
-What actually moves between the two settings, at N=200:
-  * A = sd_p/sd_t and r are ddof-invariant (the correction cancels)
-  * b shifts by sqrt((N-1)/N), so b^2 and hence R^2 shift by ~0.5%
-  * pred_var, thry_var shift by N/(N-1)  (~0.5%)
-  * tension shifts by sqrt((N-1)/N)      (~0.25%)
-  * mse, rel_err, cosmic_var are unaffected
+    R2 = 1 - mse / thry_var
+
+Changing DDOF does not change MSE, but changes the target variance
+used in R2 and the normalization of the decomposition terms.
+
+Retained as a module constant for compatibility with older analyses.
+The new evaluation uses DDOF=0.
 """
-
 
 FSKY_EXPONENT = 1
 """Power of fsky in the cosmic-variance denominator.
@@ -282,29 +286,46 @@ def _has_spread(sd_t, mu_t, rtol=1e-10):
 
 
 def decomposition(pred, thry, ells):
-    """The R^2 budget R^2 = r^2 - (A - r)^2 - b^2, as an additive per-ell account.
+    """Calculate R2 and its diagnostic decomposition, per multipole.
 
-        ceiling_r2 = r^2        variance a perfect linear rescale could explain
-        loss_calib = (A - r)^2  lost to a mis-scaled amplitude, recoverable
-        loss_bias  = b^2        lost to bias, recoverable
-        R2         = ceiling_r2 - loss_calib - loss_bias
+    R2 is calculated directly from matched prediction errors:
 
-    Every term is normalized by the local across-instance target spread
-    ``thry.std(0)``. That is mandatory, not incidental: the identity closes only
-    when r, A, b and R^2 share one normalizer, and r -- being a correlation --
-    is intrinsically local. This is why the split-scope form is the natural one
-    here even setting the missing bank aside.
+        R2 = 1 - mse / thry_var
 
-    BOUNDS. Since loss_calib and loss_bias are both non-negative and r^2 <= 1,
-    R2 <= r^2 <= 1 always. An upper clip at 1 can therefore never bind; only a
-    lower clip at 0 has any effect. See ``mean_r2`` in degree_selection.
+    This remains defined for constant predictions when the targets vary.
 
-    Takes ``ells`` directly rather than a Prior object: nothing here is
-    distributional, so requiring a theory bank to compute it was a false
-    dependency.
+    The decomposition expresses R2 as:
 
-    Returns NaN at any ell where the target does not vary (thry_var == 0), e.g.
-    a fixed-cosmology split.
+        R2 = r**2 - (A - r)**2 - b**2
+
+    where:
+
+        r              correlation between predictions and targets
+        A              prediction std / target std
+        b              mean residual / target std
+        ceiling_r2     r**2
+        loss_calib     (A - r)**2
+        loss_bias      b**2
+
+    The decomposition separates tracking, calibration, and bias losses.
+    Its terms are diagnostics rather than the method used to calculate R2.
+
+    The identity holds when the constituent terms are defined and all
+    quantities use the same evaluation-set target variance with ddof=0.
+
+    Undefined cases
+    ---------------
+    If the target theory has zero variance, R2, A, b, and r are undefined.
+
+    If predictions are constant but targets vary, R2 remains defined,
+    A is zero, and r is undefined. Consequently, the complete
+    decomposition cannot be evaluated.
+
+    Returns
+    -------
+    dict
+        Per-multipole arrays containing R2 and decomposition quantities.
+        Undefined quantities are represented by NaN.
     """
     pred, thry = _as_matched(pred, thry, "decomposition")
     ells = _as_ells(ells, pred.shape[1], "decomposition")
@@ -312,12 +333,21 @@ def decomposition(pred, thry, ells):
     mu_p, mu_t = pred.mean(0), thry.mean(0)
     sd_p, sd_t = pred.std(0, ddof=DDOF), thry.std(0, ddof=DDOF)
 
+    mse = squared_error(pred, thry).mean(0)
+
     with np.errstate(divide="ignore", invalid="ignore"):
         varies = _has_spread(sd_t, mu_t)
         A = np.where(varies, sd_p / sd_t, np.nan)
         b = np.where(varies, (mu_p - mu_t) / sd_t, np.nan)
         cov = ((pred - mu_p) * (thry - mu_t)).sum(0) / (pred.shape[0] - DDOF)
         r = np.where(varies & (sd_p > 0), cov / (sd_p * sd_t), np.nan)
+        R2 = np.divide(
+            -mse,
+            sd_t**2,
+            out=np.full_like(mse, np.nan),
+            where=varies,
+        )
+        R2 = np.where(varies, 1.0 + R2, np.nan)
 
     ceiling_r2 = r ** 2
     loss_calib = (A - r) ** 2
@@ -325,6 +355,9 @@ def decomposition(pred, thry, ells):
 
     return {
         "ell": ells,
+        # predictive skill
+        "R2": R2,
+        # sensitivity
         "A": A,
         "r": r,
         "b": b,
@@ -332,7 +365,6 @@ def decomposition(pred, thry, ells):
         "ceiling_r2": ceiling_r2,
         "loss_calib": loss_calib,
         "loss_bias": loss_bias,
-        "R2": ceiling_r2 - loss_calib - loss_bias,
     }
 
 
@@ -341,7 +373,7 @@ def tension(pred, thry):
 
     The mean error in units of its own across-instance spread: ~1 means the
     offset is the size of the scatter, <<1 means it is buried in it, >>1 means a
-    real systematic.
+    bias large relative to residual scatter.
 
     Algebraically identical to the notebook's
 
@@ -351,10 +383,20 @@ def tension(pred, thry):
     spellings and reconciled them in a later cell; there is one here.
     """
     pred, thry = _as_matched(pred, thry, "tension")
-    me = pred.mean(0) - thry.mean(0)
-    sd_err = (pred - thry).std(0, ddof=DDOF)
+
+    residual = pred - thry
+    me = residual.mean(axis=0)
+    sd_err = residual.std(axis=0, ddof=DDOF)
+
+    varies = _has_spread(sd_err, me)
+
     with np.errstate(divide="ignore", invalid="ignore"):
-        return np.where(sd_err > 0, np.abs(me) / sd_err, np.nan)
+        return np.divide(
+            np.abs(me),
+            sd_err,
+            out=np.full_like(me, np.nan),
+            where=varies,
+        )
 
 
 def e_thry(pred, thry):
@@ -374,41 +416,143 @@ def e_thry(pred, thry):
 # assembly
 # --------------------------------------------------------------------------- #
 
-def compute_metrics(pred, thry, ells, fsky=1.0):
-    """All per-ell metrics for one (model, split) pair, in one dict.
+def compute_metrics(pred, thry, ells, fsky=1.0, mean_theory=None):
+    """Calculate per-multipole evaluation metrics for one model and split.
 
-    Aggregation happens here and only here, explicitly, so the ordering is
-    visible at the point it occurs rather than hidden inside each metric.
+    Predictions and targets must be matched arrays with shape
+    (N, n_ell). All returned metrics have shape (n_ell,).
 
-    All values have shape (n_ell,). ``pred`` and ``thry`` must be matched
-    (N, n_ell) arrays on the same ell axis as ``ells``.
+    Metrics follow the manuscript's five evaluation criteria:
+    predictive skill, accuracy, bias, scatter, and sensitivity.
+
+    Parameters
+    ----------
+    pred : array_like
+        Predicted power spectra, shape (N, n_ell).
+    thry : array_like
+        Matched theory power spectra, shape (N, n_ell).
+    ells : array_like
+        Multipole values corresponding to the final array dimension.
+    fsky : float, optional
+        Effective sky fraction for cosmic-variance calculations.
+        Does not affect the primary evaluation metrics.
+    mean_theory : array_like, optional
+        Training-set mean theory spectrum, shape (n_ell,).
+        Required to calculate skill relative to MeanTheory.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Per-multipole evaluation metrics and supporting diagnostics.
+
+        Undefined quantities are represented by NaN. If mean_theory
+        is omitted, skill and baseline_mse are returned as NaN arrays.
+
+    Notes
+    -----
+    Skill compares model MSE against the MSE obtained by predicting
+    the training-set mean theory spectrum for every simulation.
+
+    Scalar summaries over multipole ranges are not calculated here.
+    In particular, scalar skill must be calculated from aggregated
+    MSE values rather than by averaging per-multipole skill.
     """
     pred, thry = _as_matched(pred, thry, "compute_metrics")
     ells = _as_ells(ells, pred.shape[1], "compute_metrics")
 
-    cv = cosmic_var(thry, ells, fsky=fsky)               # per instance
+    # Shared calculations
+    residual = pred - thry
+
+    bias = residual.mean(axis=0)
+    resid_var = residual.var(axis=0, ddof=DDOF)
+    resid_std = np.sqrt(resid_var)
+
+    pred_var = pred.var(axis=0, ddof=DDOF)
+    pred_std = np.sqrt(pred_var)
+
+    mse = (residual**2).mean(axis=0)
+
+    cv = cosmic_var(thry, ells, fsky=fsky)
     tv = thry_var(thry)
-    pv = pred.var(0, ddof=DDOF)
 
-    out = dict(decomposition(pred, thry, ells))
+    decomp = decomposition(pred, thry, ells)
 
-    # Note that the following are in addition to the metrics from lines 327-335
-    out.update({
-        # per-instance metrics, aggregated here
-        "mse": squared_error(pred, thry).mean(0),
-        "rel_err": np.nanmean(rel_err(pred, thry), axis=0),
-        "abs_rel_err_pct": np.nanmean(np.abs(rel_err(pred, thry)), axis=0) * 100.0,
-        "cosmic_var": cv.mean(0),
+    # MeanTheory reference
+    if mean_theory is not None:
+        mean_theory = np.asarray(mean_theory, dtype=float)
 
-        # aggregate metrics
-        "thry_var": tv,
-        "pred_var": pv,
+        if mean_theory.shape != (pred.shape[1],):
+            raise ValueError(
+                f"MeanTheory must have shape ({pred.shape[1]},), "
+                f"got {mean_theory.shape}."
+            )
+
+        baseline_mse = (
+            (thry - mean_theory[np.newaxis, :])**2
+        ).mean(axis=0)
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            skill = 1.0 - np.divide(
+                mse,
+                baseline_mse,
+                out=np.full_like(mse, np.nan),
+                where=baseline_mse > 0,
+            )
+    else:
+        baseline_mse = np.full_like(mse, np.nan)
+        skill = np.full_like(mse, np.nan)
+
+    return {
+        "ell": ells,
+
+        # 1. Predictive skill
+        "mse": mse,
+        "R2": decomp["R2"],
+        "skill": skill,
+
+        # 2. Accuracy
+        "abs_rel_err_pct": np.nanmean(
+            np.abs(rel_err(pred, thry)), axis=0
+        ) * 100.0,
+
+        # 3. Bias
+        "bias": bias,
         "tension": tension(pred, thry),
+
+        # 4. Scatter
+        "resid_var": resid_var,
+        "resid_std": resid_std,
+        "pred_var": pred_var,
+        "pred_std": pred_std,
+
+        # 5. Sensitivity
+        "r": decomp["r"],
+        "A": decomp["A"],
+
+        # Supporting quantities
+        "thry_var": tv,
+        "baseline_mse": baseline_mse,
+        "rel_err": np.nanmean(rel_err(pred, thry), axis=0),
+        "cosmic_var": cv,
         "e_thry": e_thry(pred, thry),
 
-        # treble against each of the three denominators the analysis uses
+        # R2 decomposition diagnostics
+        "b": decomp["b"],
+        "A_minus_r": decomp["A_minus_r"],
+        "ceiling_r2": decomp["ceiling_r2"],
+        "loss_calib": decomp["loss_calib"],
+        "loss_bias": decomp["loss_bias"],
+
+        # Legacy treble diagnostics
         "treble_cosmic_var": treble(pred, thry, cv),
-        "treble_thry_var": treble(pred, thry, tv),
-        "treble_pred_var": treble(pred, thry, pv),
-    })
-    return out
+        "treble_thry_var": treble(
+                pred,
+                thry,
+                np.where(
+                    _has_spread(np.sqrt(tv), thry.mean(axis=0)),
+                    tv,
+                    np.nan,
+                ),
+            ),
+        "treble_pred_var": treble(pred, thry, pred_var),
+    }

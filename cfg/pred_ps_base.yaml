@@ -51,7 +51,7 @@ cmbnncs_bundle_pred_src  : {stage: make_pred_ps, orig_name: auto_pred}
 cmbnncs_fig_color        : "red"
 
 obs2ps_cleaning_model   : "obs2ps"
-obs2ps_working_dir      : "obs2ps_use_new_mask/drop_no_drop_scale_ps_None-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/"
+obs2ps_working_dir      : "obs2ps_r22/drop_no_drop_scale_ps_None-scale_px_minmax_global-optimizer_Adam-lr_0.001-norm_bn-activation_gelu-down_XXXXXXXXX-spat_max/"
 obs2ps_fig_model_name   : "d2ps"
 obs2ps_use_epochs       : ["best"]
 obs2ps_use_epoch        : "best"
