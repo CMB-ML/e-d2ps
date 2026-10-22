@@ -61,6 +61,17 @@ obs2ps_sm_score_ell_max : null
 obs2ps_bundle_pred_src  : {stage: predict, orig_name: cmb_ps}
 obs2ps_fig_color        : "blue"
 
+mean_thry_cleaning_model   : "mean_thry"
+mean_thry_working_dir      : "MeanTheory/"
+mean_thry_fig_model_name   : "MeanTheory"
+mean_thry_use_epochs       : [""]
+mean_thry_use_epoch        : ""
+mean_thry_sm_epoch         : null
+mean_thry_do_smooth        : false
+mean_thry_sm_score_ell_max : null
+mean_thry_bundle_pred_src  : {stage: make_mean_spectrum, orig_name: mean_thry}
+mean_thry_fig_color        : "gray"
+
 # cleaning_model   : ${model.cleaning.cleaning_model}
 working_dir      : ${model.cleaning.working_dir}
 # fig_model_name   : ${model.cleaning.fig_model_name}
@@ -83,6 +94,7 @@ detectors      : [100, 143, 217, 353]
 map_fields     : "I"
 
 lmax           : 1280
+lcut           : 430
 
 # For prediction, postprocessing, power spectra generation:
 # For single simulation figures (maps & ps figures):

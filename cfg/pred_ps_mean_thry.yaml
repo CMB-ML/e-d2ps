@@ -1,0 +1,12 @@
+defaults:
+  - pred_ps_base
+  - model/cleaning: mean_thry
+  - _self_
+
+
+pipeline:
+  bundle_pred:
+    assets_in:
+      mean_thry:
+        stage: make_mean_spectrum
+        orig_name: mean_thry

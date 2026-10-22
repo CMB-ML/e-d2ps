@@ -1,0 +1,10 @@
+cleaning_model   : ${mean_thry_cleaning_model}
+working_dir      : ${mean_thry_working_dir}
+fig_model_name   : ${mean_thry_fig_model_name}
+use_epochs       : ${mean_thry_use_epochs}
+use_epoch        : ${mean_thry_use_epoch}
+do_smooth        : ${mean_thry_do_smooth}
+sm_epoch         : ${mean_thry_sm_epoch}
+sm_score_ell_max : ${mean_thry_sm_score_ell_max}
+bundle_pred_src  : ${mean_thry_bundle_pred_src}
+fig_color        : ${mean_thry_fig_color}

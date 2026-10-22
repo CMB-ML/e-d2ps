@@ -112,19 +112,53 @@ class BundleTrueExecutor(BundleExecutor):
 
         super().process(split)
 
-# class BundleRealExecutor(BundleExecutor):
-#     def __init__(self, cfg: DictConfig) -> None:
-#         super().__init__(cfg, stage_str="bundle_real")
-#         self.spectra_kind = "realization"
 
-#     def execute(self) -> None:
-#         logger.debug(f"Running {self.__class__.__name__} execute()")
+class BundleMeanTheoryExecutor(BaseStageExecutor):
+    """
+    Broadcast the training-set mean theory spectrum into prediction bundles.
 
-#         for split in self.splits:
-#             context = dict(split=split.name)
-#             with self.name_tracker.set_contexts(context):
-#                 self.process(split)
-#             logger.info(f"Done bundling {split.name} {self.spectra_kind} spectra.")
+    The same mean spectrum is used for every evaluation split.
+    Each output has shape (N_sim, N_ell), matching other prediction bundles.
+    """
+    def __init__(self, cfg: DictConfig) -> None:
+        super().__init__(cfg, stage_str="bundle_pred")
+
+        self.in_mean_thry: Asset = self.assets_in["mean_thry"]
+        self.out_ps: Asset = self.assets_out["ps_bundle"]
+
+        self.ells = parse_ells(cfg.model.use_ells)
+
+    def execute(self) -> None:
+        logger.debug(f"Running {self.__class__.__name__} execute()")
+
+        mean_thry = self.in_mean_thry.read()
+
+        if mean_thry.ndim != 1:
+            raise ValueError(
+                f"MeanTheory must be 1D, got shape {mean_thry.shape}."
+            )
+
+        if mean_thry.shape[0] != len(self.ells):
+            raise ValueError(
+                f"MeanTheory multipole count mismatch: "
+                f"expected {len(self.ells)}, got {mean_thry.shape[0]}."
+            )
+
+        epoch_iter = [None] if self.model_epochs is None else self.model_epochs
+
+        for split in self.splits:
+            for epoch in epoch_iter:
+                with self.name_tracker.set_contexts(
+                    dict(split=split.name, epoch=epoch)
+                ):
+                    pred = np.broadcast_to(
+                        mean_thry,
+                        (split.n_sims, mean_thry.shape[0]),
+                    ).copy()
+
+                    self.out_ps.write(data=pred)
+
+            logger.info(f"Done bundling MeanTheory for {split.name}.")
 
 
 def trim_tt_to_target_ells(
