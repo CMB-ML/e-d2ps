@@ -115,7 +115,7 @@ sm_basis_kind: "polyfit"  # Use np.polyfit, the fastest by ~4x.
                           # Alternatives (chebyshev, legendre, monomial) use scikit-learn.
                           # Results agree to ~10 decimal places. 
 sm_deg_range: [4,30]
-sm_criterion: "mean_mse"
+sm_criterion: "mean_r2"
 
 # Analysis details
 # metrics_to_use: ["mse", "rel_err", "abs_rel_err_pct", "thry_var", "pred_var", "tension", "R2", "ceiling_r2", "loss_calib", "loss_bias"]
