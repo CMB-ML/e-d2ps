@@ -338,6 +338,7 @@ plot_testfp_metrics:
       path_template: "{root}/{dataset}/{working}{stage}/fig_testfp_{metric}_{split}.{fig_type}"
   assets_in:
     per_ell_metric: {stage: get_per_ell_metrics}
+    ps_thry: {stage: bundle_true, orig_name: ps_bundle}
   splits:
     - TestFP
   dir_name: Analysis_Figures
