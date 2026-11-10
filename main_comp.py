@@ -136,8 +136,8 @@ def run_all_model_analysis(cfg):
         # R2DecompositionExecutor,
         # PairedRealizationPeaksExecutor,
         TestFPOverviewExecutor,
-        TestVTMetricsExecutor,
-        TestFPMetricsExecutor
+        # TestVTMetricsExecutor,
+        # TestFPMetricsExecutor
     ]
     run(cfg, pipes)
 
