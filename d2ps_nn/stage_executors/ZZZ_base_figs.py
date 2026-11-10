@@ -1425,6 +1425,19 @@ class TestFPMetricsExecutor(
                 )
 
             # Reference lines
+            if metric == "resid_std":
+                fixed_theory = np.asarray(data.thry[split_name])[0]
+                cosmic_std = np.sqrt(2.0 / (2 * ells + 1)) * fixed_theory
+
+                ax.plot(
+                    ells,
+                    cosmic_std,
+                    color="black",
+                    linestyle="--",
+                    linewidth=1.2,
+                    label="Cosmic variance",
+                )
+
             if metric == "bias":
                 ax.axhline(
                     0,
