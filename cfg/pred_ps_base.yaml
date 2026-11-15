@@ -46,7 +46,7 @@ cmbnncs_use_epochs       : ["best"]
 cmbnncs_use_epoch        : "best"
 cmbnncs_sm_epoch         : "best"
 cmbnncs_do_smooth        : true
-cmbnncs_sm_score_ell_max : 500
+cmbnncs_sm_score_ell_max : ${lcut}
 cmbnncs_bundle_pred_src  : {stage: make_pred_ps, orig_name: auto_pred}
 cmbnncs_fig_color        : "red"
 

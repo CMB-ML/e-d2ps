@@ -1,38 +1,35 @@
 import logging
 import hydra
-from omegaconf import OmegaConf
 from cmbml.core import PipelineContext, LogMaker
-from cmbml.core.A_check_hydra_configs import HydraConfigCheckerExecutor
 from cmbml.sims.ex import (
     MaskCreatorExecutor,
 )
 from cmbml.analysis.ex import (
-    CommonRealPostExecutor,
     MakeRealPowerSpectrumExecutor
 )
 from d2ps_nn.ex import (
     BundlePredExecutor,
     GetPolyDegreeExecutor,
     BundleSmoothExecutor,
-    BundleSmoothTrueExecutor,
-    GetPerEllMetricsExecutor,
-    GetPerSimMetricsExecutor,
+    # BundleSmoothTrueExecutor,
+    # GetPerEllMetricsExecutor,
+    # GetPerSimMetricsExecutor,
     BundleTrueExecutor,
-    BundleMeanTheoryExecutor,
-    MakeMeanSpectrumExecutor,
-    GetScalarMetricsExecutor,
-    GetScalarUncertaintyExecutor,
-    ComparePerEllR2Executor,
-    ComparePerEllMSEExecutor,
-    ComparePerEllTensionExecutor,
-    ComparePerEllAbsRelErrPctExecutor,
-    ModelVsTheoryWithTensionExecutor,
-    ComparePerEllVarianceExecutor,
-    FixedSingleSimFigsExecutor,
-    RankedSingleSimFigsExecutor,
-    PredictionCloudExecutor,
-    R2DecompositionExecutor,
-    PairedRealizationPeaksExecutor,
+    # BundleMeanTheoryExecutor,
+    # MakeMeanSpectrumExecutor,
+    # GetScalarMetricsExecutor,
+    # GetScalarUncertaintyExecutor,
+    # ComparePerEllR2Executor,
+    # ComparePerEllMSEExecutor,
+    # ComparePerEllTensionExecutor,
+    # ComparePerEllAbsRelErrPctExecutor,
+    # ModelVsTheoryWithTensionExecutor,
+    # ComparePerEllVarianceExecutor,
+    # FixedSingleSimFigsExecutor,
+    # RankedSingleSimFigsExecutor,
+    # PredictionCloudExecutor,
+    # R2DecompositionExecutor,
+    # PairedRealizationPeaksExecutor,
     TestFPOverviewExecutor,
     TestVTMetricsExecutor,
     TestFPMetricsExecutor,
@@ -53,10 +50,10 @@ def run_bundle_real(cfg):
         BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
-        GetScalarMetricsExecutor,
-        GetScalarUncertaintyExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerEllMetricsExecutor,
+        # GetScalarMetricsExecutor,
+        # GetScalarUncertaintyExecutor,
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -68,10 +65,10 @@ def run_bundle_pyilc(cfg):
         BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
-        GetScalarMetricsExecutor,
-        GetScalarUncertaintyExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerEllMetricsExecutor,
+        # GetScalarMetricsExecutor,
+        # GetScalarUncertaintyExecutor,
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -83,10 +80,10 @@ def run_bundle_cmbnncs(cfg):
         BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
-        GetScalarMetricsExecutor,
-        GetScalarUncertaintyExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerEllMetricsExecutor,
+        # GetScalarMetricsExecutor,
+        # GetScalarUncertaintyExecutor,
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
@@ -98,27 +95,27 @@ def run_bundle_d2ps(cfg):
         BundlePredExecutor,
         GetPolyDegreeExecutor,
         BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
-        GetScalarMetricsExecutor,
-        GetScalarUncertaintyExecutor,
-        GetPerSimMetricsExecutor
+        # GetPerEllMetricsExecutor,
+        # GetScalarMetricsExecutor,
+        # GetScalarUncertaintyExecutor,
+        # GetPerSimMetricsExecutor
     ]
     run(cfg, pipes)
 
 
-@hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_mean_thry")
-def run_bundle_mean_thry(cfg):
-    pipes = [
-        MakeMeanSpectrumExecutor,
-        BundleMeanTheoryExecutor,
-        GetPolyDegreeExecutor,
-        BundleSmoothExecutor,
-        GetPerEllMetricsExecutor,
-        GetScalarMetricsExecutor,
-        GetScalarUncertaintyExecutor,
-        GetPerSimMetricsExecutor
-    ]
-    run(cfg, pipes)
+# @hydra.main(version_base=None, config_path="cfg", config_name="pred_ps_mean_thry")
+# def run_bundle_mean_thry(cfg):
+#     pipes = [
+#         MakeMeanSpectrumExecutor,
+#         BundleMeanTheoryExecutor,
+#         GetPolyDegreeExecutor,
+#         BundleSmoothExecutor,
+#         GetPerEllMetricsExecutor,
+#         GetScalarMetricsExecutor,
+#         GetScalarUncertaintyExecutor,
+#         GetPerSimMetricsExecutor
+#     ]
+#     run(cfg, pipes)
 
 
 @hydra.main(version_base=None, config_path="cfg", config_name="produce_figs")
@@ -187,9 +184,3 @@ if __name__ == "__main__":
     # run_bundle_mean_thry()
 
     run_all_model_analysis()
-
-    # run_real_pl()
-    # run_cmbnncs_planck()
-    # run_pyilc_planck()
-
-    # run_sm_theory()
