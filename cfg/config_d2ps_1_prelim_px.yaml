@@ -15,7 +15,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      scale_px: global_minmax  #, local_minmax
+      scale_px: minmax_global
       use_pos_enc_lut: ${use_pos_enc_lut_sweep}
 
 n_sims: ${n_sims_train_full}

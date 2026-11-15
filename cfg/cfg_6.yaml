@@ -1,7 +1,7 @@
 # Do not name any yamls "default", "null", or "basic": these are reserved and will cause issues!
 defaults:
   - config_d2ps
-  - job_sweep: ???
+  - job_sweep: r22
   - override pipeline: assembly_on_sims_sepprep
   - _self_
 

@@ -45,16 +45,20 @@ logger = logging.getLogger(__name__)
 def run_1_prelim_px(cfg):
     logger.info(f"Running prelim_px in {__file__}")
     pipes = [
+        ## For using masked regions in D2PS
         # PrepPSMaskExecutor,
         # PrepGalNILCMaskExecutor,
         # PrepGalCutMaskExecutor,
         # ComposeMasksExecutor,
 
         MakeLutExecutor,
-        # MakePosEncLutExecutor,
         FindDatasetStatsParallelExecutor,
+
+        ## For other specific settings
+        # MakePosEncLutExecutor,
         # FindPxMapStatsExecutor,
 
+        ## For using masked regions in D2PS
         # GetMonopoleExecutor,
         # ArrangeMasksExecutor
     ]
@@ -135,13 +139,13 @@ def run(cfg, pipes):
         logger.exception("An exception occured during the pipeline.", exc_info=e)
         raise e
     finally:
-        logger.info("Pipeline completed.")
         log_maker.copy_hydra_run_to_dataset_log()
+    logger.info("Pipeline completed.")
 
 
 if __name__ == "__main__":
     run_1_prelim_px()
-    run_2_prelim_ps()
+    # run_2_prelim_ps()
     run_3_prep_px()
     run_4_prep_ps()
     run_5_make_models()

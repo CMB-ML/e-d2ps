@@ -15,6 +15,7 @@ hydra:
   verbose      : false
   sweeper:
     params:
-      scale_ps: null, meanstdv
+      scale_ps: "null"
+      # scale_ps: null, meanstdv
 
 n_sims: ${n_sims_train}
