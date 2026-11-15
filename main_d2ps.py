@@ -112,8 +112,8 @@ def run_2_prelim_ps(cfg):
 def run_3_prep_px(cfg):
     logger.info(f"Running prep_px in {__file__}")
     pipes = [
-        # PreprocessMapsExecutor,
-        PreprocessMaskExecutor,
+        PreprocessMapsExecutor,
+        # PreprocessMaskExecutor,
     ]
     run(cfg, pipes)
 
@@ -122,7 +122,7 @@ def run_3_prep_px(cfg):
 def run_4_prep_ps(cfg):
     logger.info(f"Running prep_ps in {__file__}")
     pipes = [
-        # PreprocessSpectraExecutor
+        PreprocessSpectraExecutor
     ]
     run(cfg, pipes)
 
