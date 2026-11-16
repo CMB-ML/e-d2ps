@@ -153,7 +153,12 @@ if __name__ == "__main__":
     run_7_infer()
 ```
 
-To preserve the released preprocessing assets, provided model, and associated predictions, either configure new working directories for preprocessing and model training or back up the existing working directories before running the complete pipeline.
+To preserve the released preprocessing assets, provided model, and associated predictions, modify the following settings in `cfg/config_d2ps.yaml` to use new working directories:
+
+```yaml
+working_dir: &wd "D2PS_New/"
+prep_working_dir: "d2ps-prep-new/"
+```
 
 The pipeline can be run with:
 
